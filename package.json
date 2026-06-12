@@ -1,0 +1,34 @@
+{
+  "name": "statgpt-mcp-app-frontend",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Frontend for an MCP app inner widget — loaded as a second iframe inside <private-repo>. Speaks the mcpapp/proxy/* protocol and renders tool-result data (SDMX explorer) with @epam/statgpt-* libs + echarts.",
+  "scripts": {
+    "dev": "vite --port 4300 --strictPort",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview --port 4300 --strictPort"
+  },
+  "dependencies": {
+    "@epam/statgpt-sdmx-toolkit": "^0.6.1",
+    "@epam/statgpt-shared-toolkit": "^0.6.1",
+    "@epam/statgpt-ui-components": "^0.6.1",
+    "classnames": "^2.5.1",
+    "echarts": "^5.6.0",
+    "echarts-for-react": "^3.0.2",
+    "react": "^19.2.1",
+    "react-dom": "^19.2.1"
+  },
+  "devDependencies": {
+    "@tailwindcss/typography": "^0.5.16",
+    "@types/react": "^19.2.0",
+    "@types/react-dom": "^19.1.6",
+    "@vitejs/plugin-react": "^4.5.2",
+    "autoprefixer": "^10.4.21",
+    "postcss": "^8.4.0",
+    "sass": "^1.89.2",
+    "tailwindcss": "^3.4.17",
+    "typescript": "~5.8.3",
+    "vite": "^5.4.10"
+  }
+}

@@ -1,0 +1,36 @@
+// Global stylesheet. Mirrors the import recipe from
+// <private-repo>/src/scss/styles.scss, trimmed to what
+// an SDMX-only explorer needs.
+//
+// @use rules MUST come first. `tailwindcss/*` and the ui-components partial
+// resolve via the `loadPaths: ["node_modules"]` set in vite.config.ts.
+// styles-tailwind.scss uses @apply, so it is processed by the Tailwind
+// PostCSS plugin at build time (see postcss.config.js).
+@use "tailwindcss/base";
+@use "tailwindcss/components";
+@use "tailwindcss/utilities";
+
+@use "./colors.scss";
+@use "@epam/statgpt-ui-components/styles-tailwind.scss";
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--neutrals-300);
+  color: var(--neutrals-1000);
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+// The host sizes the inner iframe to a fixed (short) viewport and does not
+// grow it to our content, so #root must be its own scroll container —
+// otherwise taller content (chart + table) is clipped with no way to scroll.
+#root {
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
