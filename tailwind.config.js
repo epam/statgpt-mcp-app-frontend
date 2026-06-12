@@ -1,0 +1,85 @@
+import typography from "@tailwindcss/typography";
+
+/** @type {import('tailwindcss').Config} */
+// theme.extend + content globs lifted verbatim from
+// statgpt-global-trusted-data-commons (the canonical @epam/statgpt-*@0.6.x
+// consumer). The `./node_modules/@epam/statgpt-*` glob is mandatory: it
+// makes Tailwind generate the utility classes used INSIDE the published
+// component packages. Token values come from src/styles/colors.scss.
+export default {
+  content: [
+    "./index.html",
+    "./src/**/*.{js,ts,jsx,tsx}",
+    "./node_modules/@epam/statgpt-*/**/*.{js,ts,jsx,tsx,mjs}",
+  ],
+  theme: {
+    extend: {
+      screens: {
+        "2xl": { max: "1919px" },
+        xl: { max: "1536px" },
+        lg: { max: "1279px" },
+        "lg-min": { min: "1280px" },
+        md: { max: "1023px" },
+        "md-min": { min: "1024px" },
+        "sm-explorer": { max: "998px" },
+        sm: { max: "719px" },
+        "sm-min": { min: "720px" },
+        xs: { max: "428px" },
+        "xs-min": { min: "429px" },
+      },
+      colors: {
+        primary: "var(--primary)",
+        white: "var(--white)",
+        blackout: "var(--blackout)",
+        highlight: "var(--highlight)",
+        neutrals: {
+          1000: "var(--neutrals-1000)",
+          900: "var(--neutrals-900)",
+          800: "var(--neutrals-800)",
+          700: "var(--neutrals-700)",
+          600: "var(--neutrals-600)",
+          500: "var(--neutrals-500)",
+          400: "var(--neutrals-400)",
+          300: "var(--neutrals-300)",
+          200: "var(--neutrals-200)",
+          100: "var(--neutrals-100)",
+        },
+        hues: {
+          900: "var(--hues-900)",
+          800: "var(--hues-800)",
+          600: "var(--hues-600)",
+          400: "var(--hues-400)",
+          200: "var(--hues-200)",
+          100: "var(--hues-100)",
+        },
+        accent: {
+          700: "var(--accent-700)",
+          300: "var(--accent-300)",
+        },
+        semantic: {
+          error: "var(--semantic-error)",
+          "error-light": "var(--semantic-error-light)",
+          warning: "var(--semantic-warning)",
+          "warning-light": "var(--semantic-warning-light)",
+          success: "var(--semantic-success)",
+        },
+        gradients: {
+          light: "var(--gradients-light)",
+          middle: "var(--gradients-middle)",
+          dark: "var(--gradients-dark)",
+          white10: "var(--white10)",
+          neutrals300: "var(--neutrals-300-10)",
+        },
+      },
+      boxShadow: {
+        drop: "0px 4px 4px 0px #BBBBBB40",
+      },
+      zIndex: {
+        tooltip: "100000",
+        modal: "100001",
+        dropdown: "100002",
+      },
+    },
+  },
+  plugins: [typography],
+};
