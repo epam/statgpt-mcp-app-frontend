@@ -10,10 +10,10 @@
     "preview": "vite preview --port 4300 --strictPort"
   },
   "dependencies": {
-    "@epam/statgpt-conversation-view": "0.7.0-dev.20",
-    "@epam/statgpt-sdmx-toolkit": "0.7.0-dev.20",
-    "@epam/statgpt-shared-toolkit": "0.7.0-dev.20",
-    "@epam/statgpt-ui-components": "0.7.0-dev.20",
+    "@epam/statgpt-conversation-view": "0.7.0-dev.22",
+    "@epam/statgpt-sdmx-toolkit": "0.7.0-dev.22",
+    "@epam/statgpt-shared-toolkit": "0.7.0-dev.22",
+    "@epam/statgpt-ui-components": "0.7.0-dev.22",
     "ag-grid-community": "33.3.2",
     "ag-grid-react": "^33.3.2",
     "classnames": "^2.5.1",
