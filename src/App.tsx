@@ -1,93 +1,62 @@
 import { useMemo } from "react";
-import {
-  AdvancedViewProvider,
-  AttachmentRenderer,
-  ConversationViewFeatureTogglesProvider,
-  ConversationViewStylesProvider,
-  OnboardingProvider,
-} from "@epam/statgpt-conversation-view";
-import type { AttachmentsActions, ChartingData, GridData } from "@epam/statgpt-conversation-view";
-import type { ColDef } from "ag-grid-community";
 import { useSdmxData } from "./hooks/useSdmxData";
 import { chartModelToGrid } from "./adapters/chartModelToGrid";
 import { chartModelToChartingData } from "./adapters/chartModelToChartingData";
+import { AppProviders } from "./components/AppProviders";
 import { ConnectionStatus } from "./components/ConnectionStatus";
+import { DataView } from "./components/DataView";
+import { ErrorBanner } from "./components/ErrorBanner";
 import { ExplorerHeader } from "./components/ExplorerHeader";
-
-const STUB_ACTIONS = {} as AttachmentsActions;
-
-interface GridAttachment {
-  type: "custom_data_grid";
-  title: string;
-  grid_data?: { data: GridData[]; columns: ColDef[] };
-}
-interface ChartAttachment {
-  type: "custom_chart";
-  title: string;
-  charting_data?: ChartingData;
-}
+import { SupersededBanner } from "./components/SupersededBanner";
 
 export default function App() {
-  const { snapshot, meta, model, loading, error, canFetch, refresh } = useSdmxData();
+    const { snapshot, meta, model, loading, error, canFetch, refresh } =
+        useSdmxData();
 
-  const attachments = useMemo((): (GridAttachment | ChartAttachment)[] => {
-    if (!model) return [];
-    return [
-      {
-        type: "custom_data_grid",
-        title: meta?.title ?? "Data",
-        grid_data: chartModelToGrid(model, meta),
-      },
-      {
-        type: "custom_chart",
-        title: meta?.title ?? "Chart",
-        charting_data: chartModelToChartingData(model, meta),
-      },
-    ];
-  }, [model, meta]);
+    const gridAttachment = useMemo(() => {
+        if (!model) return undefined;
+        return {
+            type: "custom_data_grid" as const,
+            title: meta?.title ?? "Data",
+            grid_data: chartModelToGrid(model, meta),
+        };
+    }, [model, meta]);
 
-  return (
-    <ConversationViewStylesProvider>
-      <OnboardingProvider>
-        <AdvancedViewProvider>
-          <ConversationViewFeatureTogglesProvider>
+    const chartAttachment = useMemo(() => {
+        if (!model) return undefined;
+        return {
+            type: "custom_chart" as const,
+            title: meta?.title ?? "Chart",
+            charting_data: chartModelToChartingData(model, meta),
+        };
+    }, [model, meta]);
+
+    return (
+        <AppProviders>
             {snapshot.phase !== "ready" ? (
-              <ConnectionStatus phase={snapshot.phase} lastError={snapshot.lastError} />
-            ) : (
-              <div className="flex flex-col gap-4 p-4">
-                {snapshot.superseded && (
-                  <div className="rounded border border-semantic-warning bg-semantic-warning-light px-3 py-2 text-sm font-medium text-neutrals-900">
-                    Superseded — a newer instance has replaced this one.
-                  </div>
-                )}
-
-                <ExplorerHeader
-                  meta={meta}
-                  loading={loading}
-                  canRefresh={canFetch}
-                  onRefresh={refresh}
+                <ConnectionStatus
+                    phase={snapshot.phase}
+                    lastError={snapshot.lastError}
                 />
+            ) : (
+                <div className="flex flex-col gap-4 p-4">
+                    {snapshot.superseded && <SupersededBanner />}
 
-                {error && (
-                  <div className="rounded border border-semantic-error bg-semantic-error-light px-3 py-2 text-sm text-semantic-error">
-                    {error}
-                  </div>
-                )}
+                    <ExplorerHeader
+                        meta={meta}
+                        loading={loading}
+                        canRefresh={canFetch}
+                        onRefresh={refresh}
+                    />
 
-                {attachments.length > 0 && (
-                  <AttachmentRenderer
-                    attachments={attachments as never}
-                    actions={STUB_ACTIONS}
-                    isDataSetAttachments={false}
-                    hideDownloadButton
-                    containerClassName="pt-0"
-                  />
-                )}
-              </div>
+                    {error && <ErrorBanner message={error} />}
+
+                    <DataView
+                        gridAttachment={gridAttachment}
+                        chartAttachment={chartAttachment}
+                    />
+                </div>
             )}
-          </ConversationViewFeatureTogglesProvider>
-        </AdvancedViewProvider>
-      </OnboardingProvider>
-    </ConversationViewStylesProvider>
-  );
+        </AppProviders>
+    );
 }
