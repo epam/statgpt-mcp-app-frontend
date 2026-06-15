@@ -1,66 +1,93 @@
 import { useMemo } from "react";
+import {
+  AdvancedViewProvider,
+  AttachmentRenderer,
+  ConversationViewFeatureTogglesProvider,
+  ConversationViewStylesProvider,
+  OnboardingProvider,
+} from "@epam/statgpt-conversation-view";
+import type { AttachmentsActions, ChartingData, GridData } from "@epam/statgpt-conversation-view";
+import type { ColDef } from "ag-grid-community";
 import { useSdmxData } from "./hooks/useSdmxData";
-import { buildChartOption } from "./chart/buildOption";
-import { Centered } from "./components/Centered";
-import { Chart } from "./components/Chart";
+import { chartModelToGrid } from "./adapters/chartModelToGrid";
+import { chartModelToChartingData } from "./adapters/chartModelToChartingData";
 import { ConnectionStatus } from "./components/ConnectionStatus";
-import { DataTable } from "./components/DataTable";
 import { ExplorerHeader } from "./components/ExplorerHeader";
-import { Loader } from "@epam/statgpt-ui-components";
+
+const STUB_ACTIONS = {} as AttachmentsActions;
+
+interface GridAttachment {
+  type: "custom_data_grid";
+  title: string;
+  grid_data?: { data: GridData[]; columns: ColDef[] };
+}
+interface ChartAttachment {
+  type: "custom_chart";
+  title: string;
+  charting_data?: ChartingData;
+}
 
 export default function App() {
   const { snapshot, meta, model, loading, error, canFetch, refresh } = useSdmxData();
 
-  const option = useMemo(
-    () => (model && model.periods.length ? buildChartOption(model, meta) : null),
-    [model, meta],
-  );
-
-  if (snapshot.phase !== "ready") {
-    return <ConnectionStatus phase={snapshot.phase} lastError={snapshot.lastError} />;
-  }
+  const attachments = useMemo((): (GridAttachment | ChartAttachment)[] => {
+    if (!model) return [];
+    return [
+      {
+        type: "custom_data_grid",
+        title: meta?.title ?? "Data",
+        grid_data: chartModelToGrid(model, meta),
+      },
+      {
+        type: "custom_chart",
+        title: meta?.title ?? "Chart",
+        charting_data: chartModelToChartingData(model, meta),
+      },
+    ];
+  }, [model, meta]);
 
   return (
-    <div
-      className={
-        "mx-auto flex min-h-full max-w-5xl flex-col gap-4 p-4 " +
-        (snapshot.superseded ? "pointer-events-none opacity-50" : "")
-      }
-    >
-      {snapshot.superseded && (
-        <div className="rounded border border-semantic-warning bg-semantic-warning-light px-3 py-2 text-sm font-medium text-neutrals-900">
-          Superseded — a newer chart instance has replaced this one.
-        </div>
-      )}
+    <ConversationViewStylesProvider>
+      <OnboardingProvider>
+        <AdvancedViewProvider>
+          <ConversationViewFeatureTogglesProvider>
+            {snapshot.phase !== "ready" ? (
+              <ConnectionStatus phase={snapshot.phase} lastError={snapshot.lastError} />
+            ) : (
+              <div className="flex flex-col gap-4 p-4">
+                {snapshot.superseded && (
+                  <div className="rounded border border-semantic-warning bg-semantic-warning-light px-3 py-2 text-sm font-medium text-neutrals-900">
+                    Superseded — a newer instance has replaced this one.
+                  </div>
+                )}
 
-      <ExplorerHeader meta={meta} loading={loading} canRefresh={canFetch} onRefresh={refresh} />
+                <ExplorerHeader
+                  meta={meta}
+                  loading={loading}
+                  canRefresh={canFetch}
+                  onRefresh={refresh}
+                />
 
-      {error && (
-        <div className="rounded border border-semantic-error bg-semantic-error-light px-3 py-2 text-sm text-semantic-error">
-          {error}
-        </div>
-      )}
+                {error && (
+                  <div className="rounded border border-semantic-error bg-semantic-error-light px-3 py-2 text-sm text-semantic-error">
+                    {error}
+                  </div>
+                )}
 
-      <section className="rounded-lg border border-neutrals-500 bg-white p-3">
-        {loading && !option ? (
-          <Centered>
-            <Loader />
-          </Centered>
-        ) : option ? (
-          <Chart option={option} />
-        ) : (
-          <p className="py-12 text-center text-sm text-neutrals-700">No data to display.</p>
-        )}
-      </section>
-
-      {model && model.periods.length > 0 && (
-        <section>
-          <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-neutrals-700">
-            Data
-          </h2>
-          <DataTable model={model} unit={meta?.unit} />
-        </section>
-      )}
-    </div>
+                {attachments.length > 0 && (
+                  <AttachmentRenderer
+                    attachments={attachments as never}
+                    actions={STUB_ACTIONS}
+                    isDataSetAttachments={false}
+                    hideDownloadButton
+                    containerClassName="pt-0"
+                  />
+                )}
+              </div>
+            )}
+          </ConversationViewFeatureTogglesProvider>
+        </AdvancedViewProvider>
+      </OnboardingProvider>
+    </ConversationViewStylesProvider>
   );
 }
