@@ -1,0 +1,9 @@
+.chart-attachment {
+  &-title {
+    @apply h4;
+  }
+
+  .chart-area {
+    @apply border border-neutrals-500 rounded mt-4 px-3 py-5;
+  }
+}
