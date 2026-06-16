@@ -14,6 +14,9 @@
 @use "@epam/statgpt-ui-components/styles-tailwind.scss";
 @use "ag-grid-community/styles/ag-grid.css";
 @use "ag-grid-community/styles/ag-theme-quartz.css";
+@use "./fonts.scss";
+@use "./grid.scss";
+@use "./chart-attachment.scss";
 
 html,
 body {
@@ -22,8 +25,7 @@ body {
 
 body {
   margin: 0;
-  background: var(--neutrals-300);
-  color: var(--neutrals-1000);
+  background: transparent;
   font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   -webkit-font-smoothing: antialiased;
 }
