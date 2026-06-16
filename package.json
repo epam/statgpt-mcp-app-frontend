@@ -5,15 +5,15 @@
   "type": "module",
   "description": "Frontend for an MCP app inner widget — loaded as a second iframe inside statgpt-mcp-apps-prototype. Speaks the mcpapp/proxy/* protocol and renders tool-result data (SDMX explorer) with @epam/statgpt-* libs + echarts.",
   "scripts": {
-    "dev": "vite --port 4300 --strictPort",
+    "start": "vite --port 4300 --strictPort",
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview --port 4300 --strictPort"
   },
   "dependencies": {
-    "@epam/statgpt-conversation-view": "0.7.0-dev.22",
-    "@epam/statgpt-sdmx-toolkit": "0.7.0-dev.22",
-    "@epam/statgpt-shared-toolkit": "0.7.0-dev.22",
-    "@epam/statgpt-ui-components": "0.7.0-dev.22",
+    "@epam/statgpt-conversation-view": "0.7.0-dev.25",
+    "@epam/statgpt-sdmx-toolkit": "0.7.0-dev.25",
+    "@epam/statgpt-shared-toolkit": "0.7.0-dev.25",
+    "@epam/statgpt-ui-components": "0.7.0-dev.25",
     "ag-grid-community": "33.3.2",
     "ag-grid-react": "^33.3.2",
     "classnames": "^2.5.1",
