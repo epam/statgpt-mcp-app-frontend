@@ -1,5 +1,5 @@
 import { useSyncExternalStore } from "react";
-import { bridge } from "./hostBridge";
+import { bridge } from ".";
 import type { BridgeSnapshot } from "./types";
 
 export function useBridgeSnapshot(): BridgeSnapshot {

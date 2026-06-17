@@ -41,6 +41,7 @@ export function normalizeSdmxDataResponse(raw: unknown): ChartModel {
   const series = timeSeries.map((ts) => {
     const byPeriod = new Map<string, number | null>();
     for (const v of ts.values) {
+      if (!v.dimensionAtObservation) continue;
       const raw = v.values[0]?.value;
       byPeriod.set(
         v.dimensionAtObservation,

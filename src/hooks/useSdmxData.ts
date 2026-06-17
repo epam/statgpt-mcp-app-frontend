@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { bridge } from "../bridge/hostBridge";
+import { bridge } from "../bridge";
 import { useBridgeSnapshot } from "../bridge/useBridge";
 import type { BridgeSnapshot } from "../bridge/types";
 import {
@@ -49,6 +49,7 @@ export function useSdmxData(): SdmxData {
 
   const refresh = useCallback(async () => {
     if (USE_DEV_MODE || !meta?.queries.length) return;
+    // TODO: v1 fetches only the first query; multi-query support is deferred
     const q = meta.queries[0];
     const path = dataPath(q.sdmx);
     const token = ++fetchToken.current;
