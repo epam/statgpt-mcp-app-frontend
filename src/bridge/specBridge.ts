@@ -1,24 +1,11 @@
 import { App } from "@modelcontextprotocol/ext-apps";
 import type { McpUiHostContext } from "@modelcontextprotocol/ext-apps";
-import { BridgeError, type BridgeSnapshot } from "./types";
+import { BridgeError, type BridgeSnapshot, type HostBridge } from "./types";
+import { unwrapStructured } from "./utils";
 
 type Listener = () => void;
 
-export interface HostBridge {
-  start(): void;
-  subscribe(listener: Listener): () => void;
-  getSnapshot(): BridgeSnapshot;
-  callTool(name: string, args: unknown): Promise<unknown>;
-}
-
-function unwrapStructured(result: unknown): unknown {
-  if (!result || typeof result !== "object") return result;
-  const r = result as Record<string, unknown>;
-  const inner = ((r.result as Record<string, unknown>) ?? r);
-  return inner.structuredContent ?? inner.structured_content ?? r.structuredContent ?? r.structured_content ?? inner;
-}
-
-function createHostBridge(): HostBridge {
+export function createSpecBridge(): HostBridge {
   let sdkApp: App | null = null;
   let started = false;
   const listeners = new Set<Listener>();
@@ -38,7 +25,7 @@ function createHostBridge(): HostBridge {
     if (started) return;
     started = true;
 
-    sdkApp = new App({ name: "statgpt-data-widget", version: "0.1.0" }, {});
+    sdkApp = new App({ name: "statgpt-data-widget", version: "0.1.0" }, {}, { autoResize: true });
 
     sdkApp.ontoolresult = (params) => {
       patch({ toolResult: params.structuredContent ?? null });
@@ -73,14 +60,14 @@ function createHostBridge(): HostBridge {
 
   return {
     start,
-    subscribe(listener) {
+    subscribe(listener: () => void) {
       listeners.add(listener);
       return () => listeners.delete(listener);
     },
     getSnapshot() {
       return snapshot;
     },
-    async callTool(name, args) {
+    async callTool(name: string, args: unknown) {
       if (!sdkApp) throw new BridgeError("bridge not started");
       const result = await sdkApp.callServerTool({
         name,
@@ -90,5 +77,3 @@ function createHostBridge(): HostBridge {
     },
   };
 }
-
-export const bridge: HostBridge = createHostBridge();

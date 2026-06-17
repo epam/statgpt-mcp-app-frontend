@@ -3,7 +3,7 @@ import { createRoot } from "react-dom/client";
 import { AllCommunityModule, ModuleRegistry } from "ag-grid-community";
 import "./styles/global.scss";
 import App from "./App";
-import { bridge } from "./bridge/hostBridge";
+import { bridge } from "./bridge";
 
 ModuleRegistry.registerModules([AllCommunityModule]);
 

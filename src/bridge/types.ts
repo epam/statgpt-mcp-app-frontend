@@ -2,6 +2,13 @@ import type { McpUiHostContext } from "@modelcontextprotocol/ext-apps";
 
 export type BridgePhase = "connecting" | "ready" | "error" | "torndown";
 
+export interface HostBridge {
+  start(): void;
+  subscribe(listener: () => void): () => void;
+  getSnapshot(): BridgeSnapshot;
+  callTool(name: string, args: unknown): Promise<unknown>;
+}
+
 export interface BridgeSnapshot {
   phase: BridgePhase;
   hostContext?: McpUiHostContext;
