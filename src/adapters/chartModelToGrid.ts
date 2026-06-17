@@ -1,10 +1,10 @@
 import type { ColDef } from "ag-grid-community";
 import type { GridData } from "@epam/statgpt-conversation-view";
-import type { ChartMeta, ChartModel } from "../sdmx/parse";
+import type { ChartModel } from "../sdmx/parse";
 
 export function chartModelToGrid(
   model: ChartModel,
-  meta: ChartMeta | null,
+  meta: { unit?: string } | null,
 ): { data: GridData[]; columns: ColDef[] } {
   if (model.periods.length === 0) return { data: [], columns: [] };
 

@@ -1,5 +1,5 @@
 import { Loader } from "@epam/statgpt-ui-components";
-import type { BridgePhase } from "../proxy/types";
+import type { BridgePhase } from "../bridge/types";
 import { Centered } from "./Centered";
 
 // Renders the pre-ready / terminal bridge phases. App only mounts this when

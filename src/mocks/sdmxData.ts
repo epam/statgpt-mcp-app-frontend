@@ -1,13 +1,20 @@
-import type { ChartMeta, ChartModel } from "../sdmx/parse";
+import type { ChartModel, WidgetMeta } from "../sdmx/parse";
 
-export const mockMeta: ChartMeta = {
+export const mockMeta: WidgetMeta = {
   title: "Germany — Real GDP Growth",
-  unit: "% YoY",
-  frequency: "A",
-  country: "DEU",
-  countryName: "Germany",
-  query: { country: "DEU", indicator: "GDP_GROWTH" },
-  fetchToolName: "fetch_sdmx_data",
+  queries: [
+    {
+      sdmx: {
+        context: "dataflow",
+        agency_id: "IMF.STA",
+        resource_id: "QGDP",
+        version: "1.0",
+        key: "DEU.B1GQ.....",
+        params: { startPeriod: "2010" },
+      },
+    },
+  ],
+  sdmxProxyToolName: "sdmx_proxy",
 };
 
 export const mockModel: ChartModel = {
