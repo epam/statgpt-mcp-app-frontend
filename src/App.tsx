@@ -7,7 +7,6 @@ import { ConnectionStatus } from "./components/ConnectionStatus";
 import { DataView } from "./components/DataView";
 import { ErrorBanner } from "./components/ErrorBanner";
 import { ExplorerHeader } from "./components/ExplorerHeader";
-import { SupersededBanner } from "./components/SupersededBanner";
 
 export default function App() {
     const { snapshot, meta, model, loading, error, canFetch, refresh } =
@@ -18,7 +17,7 @@ export default function App() {
         return {
             type: "custom_data_grid" as const,
             title: meta?.title ?? "Data",
-            grid_data: chartModelToGrid(model, meta),
+            grid_data: chartModelToGrid(model, null),
         };
     }, [model, meta]);
 
@@ -27,7 +26,7 @@ export default function App() {
         return {
             type: "custom_chart" as const,
             title: meta?.title ?? "Chart",
-            charting_data: chartModelToChartingData(model, meta),
+            charting_data: chartModelToChartingData(model, null),
         };
     }, [model, meta]);
 
@@ -40,8 +39,6 @@ export default function App() {
                 />
             ) : (
                 <div className="flex flex-col gap-4 p-4">
-                    {snapshot.superseded && <SupersededBanner />}
-
                     <ExplorerHeader
                         meta={meta}
                         loading={loading}

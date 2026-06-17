@@ -3,9 +3,10 @@
   "private": true,
   "version": "0.1.0",
   "type": "module",
-  "description": "Frontend for an MCP app inner widget — loaded as a second iframe inside statgpt-mcp-apps-prototype. Speaks the mcpapp/proxy/* protocol and renders tool-result data (SDMX explorer) with @epam/statgpt-* libs + echarts.",
+  "description": "MCP App widget — speaks the spec io.modelcontextprotocol/ui protocol via @modelcontextprotocol/ext-apps and renders SDMX data (ag-grid table + echarts chart) with @epam/statgpt-* libs.",
   "scripts": {
     "start": "vite --port 4300 --strictPort",
+    "build:local": "VITE_BASE_URL=http://localhost:4300 tsc --noEmit && VITE_BASE_URL=http://localhost:4300 vite build",
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview --port 4300 --strictPort"
   },
@@ -14,6 +15,7 @@
     "@epam/statgpt-sdmx-toolkit": "0.7.0-dev.25",
     "@epam/statgpt-shared-toolkit": "0.7.0-dev.25",
     "@epam/statgpt-ui-components": "0.7.0-dev.25",
+    "@modelcontextprotocol/ext-apps": "^1.7.4",
     "ag-grid-community": "33.3.2",
     "ag-grid-react": "^33.3.2",
     "classnames": "^2.5.1",
@@ -24,6 +26,7 @@
   },
   "devDependencies": {
     "@tailwindcss/typography": "^0.5.16",
+    "@types/node": "^25.9.3",
     "@types/react": "^19.2.0",
     "@types/react-dom": "^19.1.6",
     "@vitejs/plugin-react": "^4.5.2",
