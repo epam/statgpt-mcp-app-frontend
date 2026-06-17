@@ -12,10 +12,7 @@
 
 @use "./colors.scss";
 @use "@epam/statgpt-ui-components/styles-tailwind.scss";
-@use "ag-grid-community/styles/ag-grid.css";
-@use "ag-grid-community/styles/ag-theme-quartz.css";
 @use "./fonts.scss";
-@use "./grid.scss";
 @use "./chart-attachment.scss";
 
 html,
@@ -30,11 +27,14 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-// The host sizes the inner iframe to a fixed (short) viewport and does not
-// grow it to our content, so #root must be its own scroll container —
-// otherwise taller content (chart + table) is clipped with no way to scroll.
+// Fixed-height strategy (FRONTEND.md §3): the widget declares its own height
+// via ui/notifications/size-changed; the host sizes the iframe to match.
+// min-height ensures a sensible reported height when the host creates the
+// iframe without a pre-set height (MCPJam dynamic mode). height: 100% fills
+// the container when the host does pre-size the iframe (Claude.ai fixed mode).
 #root {
   height: 100%;
+  min-height: 480px;
   overflow-y: auto;
   overflow-x: hidden;
 }
