@@ -15,7 +15,15 @@ export interface WidgetMeta {
 
 export function extractWidgetMeta(toolResult: unknown): WidgetMeta | null {
   if (!toolResult || typeof toolResult !== "object") return null;
-  const t = toolResult as Partial<WidgetToolResult>;
+  const r = toolResult as Record<string, unknown>;
+  // Unwrap notification-params envelope { content, structuredContent, isError }
+  // if the direct object doesn't carry the WidgetToolResult fields.
+  const candidate = (
+    !Array.isArray(r.queries) &&
+    r.structuredContent != null &&
+    typeof r.structuredContent === "object"
+  ) ? r.structuredContent : toolResult;
+  const t = candidate as Partial<WidgetToolResult>;
   if (!Array.isArray(t.queries) || !t.tools?.sdmx_proxy) return null;
   return {
     title: typeof t.title === "string" ? t.title : undefined,
