@@ -28,7 +28,7 @@ export function createSpecBridge(): HostBridge {
     sdkApp = new App({ name: "statgpt-data-widget", version: "0.1.0" }, {}, { autoResize: true });
 
     sdkApp.ontoolresult = (params) => {
-      patch({ toolResult: params.structuredContent ?? null });
+      patch({ toolResult: unwrapStructured(params.structuredContent) ?? null });
     };
 
     sdkApp.ontoolcancelled = (params) => {
