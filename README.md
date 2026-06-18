@@ -1,0 +1,1 @@
+# StatGPT MCP App Frontend
