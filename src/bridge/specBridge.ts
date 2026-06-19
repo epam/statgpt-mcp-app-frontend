@@ -1,5 +1,6 @@
 import { App } from "@modelcontextprotocol/ext-apps";
 import type { McpUiHostContext } from "@modelcontextprotocol/ext-apps";
+import { APP_NAME, APP_VERSION } from "../app.meta";
 import { BridgeError, type BridgeSnapshot, type HostBridge } from "./types";
 import { unwrapStructured } from "./utils";
 
@@ -25,7 +26,7 @@ export function createSpecBridge(): HostBridge {
     if (started) return;
     started = true;
 
-    sdkApp = new App({ name: "statgpt-data-widget", version: "0.1.0" }, {}, { autoResize: true });
+    sdkApp = new App({ name: APP_NAME, version: APP_VERSION }, {}, { autoResize: true });
 
     sdkApp.ontoolresult = (params) => {
       patch({ toolResult: unwrapStructured(params.structuredContent) ?? null });
