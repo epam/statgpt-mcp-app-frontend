@@ -1,0 +1,1 @@
+export const MAX_PERIODS_WITH_SYMBOLS = 40;
