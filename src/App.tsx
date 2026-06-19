@@ -4,6 +4,7 @@ import { chartModelToGrid } from "./adapters/chartModelToGrid";
 import { chartModelToChartingData } from "./adapters/chartModelToChartingData";
 import { AppProviders } from "./components/AppProviders";
 import { ConnectionStatus } from "./components/ConnectionStatus";
+import { ATTACHMENT_TYPE } from "./constants/attachmentTypes";
 import { DataView } from "./components/DataView";
 import { ErrorBanner } from "./components/ErrorBanner";
 import { ExplorerHeader } from "./components/ExplorerHeader";
@@ -15,7 +16,7 @@ export default function App() {
     const gridAttachment = useMemo(() => {
         if (!model) return undefined;
         return {
-            type: "custom_data_grid" as const,
+            type: ATTACHMENT_TYPE.CUSTOM_DATA_GRID,
             title: meta?.title ?? "Data",
             grid_data: chartModelToGrid(model, null),
         };
@@ -24,7 +25,7 @@ export default function App() {
     const chartAttachment = useMemo(() => {
         if (!model) return undefined;
         return {
-            type: "custom_chart" as const,
+            type: ATTACHMENT_TYPE.CUSTOM_CHART,
             title: meta?.title ?? "Chart",
             charting_data: chartModelToChartingData(model, null),
         };
