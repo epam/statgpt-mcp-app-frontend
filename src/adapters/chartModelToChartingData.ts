@@ -1,4 +1,5 @@
 import type { ChartingData, ChartUnit } from "@epam/statgpt-conversation-view";
+import { MAX_PERIODS_WITH_SYMBOLS } from "../constants/chart";
 import type { ChartModel } from "../sdmx/parse";
 
 export function chartModelToChartingData(
@@ -23,7 +24,7 @@ export function chartModelToChartingData(
           name: s.name,
           data: s.data,
           smooth: false,
-          showSymbol: model.periods.length <= 40,
+          showSymbol: model.periods.length <= MAX_PERIODS_WITH_SYMBOLS,
           connectNulls: false,
         },
       ],
