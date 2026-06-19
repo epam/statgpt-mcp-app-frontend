@@ -5,17 +5,18 @@ import {
 } from "@epam/statgpt-conversation-view";
 import type { ChartingData, GridData } from "@epam/statgpt-conversation-view";
 import type { ColDef } from "ag-grid-community";
+import { ATTACHMENT_TYPE } from "../constants/attachmentTypes";
 
 type Tab = "grid" | "chart";
 
 interface GridAttachment {
-    type: "custom_data_grid";
+    type: typeof ATTACHMENT_TYPE.CUSTOM_DATA_GRID;
     title: string;
     grid_data?: { data: GridData[]; columns: ColDef[] };
 }
 
 interface ChartAttachment {
-    type: "custom_chart";
+    type: typeof ATTACHMENT_TYPE.CUSTOM_CHART;
     title: string;
     charting_data?: ChartingData;
 }
