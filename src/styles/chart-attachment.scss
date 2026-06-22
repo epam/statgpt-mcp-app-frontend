@@ -7,3 +7,24 @@
     @apply border border-neutrals-500 rounded mt-4 px-3 py-5;
   }
 }
+
+:root[data-display-mode="pip"] .chart-area {
+  overflow: auto;
+}
+
+:root[data-display-mode="fullscreen"] .chart-area {
+  overflow: hidden;
+}
+
+:root[data-display-mode="inline"] .chart-attachment {
+  height: 400px;
+  max-height: 400px;
+}
+
+:root[data-display-mode="inline"] .chart-area {
+  flex: 1;
+  height: unset;
+  min-height: 0;
+  max-height: none;
+  overflow: hidden;
+}
