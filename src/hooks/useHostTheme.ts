@@ -1,20 +1,15 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import {
     applyDocumentTheme,
     applyHostStyleVariables,
 } from "@modelcontextprotocol/ext-apps";
 import type { McpUiHostContext } from "@modelcontextprotocol/ext-apps";
 
-// "__mcp-host-fonts" is the private element ID used by applyHostFonts in the SDK.
-// We manage the element directly so font CSS updates are applied on every hostContext
-// change, bypassing the SDK's one-shot guard. Verify this ID against
-// @modelcontextprotocol/ext-apps/dist/src/app.js if upgrading the SDK.
-const FONT_ELEMENT_ID = "__mcp-host-fonts";
-
 export function useHostTheme(hostContext: McpUiHostContext | undefined): void {
     const theme = hostContext?.theme;
     const variables = hostContext?.styles?.variables;
     const fontCss = hostContext?.styles?.css?.fonts;
+    const fontStyleRef = useRef<HTMLStyleElement | null>(null);
 
     useEffect(() => {
         if (!theme) return;
@@ -36,18 +31,19 @@ export function useHostTheme(hostContext: McpUiHostContext | undefined): void {
     }, [variables]);
 
     useEffect(() => {
-        if (!fontCss) return;
-        let el = document.getElementById(
-            FONT_ELEMENT_ID,
-        ) as HTMLStyleElement | null;
-        if (!el) {
-            el = document.createElement("style");
-            el.id = FONT_ELEMENT_ID;
-            document.head.appendChild(el);
+        if (!fontCss) {
+            fontStyleRef.current?.remove();
+            fontStyleRef.current = null;
+            return;
         }
-        el.textContent = fontCss;
+        if (!fontStyleRef.current) {
+            fontStyleRef.current = document.createElement("style");
+            document.head.appendChild(fontStyleRef.current);
+        }
+        fontStyleRef.current.textContent = fontCss;
         return () => {
-            document.getElementById(FONT_ELEMENT_ID)?.remove();
+            fontStyleRef.current?.remove();
+            fontStyleRef.current = null;
         };
     }, [fontCss]);
 }
