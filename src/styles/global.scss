@@ -38,3 +38,14 @@ body {
   height: var(--mcp-container-height, 100vh);
   min-height: unset;
 }
+
+:root[data-theme="dark"] .ag-theme-quartz {
+  --ag-background-color: var(--color-background-primary);
+  --ag-foreground-color: var(--color-text-primary);
+  --ag-header-background-color: var(--color-background-secondary);
+  --ag-header-foreground-color: var(--color-text-secondary);
+  --ag-secondary-foreground-color: var(--color-text-tertiary);
+  --ag-border-color: var(--color-border-tertiary);
+  --ag-row-hover-color: var(--color-background-secondary);
+  --ag-odd-row-background-color: var(--color-background-tertiary);
+}
