@@ -5,6 +5,10 @@ import {
 } from "@modelcontextprotocol/ext-apps";
 import type { McpUiHostContext } from "@modelcontextprotocol/ext-apps";
 
+// "__mcp-host-fonts" is the private element ID used by applyHostFonts in the SDK.
+// We manage the element directly so font CSS updates are applied on every hostContext
+// change, bypassing the SDK's one-shot guard. Verify this ID against
+// @modelcontextprotocol/ext-apps/dist/src/app.js if upgrading the SDK.
 const FONT_ELEMENT_ID = "__mcp-host-fonts";
 
 export function useHostTheme(hostContext: McpUiHostContext | undefined): void {
