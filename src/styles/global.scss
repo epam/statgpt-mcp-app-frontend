@@ -17,7 +17,7 @@
 
 html,
 body {
-  height: 100%;
+  min-height: 100%;
 }
 
 body {
@@ -27,14 +27,14 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-// Fixed-height strategy (FRONTEND.md §3): the widget declares its own height
-// via ui/notifications/size-changed; the host sizes the iframe to match.
-// min-height ensures a sensible reported height when the host creates the
-// iframe without a pre-set height (MCPJam dynamic mode). height: 100% fills
-// the container when the host does pre-size the iframe (Claude.ai fixed mode).
 #root {
-  height: 100%;
   min-height: 480px;
   overflow-y: auto;
   overflow-x: hidden;
+}
+
+:root[data-display-mode="pip"] #root,
+:root[data-display-mode="fullscreen"] #root {
+  height: var(--mcp-container-height, 100vh);
+  min-height: unset;
 }

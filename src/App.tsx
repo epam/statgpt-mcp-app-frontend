@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 import { useSdmxData } from "./hooks/useSdmxData";
+import { useHostLayout } from "./hooks/useHostLayout";
 import { chartModelToGrid } from "./adapters/chartModelToGrid";
 import { chartModelToChartingData } from "./adapters/chartModelToChartingData";
 import { AppProviders } from "./components/AppProviders";
@@ -12,6 +13,8 @@ import { ExplorerHeader } from "./components/ExplorerHeader";
 export default function App() {
     const { snapshot, meta, model, loading, error, canFetch, refresh } =
         useSdmxData();
+
+    const { isFillHeight } = useHostLayout(snapshot.hostContext);
 
     const gridAttachment = useMemo(() => {
         if (!model) return undefined;
@@ -39,7 +42,7 @@ export default function App() {
                     lastError={snapshot.lastError}
                 />
             ) : (
-                <div className="flex flex-col gap-4 p-4">
+                <div className={isFillHeight ? "flex flex-col h-full gap-4 p-4" : "flex flex-col gap-4 p-4"}>
                     <ExplorerHeader
                         meta={meta}
                         loading={loading}
@@ -52,6 +55,7 @@ export default function App() {
                     <DataView
                         gridAttachment={gridAttachment}
                         chartAttachment={chartAttachment}
+                        fillHeight={isFillHeight}
                     />
                 </div>
             )}
