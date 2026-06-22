@@ -9,11 +9,9 @@ import { ConnectionStatus } from "./components/ConnectionStatus";
 import { ATTACHMENT_TYPE } from "./constants/attachmentTypes";
 import { DataView } from "./components/DataView";
 import { ErrorBanner } from "./components/ErrorBanner";
-import { ExplorerHeader } from "./components/ExplorerHeader";
 
 export default function App() {
-    const { snapshot, meta, model, loading, error, canFetch, refresh } =
-        useSdmxData();
+    const { snapshot, meta, model, error } = useSdmxData();
 
     const { isFillHeight } = useHostLayout(snapshot.hostContext);
 
@@ -44,13 +42,6 @@ export default function App() {
                 />
             ) : (
                 <div className={classNames("flex flex-col gap-4 p-4", { "h-full": isFillHeight })}>
-                    <ExplorerHeader
-                        meta={meta}
-                        loading={loading}
-                        canRefresh={canFetch}
-                        onRefresh={refresh}
-                    />
-
                     {error && <ErrorBanner message={error} />}
 
                     <DataView
