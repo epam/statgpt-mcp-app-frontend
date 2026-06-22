@@ -14,13 +14,14 @@
   /* Neutrals — aliased to Claude structural tokens */
   --neutrals-1000: var(--color-text-primary, #2b2b2d);
   --neutrals-900: var(--color-text-secondary, #3f404a);
+  /* neutrals-800 and -700 both map to tertiary — Claude has no 4th solid text step */
   --neutrals-800: var(--color-text-tertiary, #757575);
   --neutrals-700: var(--color-text-tertiary, #89898b);
   --neutrals-600: var(--color-border-primary, #cfcfcf);
   --neutrals-500: var(--color-border-secondary, #dddfe8);
   --neutrals-400: var(--color-border-tertiary, #e9eef6);
   --neutrals-300: var(--color-background-secondary, #f0f4f8);
-  --neutrals-200: var(--color-background-secondary, #f3f5ff);
+  --neutrals-200: var(--color-background-tertiary, #f3f5ff);
   --neutrals-100: var(--color-background-tertiary, #f3f6fb);
 
   /* Hues — brand blue shades, kept hardcoded */
