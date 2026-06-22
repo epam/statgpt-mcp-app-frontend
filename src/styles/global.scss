@@ -39,6 +39,10 @@ body {
   min-height: unset;
 }
 
+.ag-theme-quartz {
+  --ag-font-family: var(--font-sans);
+}
+
 :root[data-theme="dark"] .ag-theme-quartz {
   --ag-background-color: var(--color-background-primary);
   --ag-foreground-color: var(--color-text-primary);
