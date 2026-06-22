@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import classNames from "classnames";
 import { useSdmxData } from "./hooks/useSdmxData";
 import { useHostLayout } from "./hooks/useHostLayout";
 import { chartModelToGrid } from "./adapters/chartModelToGrid";
@@ -42,7 +43,7 @@ export default function App() {
                     lastError={snapshot.lastError}
                 />
             ) : (
-                <div className={isFillHeight ? "flex flex-col h-full gap-4 p-4" : "flex flex-col gap-4 p-4"}>
+                <div className={classNames("flex flex-col gap-4 p-4", { "h-full": isFillHeight })}>
                     <ExplorerHeader
                         meta={meta}
                         loading={loading}
