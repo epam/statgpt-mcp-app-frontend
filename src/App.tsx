@@ -2,6 +2,7 @@ import { useMemo } from "react";
 import classNames from "classnames";
 import { useSdmxData } from "./hooks/useSdmxData";
 import { useHostLayout } from "./hooks/useHostLayout";
+import { useHostTheme } from "./hooks/useHostTheme";
 import { chartModelToGrid } from "./adapters/chartModelToGrid";
 import { chartModelToChartingData } from "./adapters/chartModelToChartingData";
 import { AppProviders } from "./components/AppProviders";
@@ -13,6 +14,7 @@ import { ErrorBanner } from "./components/ErrorBanner";
 export default function App() {
     const { snapshot, meta, model, error } = useSdmxData();
 
+    useHostTheme(snapshot.hostContext);
     const { isFillHeight } = useHostLayout(snapshot.hostContext);
 
     const gridAttachment = useMemo(() => {
