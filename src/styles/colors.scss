@@ -38,9 +38,9 @@
 
   /* Semantic — aliased to Claude state tokens */
   --semantic-error: var(--color-text-danger, #d6323e);
-  --semantic-error-light: var(--color-background-danger, #fbeaec);
+  --semantic-error-light: var(--color-background-danger, light-dark(#fbeaec, #602a28));
   --semantic-warning: var(--color-text-warning, #d4c000);
-  --semantic-warning-light: var(--color-background-warning, #fbf9e5);
+  --semantic-warning-light: var(--color-background-warning, light-dark(#fbf9e5, #483a0f));
   --semantic-success: var(--color-text-success, #00cc6f);
 
   /* Gradients — brand, kept hardcoded */
