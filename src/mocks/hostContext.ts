@@ -48,7 +48,7 @@ export const MOCK_HOST_CONTEXT_LIGHT: McpUiHostContext = {
             "--color-ring-danger": "rgba(167, 61, 57, 0.5)",
             "--color-ring-success": "rgba(67, 116, 38, 0.5)",
             "--color-ring-warning": "rgba(128, 92, 31, 0.5)",
-            "--font-sans": "Anthropic Sans, sans-serif",
+            "--font-sans": "Caveat, cursive",
             "--font-mono": "ui-monospace, monospace",
             "--font-weight-normal": "400",
             "--font-weight-medium": "500",
@@ -88,7 +88,9 @@ export const MOCK_HOST_CONTEXT_LIGHT: McpUiHostContext = {
             "--shadow-md": "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1)",
             "--shadow-lg": "0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1)",
         },
-        css: { fonts: "" },
+        css: {
+            fonts: "@import url('https://fonts.googleapis.com/css2?family=Caveat:wght@400;500;600;700&display=swap');",
+        },
     },
 };
 
@@ -140,7 +142,7 @@ export const MOCK_HOST_CONTEXT_DARK: McpUiHostContext = {
             "--color-ring-danger": "rgba(205, 92, 88, 0.5)",
             "--color-ring-success": "rgba(89, 145, 48, 0.5)",
             "--color-ring-warning": "rgba(168, 120, 41, 0.5)",
-            "--font-sans": "Anthropic Sans, sans-serif",
+            "--font-sans": "Chelsea Market, cursive",
             "--font-mono": "ui-monospace, monospace",
             "--font-weight-normal": "400",
             "--font-weight-medium": "500",
@@ -180,6 +182,8 @@ export const MOCK_HOST_CONTEXT_DARK: McpUiHostContext = {
             "--shadow-md": "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1)",
             "--shadow-lg": "0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1)",
         },
-        css: { fonts: "" },
+        css: {
+            fonts: "@import url('https://fonts.googleapis.com/css2?family=Chelsea+Market&display=swap');",
+        },
     },
 };
