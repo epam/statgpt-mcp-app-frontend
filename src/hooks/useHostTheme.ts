@@ -37,7 +37,9 @@ export function useHostTheme(hostContext: McpUiHostContext | undefined): void {
 
     useEffect(() => {
         if (!fontCss) return;
-        let el = document.getElementById(FONT_ELEMENT_ID) as HTMLStyleElement | null;
+        let el = document.getElementById(
+            FONT_ELEMENT_ID,
+        ) as HTMLStyleElement | null;
         if (!el) {
             el = document.createElement("style");
             el.id = FONT_ELEMENT_ID;
