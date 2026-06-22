@@ -24,15 +24,16 @@ interface ChartAttachment {
 interface Props {
     gridAttachment: GridAttachment | undefined;
     chartAttachment: ChartAttachment | undefined;
+    fillHeight?: boolean;
 }
 
-export function DataView({ gridAttachment, chartAttachment }: Props) {
+export function DataView({ gridAttachment, chartAttachment, fillHeight }: Props) {
     const [activeTab, setActiveTab] = useState<Tab>("grid");
 
     if (!gridAttachment && !chartAttachment) return null;
 
     return (
-        <div className="flex flex-col gap-4">
+        <div className={fillHeight ? "flex flex-col flex-1 min-h-0 gap-4" : "flex flex-col gap-4"}>
             <div className="flex border-b border-neutrals-400">
                 {(["grid", "chart"] as Tab[]).map((tab) => (
                     <button
@@ -50,12 +51,22 @@ export function DataView({ gridAttachment, chartAttachment }: Props) {
                 ))}
             </div>
 
-            {activeTab === "grid" && gridAttachment && (
-                <CustomDataGridAttachment attachment={gridAttachment} />
-            )}
-            {activeTab === "chart" && chartAttachment && (
-                <CustomChartAttachment attachment={chartAttachment} />
-            )}
+            <div className={fillHeight ? "flex-1 min-h-0" : ""}>
+                {activeTab === "grid" && gridAttachment && (
+                    <CustomDataGridAttachment
+                        attachment={gridAttachment}
+                        fillHeight={fillHeight}
+                        fixHeight={!fillHeight}
+                    />
+                )}
+                {activeTab === "chart" && chartAttachment && (
+                    <CustomChartAttachment
+                        attachment={chartAttachment}
+                        fillHeight={fillHeight}
+                        fixHeight={!fillHeight}
+                    />
+                )}
+            </div>
         </div>
     );
 }
