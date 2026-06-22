@@ -43,7 +43,11 @@ export default function App() {
                     lastError={snapshot.lastError}
                 />
             ) : (
-                <div className={classNames("flex flex-col gap-4 p-4", { "h-full": isFillHeight })}>
+                <div
+                    className={classNames("flex flex-col gap-4 p-4", {
+                        "h-full": isFillHeight,
+                    })}
+                >
                     {error && <ErrorBanner message={error} />}
 
                     <DataView

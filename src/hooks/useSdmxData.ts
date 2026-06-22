@@ -10,11 +10,21 @@ import {
 } from "../sdmx/parse";
 import { dataPath } from "../sdmx/buildPaths";
 import { mockMeta, mockModel } from "../mocks/sdmxData";
+import { MOCK_HOST_CONTEXT_DARK, MOCK_HOST_CONTEXT_LIGHT } from "../mocks/hostContext";
 
 const USE_DEV_MODE =
   import.meta.env.DEV && typeof window !== "undefined" && window.parent === window;
 
-const DEV_SNAPSHOT: BridgeSnapshot = { phase: "ready", toolResult: null };
+const DEV_THEME =
+  typeof window !== "undefined"
+    ? new URLSearchParams(window.location.search).get("theme") ?? "light"
+    : "light";
+
+const DEV_SNAPSHOT: BridgeSnapshot = {
+  phase: "ready",
+  toolResult: null,
+  hostContext: DEV_THEME === "dark" ? MOCK_HOST_CONTEXT_DARK : MOCK_HOST_CONTEXT_LIGHT,
+};
 
 export interface SdmxData {
   snapshot: BridgeSnapshot;
