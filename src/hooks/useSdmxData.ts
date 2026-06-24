@@ -74,11 +74,14 @@ export function useSdmxData(): SdmxData {
         const token = ++fetchToken.current;
         setLoading(true);
         setError(null);
+        console.log("[widget] callTool →", meta.sdmxProxyToolName, { path });
         try {
             const raw = await bridge.callTool(meta.sdmxProxyToolName, { path });
+            console.log("[widget] callTool ←", meta.sdmxProxyToolName, raw);
             if (token !== fetchToken.current) return;
             setModel(normalizeSdmxDataResponse(raw));
         } catch (e) {
+            console.error("[widget] callTool ✗", meta.sdmxProxyToolName, e);
             if (token !== fetchToken.current) return;
             const err = e as { message?: string };
             setError(err.message || String(e));
