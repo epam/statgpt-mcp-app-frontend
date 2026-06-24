@@ -49,7 +49,7 @@ export default defineConfig({
     strictPort: true,
     cors: true,
   },
-  preview: { port: 4300, strictPort: true },
+  preview: { port: 4300, strictPort: true, cors: true },
   css: {
     preprocessorOptions: {
       scss: {

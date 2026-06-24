@@ -9,21 +9,39 @@ export function chartModelToGrid(
   if (model.periods.length === 0) return { data: [], columns: [] };
 
   const unitSuffix = meta?.unit ? ` (${meta.unit})` : "";
+  const seriesFieldKey = (i: number) => `value_${i}`;
+
+  const dimDefs = model.series[0]?.dimensions ?? [];
+  const dimensionColumns: ColDef[] = dimDefs.map((dim) => ({
+    field: dim.id,
+    headerName: dim.name,
+    flex: 1,
+  }));
+
+  const valueColumns: ColDef[] = model.series.map((_, i) => ({
+    field: seriesFieldKey(i),
+    headerName: `Value${unitSuffix}`,
+    flex: 1,
+    type: "numericColumn",
+  }));
 
   const columns: ColDef[] = [
-    { field: "period", headerName: "Period", width: 100 },
-    ...model.series.map((s) => ({
-      field: s.name,
-      headerName: `${s.name}${unitSuffix}`,
-      flex: 1,
-      type: "numericColumn",
-    })),
+    ...(model.agencyId ? [{ field: "agency", headerName: "Agency", width: 100 }] : []),
+    ...(model.datasetName ? [{ field: "dataset_name", headerName: "Dataset", flex: 2 }] : []),
+    ...dimensionColumns,
+    { field: "period", headerName: "Period", width: 120 },
+    ...valueColumns,
   ];
 
   const data: GridData[] = model.periods.map((period, i) => {
     const row: GridData = { period };
-    for (const s of model.series) {
-      row[s.name] = s.data[i];
+    if (model.agencyId) row["agency"] = model.agencyId;
+    if (model.datasetName) row["dataset_name"] = model.datasetName;
+    for (const dim of (model.series[0]?.dimensions ?? [])) {
+      row[dim.id] = dim.valueName;
+    }
+    for (let si = 0; si < model.series.length; si++) {
+      row[seriesFieldKey(si)] = model.series[si].data[i];
     }
     return row;
   });
