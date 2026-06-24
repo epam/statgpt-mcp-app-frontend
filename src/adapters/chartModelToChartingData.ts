@@ -10,18 +10,22 @@ export function chartModelToChartingData(
     return { units: [] };
   }
 
-  const units: ChartUnit[] = model.series.map((s) => ({
+  const units: ChartUnit[] = model.series.map((s) => {
+    const label = s.dimensions.length > 0
+      ? s.dimensions.map((d) => d.valueName).join(" — ")
+      : s.name;
+    return {
     config: {
       animation: false,
       tooltip: { trigger: "axis" },
-      legend: { bottom: 0, type: "scroll", data: [s.name] },
+      legend: { bottom: 0, type: "scroll", data: [label] },
       grid: { left: "3%", right: "4%", top: 24, bottom: 48, containLabel: true },
       xAxis: { type: "category", boundaryGap: false, data: model.periods },
       yAxis: { type: "value", name: meta?.unit, nameLocation: "end", nameGap: 16 },
       series: [
         {
           type: "line",
-          name: s.name,
+          name: label,
           data: s.data,
           smooth: false,
           showSymbol: model.periods.length <= MAX_PERIODS_WITH_SYMBOLS,
@@ -33,7 +37,8 @@ export function chartModelToChartingData(
     isPlottable: true,
     rows: [],
     limitedByRowsAmountTo: undefined,
-  }));
+  };
+  });
 
   return { units };
 }
