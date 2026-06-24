@@ -5,6 +5,7 @@ import { useHostLayout } from "./hooks/useHostLayout";
 import { useHostTheme } from "./hooks/useHostTheme";
 import { chartModelToGrid } from "./adapters/chartModelToGrid";
 import { chartModelToChartingData } from "./adapters/chartModelToChartingData";
+import { chartModelToCrossDatasetGrid } from "./adapters/chartModelToCrossDatasetGrid";
 import { AppProviders } from "./components/AppProviders";
 import { ConnectionStatus } from "./components/ConnectionStatus";
 import { ATTACHMENT_TYPE } from "./constants/attachmentTypes";
@@ -35,6 +36,11 @@ export default function App() {
         };
     }, [model, meta]);
 
+    const crossDatasetGridAttachment = useMemo(() => {
+        if (!model) return undefined;
+        return chartModelToCrossDatasetGrid(model, null);
+    }, [model]);
+
     return (
         <AppProviders>
             {snapshot.phase !== "ready" ? (
@@ -53,6 +59,7 @@ export default function App() {
                     <DataView
                         gridAttachment={gridAttachment}
                         chartAttachment={chartAttachment}
+                        crossDatasetGridAttachment={crossDatasetGridAttachment}
                         fillHeight={isFillHeight}
                     />
                 </div>
