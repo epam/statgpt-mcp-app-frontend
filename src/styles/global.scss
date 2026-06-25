@@ -35,10 +35,15 @@ body {
   overflow-x: hidden;
 }
 
-:root[data-display-mode="pip"] #root,
-:root[data-display-mode="fullscreen"] #root {
-  height: var(--mcp-container-height, 100vh);
+:root[data-display-mode="pip"] #root {
+  height: var(--mcp-container-height, 100dvh);
   min-height: unset;
+}
+
+:root[data-display-mode="fullscreen"] #root {
+  height: 100dvh;
+  min-height: unset;
+  padding-bottom: var(--mcp-safe-area-bottom, 0px);
 }
 
 .ag-theme-quartz {

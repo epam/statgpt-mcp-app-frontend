@@ -3,9 +3,12 @@ import type { McpUiHostContext } from "@modelcontextprotocol/ext-apps";
 
 export interface HostLayout {
     isFillHeight: boolean;
+    locale: string | undefined;
 }
 
-export function useHostLayout(hostContext: McpUiHostContext | undefined): HostLayout {
+export function useHostLayout(
+    hostContext: McpUiHostContext | undefined,
+): HostLayout {
     const displayMode = hostContext?.displayMode;
 
     useEffect(() => {
@@ -20,14 +23,34 @@ export function useHostLayout(hostContext: McpUiHostContext | undefined): HostLa
     useEffect(() => {
         const dims = containerDimensions as Record<string, number> | undefined;
         const h = dims?.height ?? dims?.maxHeight;
+        const w = dims?.width;
         if (h != null) {
-            document.documentElement.style.setProperty('--mcp-container-height', `${h}px`);
+            document.documentElement.style.setProperty("--mcp-container-height", `${h}px`);
         } else {
-            document.documentElement.style.removeProperty('--mcp-container-height');
+            document.documentElement.style.removeProperty("--mcp-container-height");
+        }
+        if (w != null) {
+            document.documentElement.style.setProperty("--mcp-container-width", `${w}px`);
+        } else {
+            document.documentElement.style.removeProperty("--mcp-container-width");
         }
     }, [containerDimensions]);
 
+    const safeAreaInsets = hostContext?.safeAreaInsets;
+    useEffect(() => {
+        (["top", "right", "bottom", "left"] as const).forEach((side) => {
+            const value = safeAreaInsets?.[side];
+            const prop = `--mcp-safe-area-${side}`;
+            if (value != null && value > 0) {
+                document.documentElement.style.setProperty(prop, `${value}px`);
+            } else {
+                document.documentElement.style.removeProperty(prop);
+            }
+        });
+    }, [safeAreaInsets]);
+
     return {
-        isFillHeight: displayMode === 'pip' || displayMode === 'fullscreen',
+        isFillHeight: displayMode === "pip" || displayMode === "fullscreen",
+        locale: hostContext?.locale,
     };
 }
