@@ -12,7 +12,13 @@ import tailwindPlugin from 'eslint-plugin-tailwindcss';
 
 export default [
   {
-    ignores: ['**/node_modules', 'dist/', '**/*.config.js', '**/*.config.mjs'],
+    ignores: [
+      '**/node_modules',
+      'dist/',
+      '**/*.config.js',
+      '**/*.config.mjs',
+      '**/*.config.ts',
+    ],
   },
 
   // ── Core TypeScript / React rules ────────────────────────────────────────
