@@ -6,6 +6,9 @@ export interface HostLayout {
   locale: string | undefined;
 }
 
+/**
+ * Syncs host context layout values onto CSS custom properties and returns derived layout flags for the React tree.
+ */
 export function useHostLayout(
   hostContext: McpUiHostContext | undefined,
 ): HostLayout {

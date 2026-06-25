@@ -5,6 +5,9 @@ import {
 } from '@modelcontextprotocol/ext-apps';
 import type { McpUiHostContext } from '@modelcontextprotocol/ext-apps';
 
+/**
+ * Applies the host's theme, CSS variable overrides, and font styles to the document, removing them on unmount.
+ */
 export function useHostTheme(hostContext: McpUiHostContext | undefined): void {
   const theme = hostContext?.theme;
   const variables = hostContext?.styles?.variables;
