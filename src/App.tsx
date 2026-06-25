@@ -52,7 +52,8 @@ export default function App() {
             ) : (
                 <div
                     className={classNames("flex flex-col gap-4 p-4", {
-                        "h-full": isFillHeight || (loading && !model),
+                        "h-full": isFillHeight,
+                        "min-h-[var(--mcp-widget-min-height)]": !isFillHeight && loading && !model,
                     })}
                 >
                     {error && <ErrorBanner message={error} />}
