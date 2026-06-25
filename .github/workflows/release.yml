@@ -1,0 +1,25 @@
+name: Release Workflow
+
+on:
+  push:
+    branches: [development, release-*]
+
+permissions:
+  contents: write
+  packages: write
+  security-events: write
+  id-token: write
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  release:
+    uses: epam/ai-dial-ci/.github/workflows/node_release.yml@4.7.0
+    with:
+      promote: true
+      publish-enabled: false
+      draft-stable-releases: true
+      node-version: "24"
+    secrets: inherit
