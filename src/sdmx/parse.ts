@@ -1,6 +1,5 @@
 import { getParsedResponse, sortPeriods } from '@epam/statgpt-sdmx-toolkit';
 import type { DataMessage } from '@epam/statgpt-sdmx-toolkit';
-import type { SdmxQuery, WidgetToolResult } from '../bridge/types';
 
 export interface ChartDimension {
   id: string;
@@ -18,38 +17,6 @@ export interface ChartModel {
     dimensions: ChartDimension[];
     data: (number | null)[];
   }[];
-}
-
-export interface WidgetMeta {
-  title?: string;
-  queries: SdmxQuery[];
-  sdmxProxyToolName: string;
-}
-
-/**
- * Extracts widget metadata from an opaque MCP tool result, handling both direct
- * `WidgetToolResult` objects and the notification-params envelope shape
- * `{ content, structuredContent, isError }`.
- *
- * @param toolResult - The raw, untyped value returned by the MCP tool call.
- * @returns The parsed `WidgetMeta` if the result contains the expected fields, or `null` otherwise.
- */
-export function extractWidgetMeta(toolResult: unknown): WidgetMeta | null {
-  if (!toolResult || typeof toolResult !== 'object') return null;
-  const r = toolResult as Record<string, unknown>;
-  const candidate =
-    !Array.isArray(r.queries) &&
-    r.structuredContent != null &&
-    typeof r.structuredContent === 'object'
-      ? r.structuredContent
-      : toolResult;
-  const t = candidate as Partial<WidgetToolResult>;
-  if (!Array.isArray(t.queries) || !t.tools?.sdmx_proxy) return null;
-  return {
-    title: typeof t.title === 'string' ? t.title : undefined,
-    queries: t.queries,
-    sdmxProxyToolName: t.tools.sdmx_proxy,
-  };
 }
 
 /**
@@ -122,4 +89,40 @@ export function normalizeSdmxDataResponse(raw: unknown): ChartModel {
   });
 
   return { agencyId, datasetName, periods, series };
+}
+
+/**
+ * Merges multiple `ChartModel` instances into one by taking the union of all
+ * time periods and concatenating all series. Useful when multiple SDMX queries
+ * are fetched in parallel and their results need to be displayed together.
+ *
+ * @param models - Array of `ChartModel` instances to merge.
+ * @returns A single `ChartModel` containing all series across the unified period axis.
+ */
+export function mergeChartModels(models: ChartModel[]): ChartModel {
+  if (models.length === 0) return { periods: [], series: [] };
+  if (models.length === 1) return models[0];
+
+  const periodSet = new Set<string>();
+  for (const m of models) {
+    for (const p of m.periods) periodSet.add(p);
+  }
+  const periods = Array.from(periodSet).sort(sortPeriods);
+
+  const series = models.flatMap((m) =>
+    m.series.map((s) => ({
+      ...s,
+      data: periods.map((p) => {
+        const idx = m.periods.indexOf(p);
+        return idx >= 0 ? (s.data[idx] ?? null) : null;
+      }),
+    })),
+  );
+
+  return {
+    agencyId: models[0].agencyId,
+    datasetName: models[0].datasetName,
+    periods,
+    series,
+  };
 }
