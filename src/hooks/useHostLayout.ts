@@ -20,6 +20,9 @@ export function useHostLayout(
     } else {
       delete document.documentElement.dataset.displayMode;
     }
+    return () => {
+      delete document.documentElement.dataset.displayMode;
+    };
   }, [displayMode]);
 
   const containerDimensions = hostContext?.containerDimensions;
