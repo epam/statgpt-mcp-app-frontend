@@ -103,6 +103,16 @@ export default [
     },
   },
 
+  // ── Vitest globals for spec files ────────────────────────────────────────
+  {
+    files: ['**/*.{spec,test}.{ts,tsx}'],
+    languageOptions: {
+      globals: {
+        ...globals.vitest,
+      },
+    },
+  },
+
   // ── Tailwind CSS ─────────────────────────────────────────────────────────
   ...tailwindPlugin.configs['flat/recommended'],
 ];
