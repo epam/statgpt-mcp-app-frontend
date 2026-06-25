@@ -9,17 +9,15 @@ const periodFieldKey = (period: string) => `p_${period}`;
  * a row and each observation period becomes a column.
  *
  * @param model - Parsed SDMX chart model containing series and period data.
- * @param meta - Optional display metadata; `unit` is appended to period column headers when present.
  */
-export function chartModelToCrossDatasetGrid(
-  model: ChartModel,
-  meta: { unit?: string } | null,
-): { data: GridData[]; columns: ColDef[] } {
+export function chartModelToCrossDatasetGrid(model: ChartModel): {
+  data: GridData[];
+  columns: ColDef[];
+} {
   if (model.series.length === 0 || model.periods.length === 0) {
     return { data: [], columns: [] };
   }
 
-  const unitSuffix = meta?.unit ? ` (${meta.unit})` : '';
   const dimDefs = model.series[0]?.dimensions ?? [];
 
   const dimensionColumns: ColDef[] = dimDefs.map((dim) => ({
@@ -31,7 +29,7 @@ export function chartModelToCrossDatasetGrid(
 
   const periodColumns: ColDef[] = model.periods.map((period) => ({
     field: periodFieldKey(period),
-    headerName: `${period}${unitSuffix}`,
+    headerName: period,
     headerTooltip: period,
     width: 100,
     type: 'numericColumn',
