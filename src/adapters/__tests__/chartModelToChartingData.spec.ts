@@ -40,23 +40,23 @@ describe('chartModelToChartingData', () => {
     expect(result.units).toHaveLength(2);
   });
 
-  it('uses joined dimension valueNames as the series label when dimensions are present', () => {
+  it('uses the first dimension valueName as the series label when dimensions are present', () => {
     const model = makeModel({
       series: [
         {
           name: 'Series A',
           dimensions: [
             {
+              id: 'REF_AREA',
+              name: 'Country',
+              valueId: 'DE',
+              valueName: 'Germany',
+            },
+            {
               id: 'FREQ',
               name: 'Frequency',
               valueId: 'A',
               valueName: 'Annual',
-            },
-            {
-              id: 'REF_AREA',
-              name: 'Region',
-              valueId: 'UA',
-              valueName: 'Ukraine',
             },
           ],
           data: [10, 20],
@@ -66,7 +66,7 @@ describe('chartModelToChartingData', () => {
     const result = chartModelToChartingData(model);
     const config = result.units[0].config as Record<string, unknown>;
     const series = (config.series as Array<Record<string, unknown>>)[0];
-    expect(series.name).toBe('Annual — Ukraine');
+    expect(series.name).toBe('Germany');
   });
 
   it('falls back to series.name when dimensions array is empty', () => {
@@ -113,5 +113,20 @@ describe('chartModelToChartingData', () => {
     const result = chartModelToChartingData(makeModel());
     const config = result.units[0].config as Record<string, unknown>;
     expect(config.animation).toBe(false);
+  });
+
+  it('maps series dimensions to DimensionInfo on each ChartUnit', () => {
+    const result = chartModelToChartingData(makeModel());
+    expect(result.units[0].dimensions).toEqual([
+      { id: 'FREQ', title: 'Frequency', value: 'Annual' },
+    ]);
+  });
+
+  it('produces empty dimensions array when series has no dimensions', () => {
+    const model = makeModel({
+      series: [{ name: 'My Series', dimensions: [], data: [10, 20] }],
+    });
+    const result = chartModelToChartingData(model);
+    expect(result.units[0].dimensions).toEqual([]);
   });
 });

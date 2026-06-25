@@ -14,10 +14,7 @@ export function chartModelToChartingData(model: ChartModel): ChartingData {
   }
 
   const units: ChartUnit[] = model.series.map((s) => {
-    const label =
-      s.dimensions.length > 0
-        ? s.dimensions.map((d) => d.valueName).join(' — ')
-        : s.name;
+    const label = s.dimensions[0]?.valueName ?? s.name;
     return {
       config: {
         animation: false,
@@ -47,7 +44,11 @@ export function chartModelToChartingData(model: ChartModel): ChartingData {
           },
         ],
       },
-      dimensions: [],
+      dimensions: s.dimensions.map((d) => ({
+        id: d.id,
+        title: d.name,
+        value: d.valueName,
+      })),
       isPlottable: true,
       rows: [],
       limitedByRowsAmountTo: undefined,
