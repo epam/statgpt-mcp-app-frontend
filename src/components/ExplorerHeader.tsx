@@ -1,5 +1,5 @@
 import { Button } from '@epam/statgpt-ui-components';
-import type { WidgetMeta } from '../sdmx/parse';
+import type { WidgetMeta } from '../bridge/types';
 
 interface Props {
   meta: WidgetMeta | null;

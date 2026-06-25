@@ -1,4 +1,5 @@
-import type { ChartModel, WidgetMeta } from '../sdmx/parse';
+import type { ChartModel } from '../sdmx/parse';
+import type { WidgetMeta } from '../bridge/types';
 
 export const mockMeta: WidgetMeta = {
   title: 'Germany — Real GDP Growth',
