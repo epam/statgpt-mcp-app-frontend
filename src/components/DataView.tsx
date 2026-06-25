@@ -41,6 +41,8 @@ const TAB_LABELS: Record<Tab, string> = {
   'cross-grid': 'Cross Dataset Grid',
 };
 
+const CROSS_DATASET_GRID_TITLE = 'Cross Dataset Grid';
+
 /**
  * DataView renders a tabbed SDMX data panel with Grid, Chart, and Cross Dataset
  * Grid tabs, showing only the tabs for which attachment data is provided.
@@ -81,10 +83,14 @@ export function DataView({
     ...(crossDatasetGridAttachment ? ['cross-grid' as Tab] : []),
   ];
 
+  const effectiveTab: Tab = availableTabs.includes(activeTab)
+    ? activeTab
+    : availableTabs[0];
+
   const crossDatasetAttachment = crossDatasetGridAttachment
     ? {
         type: ATTACHMENT_TYPE.CROSS_DATASET_GRID,
-        title: 'Cross Dataset Grid',
+        title: CROSS_DATASET_GRID_TITLE,
         gridContent: crossDatasetGridAttachment,
       }
     : undefined;
@@ -102,7 +108,7 @@ export function DataView({
             onClick={() => setActiveTab(tab)}
             className={classNames(
               'px-4 py-2 text-sm font-medium capitalize -mb-px border-b-2 transition-colors',
-              activeTab === tab
+              effectiveTab === tab
                 ? 'border-primary text-primary'
                 : 'border-transparent text-neutrals-700 hover:text-neutrals-1000',
             )}
@@ -113,21 +119,21 @@ export function DataView({
       </div>
 
       <div className={classNames({ 'flex-1 min-h-0': fillHeight })}>
-        {activeTab === 'grid' && gridAttachment && (
+        {effectiveTab === 'grid' && gridAttachment && (
           <CustomDataGridAttachment
             attachment={gridAttachment}
             fillHeight={fillHeight}
             fixHeight={!fillHeight}
           />
         )}
-        {activeTab === 'chart' && chartAttachment && (
+        {effectiveTab === 'chart' && chartAttachment && (
           <CustomChartAttachment
             attachment={chartAttachment}
             fillHeight={fillHeight}
             fixHeight={!fillHeight}
           />
         )}
-        {activeTab === 'cross-grid' && crossDatasetAttachment && (
+        {effectiveTab === 'cross-grid' && crossDatasetAttachment && (
           <CrossDatasetGridAttachment
             attachment={crossDatasetAttachment}
             fixHeight={!fillHeight}
