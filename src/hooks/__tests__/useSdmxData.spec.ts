@@ -1,0 +1,187 @@
+import { renderHook, act } from '@testing-library/react';
+import { mockMeta, mockModel } from '../../mocks/sdmxData';
+
+describe('useSdmxData', () => {
+  describe('dev mode', () => {
+    // In jsdom, window.parent === window and import.meta.env.DEV is true,
+    // so USE_DEV_MODE is true and the hook always returns mock data.
+    let useSdmxData: () => import('../useSdmxData').SdmxData;
+
+    beforeAll(async () => {
+      ({ useSdmxData } = await import('../useSdmxData'));
+    });
+
+    it('returns loading: false', () => {
+      const { result } = renderHook(() => useSdmxData());
+      expect(result.current.loading).toBe(false);
+    });
+
+    it('returns error: null', () => {
+      const { result } = renderHook(() => useSdmxData());
+      expect(result.current.error).toBeNull();
+    });
+
+    it('returns canFetch: false', () => {
+      const { result } = renderHook(() => useSdmxData());
+      expect(result.current.canFetch).toBe(false);
+    });
+
+    it('returns the mock model', () => {
+      const { result } = renderHook(() => useSdmxData());
+      expect(result.current.model).toEqual(mockModel);
+    });
+
+    it('returns the mock meta', () => {
+      const { result } = renderHook(() => useSdmxData());
+      expect(result.current.meta).toEqual(mockMeta);
+    });
+
+    it('returns snapshot.phase as "ready"', () => {
+      const { result } = renderHook(() => useSdmxData());
+      expect(result.current.snapshot.phase).toBe('ready');
+    });
+  });
+
+  describe('production mode', () => {
+    let useSdmxData: () => import('../useSdmxData').SdmxData;
+    let mockCallTool: ReturnType<typeof vi.fn>;
+    let currentSnapshot: import('../../bridge/types').BridgeSnapshot;
+
+    const validToolResult = {
+      queries: [
+        {
+          sdmx: {
+            context: 'dataflow',
+            agency_id: 'IMF',
+            resource_id: 'BOP',
+            version: '1.0',
+            key: 'A',
+          },
+        },
+      ],
+      tools: { sdmx_proxy: 'sdmx_proxy' },
+    };
+
+    beforeEach(async () => {
+      mockCallTool = vi.fn();
+      currentSnapshot = {
+        phase: 'connecting',
+        toolResult: null,
+      };
+
+      Object.defineProperty(window, 'parent', {
+        get: () => ({}),
+        configurable: true,
+      });
+
+      vi.resetModules();
+
+      vi.doMock('../../bridge', () => ({
+        bridge: {
+          subscribe: vi.fn(() => () => {}),
+          getSnapshot: vi.fn(() => currentSnapshot),
+          callTool: mockCallTool,
+        },
+      }));
+
+      vi.doMock('../../bridge/useBridge', () => ({
+        useBridgeSnapshot: () => currentSnapshot,
+      }));
+
+      ({ useSdmxData } = await import('../useSdmxData'));
+    });
+
+    afterEach(() => {
+      Object.defineProperty(window, 'parent', {
+        get: () => window,
+        configurable: true,
+      });
+      vi.resetModules();
+      vi.clearAllMocks();
+    });
+
+    it('returns loading: false when phase is "connecting" and there is no toolResult', () => {
+      currentSnapshot = { phase: 'connecting', toolResult: null };
+      const { result } = renderHook(() => useSdmxData());
+      expect(result.current.loading).toBe(false);
+    });
+
+    it('returns canFetch: false when snapshot has no toolResult', () => {
+      currentSnapshot = { phase: 'connecting', toolResult: null };
+      const { result } = renderHook(() => useSdmxData());
+      expect(result.current.canFetch).toBe(false);
+    });
+
+    it('returns canFetch: true when snapshot.toolResult contains a valid WidgetToolResult', async () => {
+      mockCallTool.mockResolvedValue({});
+      currentSnapshot = { phase: 'ready', toolResult: validToolResult };
+      const { result } = renderHook(() => useSdmxData());
+      expect(result.current.canFetch).toBe(true);
+      await act(async () => {
+        await Promise.resolve();
+      });
+    });
+
+    it('calls bridge.callTool when phase becomes "ready" and fetchKey is non-empty', async () => {
+      mockCallTool.mockResolvedValue({});
+
+      currentSnapshot = { phase: 'ready', toolResult: validToolResult };
+
+      const { result } = renderHook(() => useSdmxData());
+
+      await act(async () => {
+        await Promise.resolve();
+      });
+
+      expect(mockCallTool).toHaveBeenCalledWith(
+        'sdmx_proxy',
+        expect.objectContaining({ path: expect.any(String) }),
+      );
+      expect(result.current).toBeDefined();
+    });
+
+    it('sets loading: true while bridge.callTool is in progress', async () => {
+      let resolveCall: (v: unknown) => void;
+      mockCallTool.mockReturnValue(
+        new Promise((r) => {
+          resolveCall = r;
+        }),
+      );
+
+      currentSnapshot = { phase: 'ready', toolResult: validToolResult };
+
+      const { result } = renderHook(() => useSdmxData());
+
+      await act(async () => {
+        await Promise.resolve();
+      });
+
+      expect(result.current.loading).toBe(true);
+
+      await act(async () => {
+        resolveCall!({});
+        await Promise.resolve();
+      });
+    });
+
+    it('sets error when bridge.callTool rejects', async () => {
+      const consoleError = vi
+        .spyOn(console, 'error')
+        .mockImplementation(() => {});
+      mockCallTool.mockRejectedValue(new Error('network failure'));
+
+      currentSnapshot = { phase: 'ready', toolResult: validToolResult };
+
+      const { result } = renderHook(() => useSdmxData());
+
+      await act(async () => {
+        await Promise.resolve();
+        await Promise.resolve();
+      });
+
+      expect(result.current.error).toBe('network failure');
+      expect(result.current.loading).toBe(false);
+      consoleError.mockRestore();
+    });
+  });
+});
