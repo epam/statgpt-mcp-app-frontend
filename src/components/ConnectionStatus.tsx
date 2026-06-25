@@ -1,23 +1,35 @@
-import type { BridgePhase } from "../bridge/types";
-import { Centered } from "./Centered";
-import { Loader } from "./Loader";
+import type { BridgePhase } from '../bridge/types';
+import { Centered } from './Centered';
+import { Loader } from './Loader';
 
 // Renders the pre-ready / terminal bridge phases. App only mounts this when
 // the phase is not "ready", so a fallback covers any unexpected phase.
-export function ConnectionStatus({ phase, lastError }: { phase: BridgePhase; lastError?: string }) {
-  if (phase === "connecting") {
+export function ConnectionStatus({
+  phase,
+  lastError,
+}: {
+  phase: BridgePhase;
+  lastError?: string;
+}) {
+  if (phase === 'connecting') {
     return (
       <Centered>
         <Loader />
-        <p className="mt-3 text-sm text-neutrals-700">Connecting to the host…</p>
+        <p className="mt-3 text-sm text-neutrals-700">
+          Connecting to the host…
+        </p>
       </Centered>
     );
   }
-  if (phase === "error") {
+  if (phase === 'error') {
     return (
       <Centered>
-        <p className="font-semibold text-semantic-error">Could not connect to the host</p>
-        <p className="mt-2 max-w-md text-center text-sm text-neutrals-700">{lastError}</p>
+        <p className="font-semibold text-semantic-error">
+          Could not connect to the host
+        </p>
+        <p className="mt-2 max-w-md text-center text-sm text-neutrals-700">
+          {lastError}
+        </p>
       </Centered>
     );
   }

@@ -1,6 +1,6 @@
-import type { ColDef } from "ag-grid-community";
-import type { GridData } from "@epam/statgpt-conversation-view";
-import type { ChartModel } from "../sdmx/parse";
+import type { ColDef } from 'ag-grid-community';
+import type { GridData } from '@epam/statgpt-conversation-view';
+import type { ChartModel } from '../sdmx/parse';
 
 const periodFieldKey = (period: string) => `p_${period}`;
 
@@ -12,14 +12,14 @@ export function chartModelToCrossDatasetGrid(
     return { data: [], columns: [] };
   }
 
-  const unitSuffix = meta?.unit ? ` (${meta.unit})` : "";
+  const unitSuffix = meta?.unit ? ` (${meta.unit})` : '';
   const dimDefs = model.series[0]?.dimensions ?? [];
 
   const dimensionColumns: ColDef[] = dimDefs.map((dim) => ({
     field: dim.id,
     headerName: dim.name,
     width: 160,
-    pinned: "left" as const,
+    pinned: 'left' as const,
   }));
 
   const periodColumns: ColDef[] = model.periods.map((period) => ({
@@ -27,7 +27,7 @@ export function chartModelToCrossDatasetGrid(
     headerName: `${period}${unitSuffix}`,
     headerTooltip: period,
     width: 100,
-    type: "numericColumn",
+    type: 'numericColumn',
   }));
 
   const columns: ColDef[] = [...dimensionColumns, ...periodColumns];
