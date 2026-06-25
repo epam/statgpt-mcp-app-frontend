@@ -7,12 +7,8 @@ import type { ChartModel } from '../sdmx/parse';
  * by the conversation-view chart component.
  *
  * @param model - Normalized chart data containing period labels and one or more data series.
- * @param meta - Optional display metadata; `unit` is rendered as the y-axis label when provided.
  */
-export function chartModelToChartingData(
-  model: ChartModel,
-  meta: { unit?: string } | null,
-): ChartingData {
+export function chartModelToChartingData(model: ChartModel): ChartingData {
   if (model.periods.length === 0 || model.series.length === 0) {
     return { units: [] };
   }
@@ -37,7 +33,6 @@ export function chartModelToChartingData(
         xAxis: { type: 'category', boundaryGap: false, data: model.periods },
         yAxis: {
           type: 'value',
-          name: meta?.unit,
           nameLocation: 'end',
           nameGap: 16,
         },

@@ -24,7 +24,7 @@ export default function App() {
     return {
       type: ATTACHMENT_TYPE.CUSTOM_DATA_GRID,
       title: meta?.title ?? 'Data',
-      grid_data: chartModelToGrid(model, null),
+      grid_data: chartModelToGrid(model),
     };
   }, [model, meta]);
 
@@ -33,13 +33,13 @@ export default function App() {
     return {
       type: ATTACHMENT_TYPE.CUSTOM_CHART,
       title: meta?.title ?? 'Chart',
-      charting_data: chartModelToChartingData(model, null),
+      charting_data: chartModelToChartingData(model),
     };
   }, [model, meta]);
 
   const crossDatasetGridAttachment = useMemo(() => {
     if (!model) return undefined;
-    return chartModelToCrossDatasetGrid(model, null);
+    return chartModelToCrossDatasetGrid(model);
   }, [model]);
 
   return (
