@@ -4,4 +4,4 @@ import type { HostBridge } from './types';
 export const bridge: HostBridge = createSpecBridge();
 
 export type { HostBridge };
-export type { BridgeSnapshot, BridgePhase } from './types';
+export type { BridgeSnapshot, BridgePhase, WidgetMeta } from './types';

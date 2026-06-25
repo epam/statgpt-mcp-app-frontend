@@ -17,7 +17,7 @@ export interface HostBridge {
 export interface BridgeSnapshot {
   phase: BridgePhase;
   hostContext?: McpUiHostContext;
-  toolResult: unknown | null;
+  toolResult: unknown;
   lastError?: string;
 }
 
@@ -38,6 +38,12 @@ export interface SdmxQuery {
     key: string;
     params?: Record<string, string>;
   };
+}
+
+export interface WidgetMeta {
+  title?: string;
+  queries: SdmxQuery[];
+  sdmxProxyToolName: string;
 }
 
 export class BridgeError extends Error {
