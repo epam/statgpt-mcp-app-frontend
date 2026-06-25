@@ -24,7 +24,10 @@ describe('useHostTheme', () => {
   describe('theme', () => {
     it('calls applyDocumentTheme with the theme string when theme is set', () => {
       renderHook(() =>
-        useHostTheme({ theme: 'dark', styles: { variables: {}, css: {} } }),
+        useHostTheme({
+          theme: 'dark',
+          styles: { variables: {}, css: {} },
+        } as never),
       );
 
       expect(vi.mocked(applyDocumentTheme)).toHaveBeenCalledWith('dark');
@@ -42,7 +45,10 @@ describe('useHostTheme', () => {
       document.documentElement.setAttribute('data-theme', 'dark');
 
       const { unmount } = renderHook(() =>
-        useHostTheme({ theme: 'dark', styles: { variables: {}, css: {} } }),
+        useHostTheme({
+          theme: 'dark',
+          styles: { variables: {}, css: {} },
+        } as never),
       );
 
       unmount();
@@ -54,7 +60,10 @@ describe('useHostTheme', () => {
       document.documentElement.style.setProperty('color-scheme', 'dark');
 
       const { unmount } = renderHook(() =>
-        useHostTheme({ theme: 'dark', styles: { variables: {}, css: {} } }),
+        useHostTheme({
+          theme: 'dark',
+          styles: { variables: {}, css: {} },
+        } as never),
       );
 
       unmount();
@@ -154,7 +163,7 @@ describe('useHostTheme', () => {
           useHostTheme({
             styles: { variables: {}, css: { fonts: fontCss } },
           } as never),
-        { initialProps: { fontCss: '@font-face {}' } },
+        { initialProps: { fontCss: '@font-face {}' as string | undefined } },
       );
 
       expect(document.head.querySelectorAll('style').length).toBe(
