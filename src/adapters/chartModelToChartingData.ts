@@ -2,6 +2,13 @@ import type { ChartingData, ChartUnit } from '@epam/statgpt-conversation-view';
 import { MAX_PERIODS_WITH_SYMBOLS } from '../constants/chart';
 import type { ChartModel } from '../sdmx/parse';
 
+/**
+ * Converts a normalized `ChartModel` into the `ChartingData` format expected
+ * by the conversation-view chart component.
+ *
+ * @param model - Normalized chart data containing period labels and one or more data series.
+ * @param meta - Optional display metadata; `unit` is rendered as the y-axis label when provided.
+ */
 export function chartModelToChartingData(
   model: ChartModel,
   meta: { unit?: string } | null,

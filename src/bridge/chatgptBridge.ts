@@ -43,6 +43,20 @@ function readHostContext(): McpUiHostContext {
   } as McpUiHostContext;
 }
 
+/**
+ * Creates a `HostBridge` implementation that integrates with the ChatGPT host
+ * environment, which exposes tool data via `window.openai.*` rather than the
+ * MCP spec SDK.
+ *
+ * The host dispatches `openai:set_globals` CustomEvents on every layout tick,
+ * not only when data changes. To avoid a "blinking widget" re-fetch on every
+ * scroll, the implementation only forwards `toolOutput` to subscribers when the
+ * event itself carries a new value — not by re-reading `window.openai.toolOutput`
+ * on each event.
+ *
+ * @returns A `HostBridge` object with `start`, `subscribe`, `getSnapshot`, and
+ * `callTool` methods wired to the ChatGPT host environment.
+ */
 export function createChatGPTBridge(): HostBridge {
   let started = false;
   const listeners = new Set<Listener>();
@@ -65,9 +79,6 @@ export function createChatGPTBridge(): HostBridge {
           globals?: { toolInput?: unknown; toolOutput?: unknown };
         }>
       ).detail?.globals ?? {};
-    // Only forward toolOutput when this event itself carries a new value.
-    // set_globals fires on every host layout tick; re-reading window.openai.toolOutput
-    // here would trigger a re-fetch on every scroll — the "blinking widget" bug.
     if (globals.toolOutput !== undefined) {
       patch({
         toolResult: globals.toolOutput,

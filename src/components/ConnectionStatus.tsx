@@ -2,8 +2,22 @@ import type { BridgePhase } from '../bridge/types';
 import { Centered } from './Centered';
 import { Loader } from './Loader';
 
-// Renders the pre-ready / terminal bridge phases. App only mounts this when
-// the phase is not "ready", so a fallback covers any unexpected phase.
+/**
+ * Renders UI for non-ready bridge phases: a spinner for `connecting`, an error
+ * message for `error`, and a "session ended" message for `torndown`.
+ *
+ * The parent (`App`) only mounts this component when the phase is not `ready`
+ * or `tool-pending`, so the component handles all pre-ready and terminal phases.
+ * The final fallback branch covers `torndown` and any other unexpected phase.
+ *
+ * @example
+ * ```tsx
+ * <ConnectionStatus phase="connecting" />
+ * ```
+ *
+ * @param phase - Current bridge lifecycle phase (e.g. `connecting`, `error`, `torndown`).
+ * @param lastError - Optional error message displayed when `phase` is `error`.
+ */
 export function ConnectionStatus({
   phase,
   lastError,
@@ -33,7 +47,6 @@ export function ConnectionStatus({
       </Centered>
     );
   }
-  // "torndown" (or any other non-ready phase)
   return (
     <Centered>
       <p className="text-sm text-neutrals-700">Session ended by the host.</p>

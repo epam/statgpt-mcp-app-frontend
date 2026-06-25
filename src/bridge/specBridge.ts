@@ -6,6 +6,13 @@ import { unwrapStructured } from './utils';
 
 type Listener = () => void;
 
+/**
+ * Creates a `HostBridge` backed by the spec-compliant MCP Apps UI protocol,
+ * using the `@modelcontextprotocol/ext-apps` `App` class to manage connect,
+ * tool-input, tool-result, and teardown lifecycle events.
+ *
+ * @returns A `HostBridge` instance ready to be started and subscribed to.
+ */
 export function createSpecBridge(): HostBridge {
   let sdkApp: App | null = null;
   let started = false;
