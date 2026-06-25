@@ -9,6 +9,7 @@ type Listener = () => void;
 export function createSpecBridge(): HostBridge {
     let sdkApp: App | null = null;
     let started = false;
+    let connectPromise: Promise<void> | null = null;
     const listeners = new Set<Listener>();
     let snapshot: BridgeSnapshot = { phase: "connecting", toolResult: null };
 
@@ -31,8 +32,13 @@ export function createSpecBridge(): HostBridge {
             { autoResize: true },
         );
 
+        sdkApp.ontoolinput = (_params) => {
+            patch({ phase: "tool-pending", toolResult: null });
+        };
+
         sdkApp.ontoolresult = (params) => {
             patch({
+                phase: "ready",
                 toolResult: unwrapStructured(params.structuredContent) ?? null,
             });
         };
@@ -57,7 +63,7 @@ export function createSpecBridge(): HostBridge {
             return {};
         };
 
-        sdkApp
+        connectPromise = sdkApp
             .connect()
             .then(() => {
                 patch({
@@ -81,6 +87,7 @@ export function createSpecBridge(): HostBridge {
         },
         async callTool(name: string, args: unknown) {
             if (!sdkApp) throw new BridgeError("bridge not started");
+            await connectPromise;
             const result = await sdkApp.callServerTool({
                 name,
                 arguments: args as Record<string, unknown>,
