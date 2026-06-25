@@ -1,12 +1,12 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { bridge } from '../bridge';
 import { useBridgeSnapshot } from '../bridge/useBridge';
-import type { BridgeSnapshot } from '../bridge/types';
+import type { BridgeSnapshot, WidgetMeta } from '../bridge/types';
+import { extractWidgetMeta } from '../bridge/parseToolResult';
 import {
-  extractWidgetMeta,
   normalizeSdmxDataResponse,
+  mergeChartModels,
   type ChartModel,
-  type WidgetMeta,
 } from '../sdmx/parse';
 import { dataPath } from '../sdmx/buildPaths';
 import { mockMeta, mockModel } from '../mocks/sdmxData';
@@ -43,7 +43,8 @@ export interface SdmxData {
 }
 
 /**
- * Reads the bridge snapshot, extracts widget metadata, fetches SDMX data via the MCP tool proxy, and returns the current load/error/model state.
+ * Reads the bridge snapshot, extracts widget metadata, fetches SDMX data via the MCP tool proxy
+ * for all queries in parallel, merges the results, and returns the current load/error/model state.
  */
 export function useSdmxData(): SdmxData {
   const snapshot = useBridgeSnapshot();
@@ -56,39 +57,40 @@ export function useSdmxData(): SdmxData {
   const fetchToken = useRef(0);
 
   const meta = useMemo(
-    () => (USE_DEV_MODE ? mockMeta : extractWidgetMeta(snapshot.toolResult)),
+    () => extractWidgetMeta(snapshot.toolResult),
     [snapshot.toolResult],
   );
 
   const fetchKey = useMemo(() => {
-    if (USE_DEV_MODE || !meta?.queries.length) return '';
+    if (!meta?.queries.length) return '';
     return JSON.stringify(meta.queries);
   }, [meta?.queries]);
 
   const refresh = useCallback(async () => {
-    if (USE_DEV_MODE || !meta?.queries.length) return;
-    const q = meta.queries[0];
-    const path = dataPath(q.sdmx);
+    if (!meta?.queries.length) return;
     const token = ++fetchToken.current;
     setLoading(true);
     setError(null);
     try {
-      const raw = await bridge.callTool(meta.sdmxProxyToolName, { path });
+      const rawResults = await Promise.all(
+        meta.queries.map((q) =>
+          bridge.callTool(meta.sdmxProxyToolName, { path: dataPath(q.sdmx) }),
+        ),
+      );
       if (token !== fetchToken.current) return;
-      setModel(normalizeSdmxDataResponse(raw));
+      setModel(mergeChartModels(rawResults.map(normalizeSdmxDataResponse)));
     } catch (e) {
       console.error('[widget] callTool ✗', meta.sdmxProxyToolName, e);
       if (token !== fetchToken.current) return;
-      const err = e as { message?: string };
-      setError(err.message || String(e));
+      setError((e as { message?: string }).message || String(e));
     } finally {
       if (token === fetchToken.current) setLoading(false);
     }
   }, [meta]);
 
   useEffect(() => {
-    if (USE_DEV_MODE) return;
     if (snapshot.phase === 'ready' && fetchKey) void refresh();
+    // refresh is stable per meta; fetchKey already captures query identity
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [snapshot.phase, fetchKey]);
 
