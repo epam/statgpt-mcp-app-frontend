@@ -17,7 +17,6 @@
 
 html,
 body {
-  height: 100%;
   min-height: 100%;
 }
 
@@ -28,21 +27,33 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+:root {
+  --mcp-widget-min-height: 480px;
+}
+
 #root {
-  height: 100%;
-  min-height: 480px;
+  min-height: var(--mcp-widget-min-height);
   overflow-y: auto;
   overflow-x: hidden;
+}
+
+:root[data-display-mode="pip"] html,
+:root[data-display-mode="pip"] body,
+:root[data-display-mode="fullscreen"] html,
+:root[data-display-mode="fullscreen"] body {
+  height: 100%;
 }
 
 :root[data-display-mode="pip"] #root {
   height: var(--mcp-container-height, 100dvh);
   min-height: unset;
+  overflow-y: hidden;
 }
 
 :root[data-display-mode="fullscreen"] #root {
   height: 100dvh;
   min-height: unset;
+  overflow-y: hidden;
   padding-bottom: var(--mcp-safe-area-bottom, 0px);
 }
 
