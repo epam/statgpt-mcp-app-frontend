@@ -1,5 +1,5 @@
-import { Button } from "@epam/statgpt-ui-components";
-import type { WidgetMeta } from "../sdmx/parse";
+import { Button } from '@epam/statgpt-ui-components';
+import type { WidgetMeta } from '../sdmx/parse';
 
 interface Props {
   meta: WidgetMeta | null;
@@ -8,14 +8,19 @@ interface Props {
   onRefresh: () => void;
 }
 
-export function ExplorerHeader({ meta, loading, canRefresh, onRefresh }: Props) {
-  const subtitle = meta?.title ? undefined : "Waiting for chart data…";
+export function ExplorerHeader({
+  meta,
+  loading,
+  canRefresh,
+  onRefresh,
+}: Props) {
+  const subtitle = meta?.title ? undefined : 'Waiting for chart data…';
 
   return (
     <header className="flex items-end justify-between gap-4">
       <div>
         <h1 className="text-xl font-semibold text-neutrals-1000">
-          {meta?.title || "SDMX Data Explorer"}
+          {meta?.title || 'SDMX Data Explorer'}
         </h1>
         {subtitle && <p className="text-sm text-neutrals-700">{subtitle}</p>}
       </div>

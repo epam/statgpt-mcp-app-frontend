@@ -1,6 +1,11 @@
-import type { McpUiHostContext } from "@modelcontextprotocol/ext-apps";
+import type { McpUiHostContext } from '@modelcontextprotocol/ext-apps';
 
-export type BridgePhase = "connecting" | "tool-pending" | "ready" | "error" | "torndown";
+export type BridgePhase =
+  | 'connecting'
+  | 'tool-pending'
+  | 'ready'
+  | 'error'
+  | 'torndown';
 
 export interface HostBridge {
   start(): void;
@@ -38,6 +43,6 @@ export interface SdmxQuery {
 export class BridgeError extends Error {
   constructor(message: string) {
     super(message);
-    this.name = "BridgeError";
+    this.name = 'BridgeError';
   }
 }
