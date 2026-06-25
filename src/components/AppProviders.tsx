@@ -1,10 +1,10 @@
-import type { ReactNode } from "react";
+import type { ReactNode } from 'react';
 import {
   AdvancedViewProvider,
   ConversationViewFeatureTogglesProvider,
   ConversationViewStylesProvider,
   OnboardingProvider,
-} from "@epam/statgpt-conversation-view";
+} from '@epam/statgpt-conversation-view';
 
 interface Props {
   children: ReactNode;

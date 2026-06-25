@@ -1,6 +1,6 @@
-import type { ColDef } from "ag-grid-community";
-import type { GridData } from "@epam/statgpt-conversation-view";
-import type { ChartModel } from "../sdmx/parse";
+import type { ColDef } from 'ag-grid-community';
+import type { GridData } from '@epam/statgpt-conversation-view';
+import type { ChartModel } from '../sdmx/parse';
 
 export function chartModelToGrid(
   model: ChartModel,
@@ -8,7 +8,7 @@ export function chartModelToGrid(
 ): { data: GridData[]; columns: ColDef[] } {
   if (model.periods.length === 0) return { data: [], columns: [] };
 
-  const unitSuffix = meta?.unit ? ` (${meta.unit})` : "";
+  const unitSuffix = meta?.unit ? ` (${meta.unit})` : '';
   const seriesFieldKey = (i: number) => `value_${i}`;
 
   const dimDefs = model.series[0]?.dimensions ?? [];
@@ -22,22 +22,26 @@ export function chartModelToGrid(
     field: seriesFieldKey(i),
     headerName: `Value${unitSuffix}`,
     flex: 1,
-    type: "numericColumn",
+    type: 'numericColumn',
   }));
 
   const columns: ColDef[] = [
-    ...(model.agencyId ? [{ field: "agency", headerName: "Agency", width: 100 }] : []),
-    ...(model.datasetName ? [{ field: "dataset_name", headerName: "Dataset", flex: 2 }] : []),
+    ...(model.agencyId
+      ? [{ field: 'agency', headerName: 'Agency', width: 100 }]
+      : []),
+    ...(model.datasetName
+      ? [{ field: 'dataset_name', headerName: 'Dataset', flex: 2 }]
+      : []),
     ...dimensionColumns,
-    { field: "period", headerName: "Period", width: 120 },
+    { field: 'period', headerName: 'Period', width: 120 },
     ...valueColumns,
   ];
 
   const data: GridData[] = model.periods.map((period, i) => {
     const row: GridData = { period };
-    if (model.agencyId) row["agency"] = model.agencyId;
-    if (model.datasetName) row["dataset_name"] = model.datasetName;
-    for (const dim of (model.series[0]?.dimensions ?? [])) {
+    if (model.agencyId) row['agency'] = model.agencyId;
+    if (model.datasetName) row['dataset_name'] = model.datasetName;
+    for (const dim of model.series[0]?.dimensions ?? []) {
       row[dim.id] = dim.valueName;
     }
     for (let si = 0; si < model.series.length; si++) {

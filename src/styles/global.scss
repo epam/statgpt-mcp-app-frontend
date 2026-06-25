@@ -6,14 +6,14 @@
 // resolve via the `loadPaths: ["node_modules"]` set in vite.config.ts.
 // styles-tailwind.scss uses @apply, so it is processed by the Tailwind
 // PostCSS plugin at build time (see postcss.config.js).
-@use "tailwindcss/base";
-@use "tailwindcss/components";
-@use "tailwindcss/utilities";
+@use 'tailwindcss/base';
+@use 'tailwindcss/components';
+@use 'tailwindcss/utilities';
 
-@use "./colors.scss";
-@use "@epam/statgpt-ui-components/styles-tailwind.scss";
-@use "./fonts.scss";
-@use "./chart-attachment.scss";
+@use './colors.scss';
+@use '@epam/statgpt-ui-components/styles-tailwind.scss';
+@use './fonts.scss';
+@use './chart-attachment.scss';
 
 html,
 body {
@@ -23,7 +23,14 @@ body {
 body {
   margin: 0;
   background: transparent;
-  font-family: var(--font-sans, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif);
+  font-family: var(
+    --font-sans,
+    system-ui,
+    -apple-system,
+    'Segoe UI',
+    Roboto,
+    sans-serif
+  );
   -webkit-font-smoothing: antialiased;
 }
 
@@ -37,20 +44,20 @@ body {
   overflow-x: hidden;
 }
 
-:root[data-display-mode="pip"] html,
-:root[data-display-mode="pip"] body,
-:root[data-display-mode="fullscreen"] html,
-:root[data-display-mode="fullscreen"] body {
+:root[data-display-mode='pip'] html,
+:root[data-display-mode='pip'] body,
+:root[data-display-mode='fullscreen'] html,
+:root[data-display-mode='fullscreen'] body {
   height: 100%;
 }
 
-:root[data-display-mode="pip"] #root {
+:root[data-display-mode='pip'] #root {
   height: var(--mcp-container-height, 100dvh);
   min-height: unset;
   overflow-y: hidden;
 }
 
-:root[data-display-mode="fullscreen"] #root {
+:root[data-display-mode='fullscreen'] #root {
   height: 100dvh;
   min-height: unset;
   overflow-y: hidden;

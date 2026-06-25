@@ -1,9 +1,9 @@
-import { StrictMode } from "react";
-import { createRoot } from "react-dom/client";
-import { AllCommunityModule, ModuleRegistry } from "ag-grid-community";
-import "./styles/global.scss";
-import App from "./App";
-import { bridge } from "./bridge";
+import { StrictMode } from 'react';
+import { createRoot } from 'react-dom/client';
+import { AllCommunityModule, ModuleRegistry } from 'ag-grid-community';
+import './styles/global.scss';
+import App from './App';
+import { bridge } from './bridge';
 
 ModuleRegistry.registerModules([AllCommunityModule]);
 
@@ -12,7 +12,7 @@ ModuleRegistry.registerModules([AllCommunityModule]);
 // sees our bootstrap).
 bridge.start();
 
-createRoot(document.getElementById("root")!).render(
+createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <App />
   </StrictMode>,
