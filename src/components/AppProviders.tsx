@@ -10,6 +10,11 @@ interface Props {
   children: ReactNode;
 }
 
+/**
+ * Composes the required `@epam/statgpt-conversation-view` context providers into a single wrapper.
+ *
+ * @param children - Application subtree that requires the conversation-view context stack.
+ */
 export function AppProviders({ children }: Props) {
   return (
     <ConversationViewStylesProvider>

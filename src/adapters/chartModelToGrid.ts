@@ -2,6 +2,13 @@ import type { ColDef } from 'ag-grid-community';
 import type { GridData } from '@epam/statgpt-conversation-view';
 import type { ChartModel } from '../sdmx/parse';
 
+/**
+ * Converts a normalized `ChartModel` into AG Grid-compatible row data and column definitions,
+ * producing one row per time period with each series value in a separate column.
+ *
+ * @param model - The normalized internal chart model containing periods, series, and dataset metadata.
+ * @param meta - Optional display metadata; `unit` is appended to value column headers when present.
+ */
 export function chartModelToGrid(
   model: ChartModel,
   meta: { unit?: string } | null,

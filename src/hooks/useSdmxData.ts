@@ -42,6 +42,9 @@ export interface SdmxData {
   refresh: () => void;
 }
 
+/**
+ * Reads the bridge snapshot, extracts widget metadata, fetches SDMX data via the MCP tool proxy, and returns the current load/error/model state.
+ */
 export function useSdmxData(): SdmxData {
   const snapshot = useBridgeSnapshot();
   const [model, setModel] = useState<ChartModel | null>(
@@ -54,8 +57,6 @@ export function useSdmxData(): SdmxData {
 
   const meta = useMemo(
     () => (USE_DEV_MODE ? mockMeta : extractWidgetMeta(snapshot.toolResult)),
-    // USE_DEV_MODE is constant — snapshot.toolResult is the only reactive dep
-
     [snapshot.toolResult],
   );
 
@@ -66,7 +67,6 @@ export function useSdmxData(): SdmxData {
 
   const refresh = useCallback(async () => {
     if (USE_DEV_MODE || !meta?.queries.length) return;
-    // TODO: v1 fetches only the first query; multi-query support is deferred
     const q = meta.queries[0];
     const path = dataPath(q.sdmx);
     const token = ++fetchToken.current;

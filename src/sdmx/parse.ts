@@ -26,11 +26,17 @@ export interface WidgetMeta {
   sdmxProxyToolName: string;
 }
 
+/**
+ * Extracts widget metadata from an opaque MCP tool result, handling both direct
+ * `WidgetToolResult` objects and the notification-params envelope shape
+ * `{ content, structuredContent, isError }`.
+ *
+ * @param toolResult - The raw, untyped value returned by the MCP tool call.
+ * @returns The parsed `WidgetMeta` if the result contains the expected fields, or `null` otherwise.
+ */
 export function extractWidgetMeta(toolResult: unknown): WidgetMeta | null {
   if (!toolResult || typeof toolResult !== 'object') return null;
   const r = toolResult as Record<string, unknown>;
-  // Unwrap notification-params envelope { content, structuredContent, isError }
-  // if the direct object doesn't carry the WidgetToolResult fields.
   const candidate =
     !Array.isArray(r.queries) &&
     r.structuredContent != null &&
@@ -46,6 +52,13 @@ export function extractWidgetMeta(toolResult: unknown): WidgetMeta | null {
   };
 }
 
+/**
+ * Converts a raw SDMX JSON data response into the internal `ChartModel` representation,
+ * extracting time periods, series data, dimension labels, and the agency ID from the dataflow URN.
+ *
+ * @param raw - The untyped SDMX JSON data response object.
+ * @returns A `ChartModel` with periods, series, dimension metadata, dataset name, and agency ID.
+ */
 export function normalizeSdmxDataResponse(raw: unknown): ChartModel {
   if (!raw || typeof raw !== 'object') return { periods: [], series: [] };
 
@@ -60,7 +73,6 @@ export function normalizeSdmxDataResponse(raw: unknown): ChartModel {
   const dataflowUrn = (
     structure0?.links as Record<string, unknown>[] | undefined
   )?.[0]?.urn as string | undefined;
-  // URN format: "urn:sdmx:...=AGENCY:RESOURCE_ID(VERSION)"
   const agencyId = dataflowUrn?.split('=')?.[1]?.split(':')?.[0];
   const seriesDimDefs =
     ((structure0?.dimensions as Record<string, unknown> | undefined)

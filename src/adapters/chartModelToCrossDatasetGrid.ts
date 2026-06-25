@@ -4,6 +4,13 @@ import type { ChartModel } from '../sdmx/parse';
 
 const periodFieldKey = (period: string) => `p_${period}`;
 
+/**
+ * Converts a `ChartModel` into a cross-dataset grid where each series becomes
+ * a row and each observation period becomes a column.
+ *
+ * @param model - Parsed SDMX chart model containing series and period data.
+ * @param meta - Optional display metadata; `unit` is appended to period column headers when present.
+ */
 export function chartModelToCrossDatasetGrid(
   model: ChartModel,
   meta: { unit?: string } | null,

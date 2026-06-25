@@ -41,6 +41,29 @@ const TAB_LABELS: Record<Tab, string> = {
   'cross-grid': 'Cross Dataset Grid',
 };
 
+/**
+ * DataView renders a tabbed SDMX data panel with Grid, Chart, and Cross Dataset
+ * Grid tabs, showing only the tabs for which attachment data is provided.
+ *
+ * Each tab is conditionally included based on whether its corresponding attachment
+ * prop is defined — if none of the three attachments are provided, the component
+ * returns null. When `fillHeight` is set, the component expands to fill available
+ * vertical space, enabling correct layout in pip and fullscreen display modes.
+ *
+ * @example
+ * ```tsx
+ * <DataView
+ *   gridAttachment={{ type: ATTACHMENT_TYPE.CUSTOM_DATA_GRID, title: 'Population', grid_data: { data, columns } }}
+ *   chartAttachment={undefined}
+ *   crossDatasetGridAttachment={undefined}
+ * />
+ * ```
+ *
+ * @param gridAttachment - Grid attachment data for the Grid tab; omit to hide that tab.
+ * @param chartAttachment - Chart attachment data for the Chart tab; omit to hide that tab.
+ * @param crossDatasetGridAttachment - Grid data for the Cross Dataset Grid tab; omit to hide that tab.
+ * @param fillHeight - When true, the component stretches to fill its container's height for pip or fullscreen modes.
+ */
 export function DataView({
   gridAttachment,
   chartAttachment,
