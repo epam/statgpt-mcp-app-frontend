@@ -1,6 +1,6 @@
-import { Loader } from "@epam/statgpt-ui-components";
 import type { BridgePhase } from "../bridge/types";
 import { Centered } from "./Centered";
+import { Loader } from "./Loader";
 
 // Renders the pre-ready / terminal bridge phases. App only mounts this when
 // the phase is not "ready", so a fallback covers any unexpected phase.

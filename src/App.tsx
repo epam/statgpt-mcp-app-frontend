@@ -8,12 +8,13 @@ import { chartModelToChartingData } from "./adapters/chartModelToChartingData";
 import { chartModelToCrossDatasetGrid } from "./adapters/chartModelToCrossDatasetGrid";
 import { AppProviders } from "./components/AppProviders";
 import { ConnectionStatus } from "./components/ConnectionStatus";
+import { Loader } from "./components/Loader";
 import { ATTACHMENT_TYPE } from "./constants/attachmentTypes";
 import { DataView } from "./components/DataView";
 import { ErrorBanner } from "./components/ErrorBanner";
 
 export default function App() {
-    const { snapshot, meta, model, error } = useSdmxData();
+    const { snapshot, meta, model, loading, error } = useSdmxData();
 
     useHostTheme(snapshot.hostContext);
     const { isFillHeight } = useHostLayout(snapshot.hostContext);
@@ -43,7 +44,7 @@ export default function App() {
 
     return (
         <AppProviders>
-            {snapshot.phase !== "ready" ? (
+            {snapshot.phase !== "ready" && snapshot.phase !== "tool-pending" ? (
                 <ConnectionStatus
                     phase={snapshot.phase}
                     lastError={snapshot.lastError}
@@ -51,17 +52,25 @@ export default function App() {
             ) : (
                 <div
                     className={classNames("flex flex-col gap-4 p-4", {
-                        "h-full": isFillHeight,
+                        "h-full": isFillHeight || (loading && !model),
                     })}
                 >
                     {error && <ErrorBanner message={error} />}
 
-                    <DataView
-                        gridAttachment={gridAttachment}
-                        chartAttachment={chartAttachment}
-                        crossDatasetGridAttachment={crossDatasetGridAttachment}
-                        fillHeight={isFillHeight}
-                    />
+                    {loading && !model ? (
+                        <div className="flex flex-1 items-center justify-center">
+                            <Loader />
+                        </div>
+                    ) : (
+                        <DataView
+                            gridAttachment={gridAttachment}
+                            chartAttachment={chartAttachment}
+                            crossDatasetGridAttachment={
+                                crossDatasetGridAttachment
+                            }
+                            fillHeight={isFillHeight}
+                        />
+                    )}
                 </div>
             )}
         </AppProviders>
