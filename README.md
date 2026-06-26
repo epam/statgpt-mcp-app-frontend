@@ -56,6 +56,28 @@ npm run build:local    # same but with VITE_BASE_URL=http://localhost:4300 (for 
 npm run preview        # serve dist/ on :4300
 ```
 
+## Docker
+
+The widget is packaged as a static nginx container. Asset URLs are stamped into `index.html` at build time via `VITE_BASE_URL` — this must match the public origin where the container will be served, so the host can load widget assets cross-origin.
+
+```bash
+# Build (defaults to http://localhost:8080)
+make docker-build
+
+# Build for a specific origin
+make docker-build VITE_BASE_URL=https://widget.example.com
+
+# Run on port 8080
+make docker-run
+
+# Stop
+make docker-stop
+```
+
+The container serves on port 80 (mapped to `PORT`, default `8080`). The `/_mcp-app/index.html` endpoint is handled by nginx and returns the same `index.html` as `/`. All assets are served with `Access-Control-Allow-Origin: *`, which is required for MCP hosts to load the widget cross-origin via `resourceDomains`.
+
+When testing locally with MCPJam, pass `--widget-origin http://localhost:8080` to the MCP server's `local_server.py` so it fetches the widget HTML from the container instead of the dev server.
+
 ## Internal HTML endpoint
 
 The widget exposes `GET /_mcp-app/index.html` (rewritten from `/` by the `mcpAppEndpoint()` Vite plugin). This is the path the backend MCP server fetches to serve the widget as a `ui://` resource. Asset URLs in the returned HTML are absolute when `VITE_BASE_URL` is set at build time.
