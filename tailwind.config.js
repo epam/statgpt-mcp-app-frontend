@@ -1,11 +1,9 @@
 import typography from '@tailwindcss/typography';
 
 /** @type {import('tailwindcss').Config} */
-// theme.extend + content globs lifted verbatim from
-// statgpt-global-trusted-data-commons (the canonical @epam/statgpt-*@0.6.x
-// consumer). The `./node_modules/@epam/statgpt-*` glob is mandatory: it
-// makes Tailwind generate the utility classes used INSIDE the published
-// component packages. Token values come from src/styles/colors.scss.
+// The `./node_modules/@epam/statgpt-*` glob is mandatory: it makes Tailwind
+// generate the utility classes used INSIDE the published component packages.
+// Token values come from src/styles/colors.scss.
 export default {
   content: [
     './index.html',
