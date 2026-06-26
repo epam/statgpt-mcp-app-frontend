@@ -9,54 +9,44 @@ A **single-widget MCP App** that renders an SDMX data explorer inside an AI chat
 ## Stack
 
 - Vite + React 19 SPA, served on a fixed port (`4300`) so its origin is stable.
-- `@epam/statgpt-ui-components` (design system, Tailwind 3.4 + design tokens), `@epam/statgpt-sdmx-toolkit` (SDMX-JSON 2.0 parsing + period sorting), `ag-grid-community`, `echarts`.
+- `@epam/statgpt-ui-components` (design system, Tailwind 3.4 + design tokens), `@epam/statgpt-sdmx-toolkit` (SDMX-JSON 2.0 parsing + period sorting), `@epam/statgpt-conversation-view` (shared attachment types), `ag-grid-community`, `echarts`.
 
-## Layout
+## How it works
 
-```
-src/
-  main.tsx              # starts the bridge, mounts <App/>
-  App.tsx               # orchestration: tool-result → fetch SDMX → render grid/chart
-  bridge/
-    types.ts            # BridgeSnapshot, WidgetToolResult, SdmxQuery
-    hostBridge.ts       # @modelcontextprotocol/ext-apps App init + RPC
-    useBridge.ts        # useSyncExternalStore hook over the bridge
-  sdmx/
-    parse.ts            # extractWidgetMeta + normalizeSdmxDataResponse → ChartModel
-    buildPaths.ts       # SDMX REST 3.0 path builders
-  adapters/
-    chartModelToGrid.ts          # ChartModel → ag-grid RowData
-    chartModelToChartingData.ts  # ChartModel → echarts series
-  components/
-    ConnectionStatus.tsx  # connecting / error / torndown states
-    DataView.tsx          # tabbed grid + chart view
-    ExplorerHeader.tsx    # title + refresh button
-    ErrorBanner.tsx       # error message display
-    AppProviders.tsx      # Tailwind + @epam providers
-  hooks/
-    useSdmxData.ts        # drives SDMX fetch from bridge snapshot
-  styles/
-    global.scss           # tailwind layers + @epam ui-components styles
-    colors.scss           # :root design tokens
-    fonts.scss            # typography utilities
-    chart-attachment.scss # chart attachment styles
-  mocks/
-    sdmxData.ts           # mock data for dev mode
-```
+The host calls `query_data` → the widget receives the tool result via the MCP-UI spec bridge → `useSdmxData` fetches SDMX data via `sdmx_proxy` → adapters transform the response into a `ChartModel` → `DataView` renders a tabbed ag-grid table and echarts chart. Display mode and host theme are applied reactively via `useHostLayout` and `useHostTheme`.
 
-## Run locally against the prototype
+## Run locally
+
+### Scenario 1 — mock data (no MCP server needed)
 
 ```bash
-# Terminal 1 — serve this app
 npm install
-npm run start                    # http://localhost:4300
-
-# Terminal 2 — run the prototype MCP server
-cd ../statgpt-mcp-apps-prototype
-python src/server.py             # or your local runner
+npm run start    # http://localhost:4300
 ```
 
-Then open the printed MCP server URL in MCPJam, trigger `query_data`, and the widget loads and renders the SDMX data table.
+The widget runs with mock SDMX data and a mock host context. Use this for UI iteration — no MCP server or host chat required.
+
+### Scenario 2 — connected to a local MCP server
+
+```bash
+npm run build:local    # build with absolute asset URLs → http://localhost:4300
+npm run preview        # serve dist/ at http://localhost:4300
+```
+
+The widget is now available at `/_mcp-app/index.html`. A local MCP server can read this endpoint via `resources/read` and expose the HTML as a `ui://` resource. The host (Claude, ChatGPT, MCPJam) loads the widget in a sandboxed iframe when the model calls `query_data`.
+
+`build:local` is required here (not `start`) because asset URLs must be absolute — root-relative paths would resolve against the host's sandbox origin and 404.
+
+The MCP server setup is on the developer's side and is not provided in this repository.
+
+## Testing
+
+```bash
+npm test              # run all tests once
+npm run test:watch    # watch mode
+```
+
+Unit tests live next to their source files under `src/` with a `.spec.ts` suffix (Vitest + jsdom).
 
 ## Build
 
