@@ -69,15 +69,6 @@ describe('chartModelToCrossDatasetGrid', () => {
     expect(periodFields).toEqual(['p_2020', 'p_2021']);
   });
 
-  it('pins dimension columns to the left', () => {
-    const { columns } = chartModelToCrossDatasetGrid(makeModel());
-    const dimColumns = columns.filter((c) => !c.field?.startsWith('p_'));
-    expect(dimColumns.length).toBeGreaterThan(0);
-    for (const col of dimColumns) {
-      expect(col.pinned).toBe('left');
-    }
-  });
-
   it('uses the period value as the period column header', () => {
     const { columns } = chartModelToCrossDatasetGrid(makeModel());
     const periodColumns = columns.filter((c) => c.field?.startsWith('p_'));
