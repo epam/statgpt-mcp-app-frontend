@@ -69,7 +69,7 @@ export default defineConfig({
     target: 'es2020',
     outDir: 'dist',
     emptyOutDir: true,
-    sourcemap: true,
+    sourcemap: process.env.VITE_SOURCEMAP !== 'false',
   },
   test: {
     globals: true,
