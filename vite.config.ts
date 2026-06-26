@@ -3,8 +3,8 @@ import react from '@vitejs/plugin-react';
 import type { Plugin } from 'vite';
 import type { IncomingMessage, ServerResponse } from 'node:http';
 
-// Exposes GET /_mcp-app/index.html — the stable internal endpoint the MCP
-// server fetches on resources/read (CONTRACTS.md §5, FRONTEND.md §2).
+// Exposes GET /_mcp-app/index.html — the stable endpoint the MCP server
+// fetches on resources/read to serve the widget as a ui:// resource.
 // Returns the same HTML as root; the separate path is a stable contract
 // that won't clash with app routing in the production Next.js build.
 function mcpAppEndpoint(): Plugin {
