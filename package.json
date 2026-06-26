@@ -1,7 +1,7 @@
 {
   "name": "statgpt-mcp-app-frontend",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.0.0",
   "type": "module",
   "description": "MCP App widget — speaks the spec io.modelcontextprotocol/ui protocol via @modelcontextprotocol/ext-apps and renders SDMX data (ag-grid table + echarts chart) with @epam/statgpt-* libs.",
   "scripts": {
