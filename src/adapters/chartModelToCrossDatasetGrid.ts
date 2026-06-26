@@ -24,7 +24,6 @@ export function chartModelToCrossDatasetGrid(model: ChartModel): {
     field: dim.id,
     headerName: dim.name,
     width: 160,
-    pinned: 'left' as const,
   }));
 
   const periodColumns: ColDef[] = model.periods.map((period) => ({
