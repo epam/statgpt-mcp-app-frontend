@@ -32,8 +32,7 @@ export function normalizeSdmxDataResponse(raw: unknown): ChartModel {
   const r = raw as Record<string, unknown>;
   const dataBlock = r.data as Record<string, unknown> | undefined;
   const structures = dataBlock?.structures as
-    | Record<string, unknown>[]
-    | undefined;
+    Record<string, unknown>[] | undefined;
   const structure0 = structures?.[0];
   const datasetName =
     typeof structure0?.name === 'string' ? structure0.name : undefined;

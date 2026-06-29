@@ -1,11 +1,7 @@
 import type { McpUiHostContext } from '@modelcontextprotocol/ext-apps';
 
 export type BridgePhase =
-  | 'connecting'
-  | 'tool-pending'
-  | 'ready'
-  | 'error'
-  | 'torndown';
+  'connecting' | 'tool-pending' | 'ready' | 'error' | 'torndown';
 
 export interface HostBridge {
   start(): void;
