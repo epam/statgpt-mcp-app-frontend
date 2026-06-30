@@ -17,11 +17,11 @@ The host calls `query_data` → the widget receives the tool result via the MCP-
 
 ## Environment variables
 
-All variables are consumed at **build time** (Vite bakes them into the static output — there is no runtime server to inject them). The widget HTML is served by the host inside a sandboxed iframe whose origin differs from the widget origin, so asset URLs must be absolute and point back at the widget origin.
+Local builds bake `VITE_BASE_URL` into the static output via Vite's `base`. The **Docker image** builds with a placeholder origin and rewrites it to the **runtime** `VITE_BASE_URL` on startup (`docker-entrypoint.d/40-replace-base-url.sh`), so one image serves any environment. The widget HTML is served by the host inside a sandboxed iframe whose origin differs from the widget origin, so asset URLs must be absolute and point back at the widget origin.
 
 | Variable | Scope | Default | Required | Purpose |
 |---|---|---|---|---|
-| `VITE_BASE_URL` | Build (Vite `base`) + dev | `/` | Yes for any host-served deploy | Public origin where the widget assets are served. Stamped into `index.html` so asset URLs are **absolute** (e.g. `https://widget.example.com/assets/...`). Without it, asset paths are root-relative (`/assets/...`) and resolve against the host's sandbox iframe origin — not the widget origin — producing 404s. Must equal the public widget origin; that origin must serve assets with permissive CORS (`Access-Control-Allow-Origin: *`) and be listed in the host's CSP `resourceDomains`. In dev mode it also drives the `transformIndexHtml` hook that rewrites Vite's root-relative dev URLs (`/@vite/client`, `/src/main.tsx`) to absolute. |
+| `VITE_BASE_URL` | Build (local) / **runtime** (Docker) | `/` | Yes for any host-served deploy | Public origin where the widget assets are served. Stamped into the built assets so URLs are **absolute** (e.g. `https://widget.example.com/assets/...`). Without it, asset paths are root-relative (`/assets/...`) and resolve against the host's sandbox iframe origin — not the widget origin — producing 404s. Must equal the public widget origin; that origin must serve assets with permissive CORS (`Access-Control-Allow-Origin: *`) and be listed in the host's CSP `resourceDomains`. In the Docker image it is read at container start (`docker run -e VITE_BASE_URL=...`); pass it **without** a trailing slash. In dev mode it also drives the `transformIndexHtml` hook that rewrites Vite's root-relative dev URLs (`/@vite/client`, `/src/main.tsx`) to absolute. |
 | `VITE_SOURCEMAP` | Build | sourcemaps **on** | No | Set to `false` to disable JS sourcemaps in the build. The Dockerfile sets this to `false`. |
 | `PORT` | Makefile / Docker only | `8080` | No | Host port the nginx container is mapped to (the container itself listens on `80`). Also feeds the default `VITE_BASE_URL` in the Makefile (`http://localhost:$(PORT)`). |
 
@@ -31,7 +31,7 @@ All variables are consumed at **build time** (Vite bakes them into the static ou
 
 - **`npm run start`** — no `VITE_BASE_URL`; `base` falls back to `/`. Fine for standalone UI iteration at `http://localhost:4300`.
 - **`npm run build:local`** — hardcodes `VITE_BASE_URL=http://localhost:4300` for MCPJam testing.
-- **Docker / production** — `make docker-build VITE_BASE_URL=https://widget.example.com` passes it as a build arg into the image (see `Dockerfile`).
+- **Docker / production** — the image is built once with a placeholder origin; the real origin is supplied at run time: `make docker-run VITE_BASE_URL=https://widget.example.com` (or `docker run -e VITE_BASE_URL=...`). The startup script rewrites the placeholder in the built assets before nginx serves them.
 
 ## Run locally
 
@@ -76,26 +76,28 @@ npm run preview        # serve dist/ on :4300
 
 ## Docker
 
-The widget is packaged as a static nginx container. Asset URLs are stamped into `index.html` at build time via `VITE_BASE_URL` — this must match the public origin where the container will be served, so the host can load widget assets cross-origin.
+The widget is packaged as a static nginx container. The widget origin is chosen **at run time**: the build stamps a placeholder origin into the assets, and a startup script (`docker-entrypoint.d/40-replace-base-url.sh`) rewrites it to the `VITE_BASE_URL` passed via `docker run -e`. **One image serves every environment.** `VITE_BASE_URL` must match the public origin where the container is served so the host can load widget assets cross-origin.
 
 ```bash
-# Build (defaults to http://localhost:8080)
+# Build the image (origin not needed yet)
 make docker-build
 
-# Build for a specific origin
-make docker-build VITE_BASE_URL=https://widget.example.com
-
-# Run on port 8080
+# Run, supplying the origin (defaults to http://localhost:8080)
 make docker-run
+
+# Run for a specific origin
+make docker-run VITE_BASE_URL=https://widget.example.com
 
 # Stop
 make docker-stop
 ```
 
-The container serves on port 80 (mapped to `PORT`, default `8080`). The `/_mcp-app/index.html` endpoint is handled by nginx and returns the same `index.html` as `/`. All assets are served with `Access-Control-Allow-Origin: *`, which is required for MCP hosts to load the widget cross-origin via `resourceDomains`.
+The container serves on port 80 (mapped to `PORT`, default `8080`). `VITE_BASE_URL` is **required at run time** — the startup script aborts if it is unset (the widget would 404 in the host iframe). The `/_mcp-app/index.html` endpoint is handled by nginx and returns the same `index.html` as `/`. All assets are served with `Access-Control-Allow-Origin: *`, which is required for MCP hosts to load the widget cross-origin via `resourceDomains`.
+
+> If the container runs with a read-only root filesystem, `/usr/share/nginx/html` must remain writable (or be mounted from a writable volume) so the startup rewrite can run.
 
 When testing locally with MCPJam, pass `--widget-origin http://localhost:8080` to the MCP server's `local_server.py` so it fetches the widget HTML from the container instead of the dev server.
 
 ## Internal HTML endpoint
 
-The widget exposes `GET /_mcp-app/index.html` (rewritten from `/` by the `mcpAppEndpoint()` Vite plugin). This is the path the backend MCP server fetches to serve the widget as a `ui://` resource. Asset URLs in the returned HTML are absolute when `VITE_BASE_URL` is set at build time.
+The widget exposes `GET /_mcp-app/index.html` (rewritten from `/` by the `mcpAppEndpoint()` Vite plugin). This is the path the backend MCP server fetches to serve the widget as a `ui://` resource. Asset URLs in the returned HTML are absolute, pointing at the origin given by `VITE_BASE_URL` (stamped at build time for local builds, rewritten at container start for the Docker image).
