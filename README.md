@@ -23,7 +23,7 @@ Local builds bake `VITE_BASE_URL` into the static output via Vite's `base`. The 
 |---|---|---|---|---|
 | `VITE_BASE_URL` | Build (local) / **runtime** (Docker) | `/` | Yes for any host-served deploy | Public origin where the widget assets are served. Stamped into the built assets so URLs are **absolute** (e.g. `https://widget.example.com/assets/...`). Without it, asset paths are root-relative (`/assets/...`) and resolve against the host's sandbox iframe origin — not the widget origin — producing 404s. Must equal the public widget origin; that origin must serve assets with permissive CORS (`Access-Control-Allow-Origin: *`) and be listed in the host's CSP `resourceDomains`. In the Docker image it is read at container start (`docker run -e VITE_BASE_URL=...`); pass it **without** a trailing slash. In dev mode it also drives the `transformIndexHtml` hook that rewrites Vite's root-relative dev URLs (`/@vite/client`, `/src/main.tsx`) to absolute. |
 | `VITE_SOURCEMAP` | Build | sourcemaps **on** | No | Set to `false` to disable JS sourcemaps in the build. The Dockerfile sets this to `false`. |
-| `PORT` | Makefile / Docker only | `8080` | No | Host port the nginx container is mapped to (the container itself listens on `80`). Also feeds the default `VITE_BASE_URL` in the Makefile (`http://localhost:$(PORT)`). |
+| `PORT` | Makefile / Docker only | `8080` | No | Host port the nginx container is mapped to (the container itself listens on `8080`, a non-privileged port so it can bind as a non-root user). Also feeds the default `VITE_BASE_URL` in the Makefile (`http://localhost:$(PORT)`). |
 
 > `IMAGE` and `TAG` in the `Makefile` are Docker image tagging knobs, not application configuration.
 
@@ -76,7 +76,7 @@ npm run preview        # serve dist/ on :4300
 
 ## Docker
 
-The widget is packaged as a static nginx container. The widget origin is chosen **at run time**: the build stamps a placeholder origin into the assets, and a startup script (`docker-entrypoint.d/40-replace-base-url.sh`) rewrites it to the `VITE_BASE_URL` passed via `docker run -e`. **One image serves every environment.** `VITE_BASE_URL` must match the public origin where the container is served so the host can load widget assets cross-origin.
+The widget is packaged as a static nginx container (`nginxinc/nginx-unprivileged`). The widget origin is chosen **at run time**: the build stamps a placeholder origin into the assets, and a startup script (`docker-entrypoint.d/40-replace-base-url.sh`) copies the assets into `/tmp/html` and rewrites the placeholder there to the `VITE_BASE_URL` passed via `docker run -e`. **One image serves every environment.** `VITE_BASE_URL` must match the public origin where the container is served so the host can load widget assets cross-origin.
 
 ```bash
 # Build the image (origin not needed yet)
@@ -88,13 +88,25 @@ make docker-run
 # Run for a specific origin
 make docker-run VITE_BASE_URL=https://widget.example.com
 
+# Reproduce the deployment's hardened securityContext (read-only rootfs, /tmp
+# writable, non-root) locally:
+make docker-run-hardened
+
 # Stop
 make docker-stop
 ```
 
-The container serves on port 80 (mapped to `PORT`, default `8080`). `VITE_BASE_URL` is **required at run time** — the startup script aborts if it is unset (the widget would 404 in the host iframe). The `/_mcp-app/index.html` endpoint is handled by nginx and returns the same `index.html` as `/`. All assets are served with `Access-Control-Allow-Origin: *`, which is required for MCP hosts to load the widget cross-origin via `resourceDomains`.
+The container listens on port `8080` (mapped to `PORT`, default `8080`) — a non-privileged port so nginx can bind as a non-root user. `VITE_BASE_URL` is **required at run time** — the startup script aborts if it is unset (the widget would 404 in the host iframe). The `/_mcp-app/index.html` endpoint is handled by nginx and returns the same `index.html` as `/`. All assets are served with `Access-Control-Allow-Origin: *`, which is required for MCP hosts to load the widget cross-origin via `resourceDomains`.
 
-> If the container runs with a read-only root filesystem, `/usr/share/nginx/html` must remain writable (or be mounted from a writable volume) so the startup rewrite can run.
+### Hardened deployment (read-only rootfs, non-root)
+
+The image is built to run under a hardened Kubernetes `securityContext` (`readOnlyRootFilesystem: true`, non-root `runAsUser`). It needs **one writable volume mounted at `/tmp`** (an `emptyDir`) — nginx writes its pid and temp dirs there (handled by the `nginx-unprivileged` base image), and the startup script writes the rewritten asset copy to `/tmp/html`. Nothing else on the root filesystem is written.
+
+Deployment checklist:
+- `containerPort` / Service `targetPort` → **8080**
+- liveness/readiness probes → **8080** (a probe still hitting `:80` gets connection-refused and the pod is killed even when nginx is healthy)
+- mount a writable `emptyDir` at **`/tmp`**
+- set **`VITE_BASE_URL`** to the public widget origin
 
 When testing locally with MCPJam, pass `--widget-origin http://localhost:8080` to the MCP server's `local_server.py` so it fetches the widget HTML from the container instead of the dev server.
 

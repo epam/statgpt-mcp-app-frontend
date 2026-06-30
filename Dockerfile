@@ -18,15 +18,20 @@ ENV VITE_SOURCEMAP=false
 
 RUN npm run build
 
-FROM nginx:stable-alpine AS runner
+# nginx-unprivileged runs as a non-root user, listens on a non-privileged port,
+# and writes its pid + temp dirs under /tmp — so the image runs under a hardened
+# securityContext (readOnlyRootFilesystem, non-root) with only /tmp writable.
+FROM nginxinc/nginx-unprivileged:stable-alpine AS runner
 COPY --from=builder /app/dist /usr/share/nginx/html
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
-# Runs (via the stock nginx entrypoint) before nginx starts: rewrites the
-# placeholder origin in the built assets to the VITE_BASE_URL passed at runtime.
+# Runs (via the stock nginx entrypoint) before nginx starts: copies the built
+# assets into the writable /tmp/html and rewrites the placeholder origin there to
+# the VITE_BASE_URL passed at runtime. The script is tracked executable (100755),
+# so COPY preserves the bit — no chmod needed (a RUN chmod would fail as the
+# non-root build user in this base image).
 COPY docker-entrypoint.d/40-replace-base-url.sh /docker-entrypoint.d/40-replace-base-url.sh
-RUN chmod +x /docker-entrypoint.d/40-replace-base-url.sh
 
-EXPOSE 80
+EXPOSE 8080
 
 CMD ["nginx", "-g", "daemon off;"]
