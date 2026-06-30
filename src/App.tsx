@@ -3,7 +3,6 @@ import classNames from 'classnames';
 import { useSdmxData } from './hooks/useSdmxData';
 import { useHostLayout } from './hooks/useHostLayout';
 import { useHostTheme } from './hooks/useHostTheme';
-import { chartModelToGrid } from './adapters/chartModelToGrid';
 import { chartModelToChartingData } from './adapters/chartModelToChartingData';
 import { chartModelToCrossDatasetGrid } from './adapters/chartModelToCrossDatasetGrid';
 import { AppProviders } from './components/AppProviders';
@@ -18,15 +17,6 @@ export default function App() {
 
   useHostTheme(snapshot.hostContext);
   const { isFillHeight } = useHostLayout(snapshot.hostContext);
-
-  const gridAttachment = useMemo(() => {
-    if (!model) return undefined;
-    return {
-      type: ATTACHMENT_TYPE.CUSTOM_DATA_GRID,
-      title: meta?.title ?? 'Data',
-      grid_data: chartModelToGrid(model),
-    };
-  }, [model, meta]);
 
   const chartAttachment = useMemo(() => {
     if (!model) return undefined;
@@ -65,7 +55,6 @@ export default function App() {
             </div>
           ) : (
             <DataView
-              gridAttachment={gridAttachment}
               chartAttachment={chartAttachment}
               crossDatasetGridAttachment={crossDatasetGridAttachment}
               fillHeight={isFillHeight}
