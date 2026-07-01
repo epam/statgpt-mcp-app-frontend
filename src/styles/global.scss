@@ -74,4 +74,8 @@ body {
   --ag-border-color: var(--color-border-tertiary);
   --ag-row-hover-color: var(--color-background-secondary);
   --ag-odd-row-background-color: var(--color-background-tertiary);
+
+  .ag-root-wrapper {
+    color-scheme: inherit;
+  }
 }
