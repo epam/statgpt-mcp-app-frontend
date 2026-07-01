@@ -6,7 +6,7 @@
   "description": "MCP App widget — speaks the spec io.modelcontextprotocol/ui protocol via @modelcontextprotocol/ext-apps and renders SDMX data (ag-grid table + echarts chart) with @epam/statgpt-* libs.",
   "scripts": {
     "start": "vite --port 4300 --strictPort",
-    "build:local": "VITE_BASE_URL=http://localhost:4300 tsc --noEmit && VITE_BASE_URL=http://localhost:4300 vite build",
+    "build:local": "cross-env VITE_BASE_URL=http://localhost:4300 tsc --noEmit && cross-env VITE_BASE_URL=http://localhost:4300 vite build",
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview --port 4300 --strictPort",
     "lint": "eslint .",
@@ -44,6 +44,7 @@
     "@vitejs/plugin-react": "^6.0.3",
     "@vitest/coverage-v8": "^4.1.9",
     "autoprefixer": "^10.5.2",
+    "cross-env": "^7.0.3",
     "eslint": "^9.32.0",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-import": "^2.32.0",
