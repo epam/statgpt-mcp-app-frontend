@@ -1,0 +1,10 @@
+.ag-cell .metadata-indicator {
+  @apply absolute top-0 right-0;
+  @apply border-transparent border-r-semantic-info;
+  @apply border-r-[10px] border-b-[10px];
+  @apply cursor-pointer;
+}
+
+:root:not([data-display-mode='fullscreen']) .metadata-indicator {
+  display: none;
+}
