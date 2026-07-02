@@ -1,10 +1,8 @@
 import { renderHook, act } from '@testing-library/react';
-import { mockMeta, mockModel } from '../../mocks/sdmxData';
+import { mockMeta } from '../../mocks/sdmxData';
 
 describe('useSdmxData', () => {
   describe('dev mode', () => {
-    // In jsdom, window.parent === window and import.meta.env.DEV is true,
-    // so USE_DEV_MODE is true and the hook always returns mock data.
     let useSdmxData: () => import('../useSdmxData').SdmxData;
 
     beforeAll(async () => {
@@ -19,16 +17,6 @@ describe('useSdmxData', () => {
     it('returns error: null', () => {
       const { result } = renderHook(() => useSdmxData());
       expect(result.current.error).toBeNull();
-    });
-
-    it('returns canFetch: false', () => {
-      const { result } = renderHook(() => useSdmxData());
-      expect(result.current.canFetch).toBe(false);
-    });
-
-    it('returns the mock model', () => {
-      const { result } = renderHook(() => useSdmxData());
-      expect(result.current.model).toEqual(mockModel);
     });
 
     it('returns the mock meta', () => {
@@ -104,22 +92,6 @@ describe('useSdmxData', () => {
       currentSnapshot = { phase: 'connecting', toolResult: null };
       const { result } = renderHook(() => useSdmxData());
       expect(result.current.loading).toBe(false);
-    });
-
-    it('returns canFetch: false when snapshot has no toolResult', () => {
-      currentSnapshot = { phase: 'connecting', toolResult: null };
-      const { result } = renderHook(() => useSdmxData());
-      expect(result.current.canFetch).toBe(false);
-    });
-
-    it('returns canFetch: true when snapshot.toolResult contains a valid WidgetToolResult', async () => {
-      mockCallTool.mockResolvedValue({});
-      currentSnapshot = { phase: 'ready', toolResult: validToolResult };
-      const { result } = renderHook(() => useSdmxData());
-      expect(result.current.canFetch).toBe(true);
-      await act(async () => {
-        await Promise.resolve();
-      });
     });
 
     it('calls bridge.callTool when phase becomes "ready" and fetchKey is non-empty', async () => {

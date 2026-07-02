@@ -3,6 +3,7 @@ import type { McpUiHostContext } from '@modelcontextprotocol/ext-apps';
 
 export interface HostLayout {
   isFillHeight: boolean;
+  isFullscreen: boolean;
   locale: string | undefined;
 }
 
@@ -63,6 +64,7 @@ export function useHostLayout(
 
   return {
     isFillHeight: displayMode === 'pip' || displayMode === 'fullscreen',
+    isFullscreen: displayMode === 'fullscreen',
     locale: hostContext?.locale,
   };
 }
