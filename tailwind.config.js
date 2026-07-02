@@ -60,6 +60,7 @@ export default {
           warning: 'var(--semantic-warning)',
           'warning-light': 'var(--semantic-warning-light)',
           success: 'var(--semantic-success)',
+          info: 'var(--semantic-info)',
         },
         gradients: {
           light: 'var(--gradients-light)',

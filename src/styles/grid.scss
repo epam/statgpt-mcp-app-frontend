@@ -1,13 +1,9 @@
-.ag-root-wrapper {
-  @apply border-neutrals-300 rounded;
-}
-
 .ag-theme-quartz {
   .ag-root-wrapper {
     @apply border-neutrals-300 rounded;
 
     .ag-header {
-      @apply bg-hues-100 border-0;
+      @apply border-0;
     }
 
     .ag-row {
