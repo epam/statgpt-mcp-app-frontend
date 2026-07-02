@@ -14,6 +14,9 @@
 @use '@epam/statgpt-ui-components/styles-tailwind.scss';
 @use './fonts.scss';
 @use './chart-attachment.scss';
+@use './grid.scss';
+@use './side-panel.scss';
+@use './metadata.scss';
 
 html,
 body {
@@ -44,9 +47,7 @@ body {
   overflow-x: hidden;
 }
 
-:root[data-display-mode='pip'] html,
 :root[data-display-mode='pip'] body,
-:root[data-display-mode='fullscreen'] html,
 :root[data-display-mode='fullscreen'] body {
   height: 100%;
 }

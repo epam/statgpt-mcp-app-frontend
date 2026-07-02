@@ -1,4 +1,6 @@
 .chart-attachment {
+  --primary: var(--semantic-info);
+
   &-title {
     @apply h4;
   }

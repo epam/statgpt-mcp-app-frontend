@@ -1,25 +1,23 @@
 import { useState } from 'react';
 import classNames from 'classnames';
+import { IconChevronLeft, IconChevronRight } from '@tabler/icons-react';
 import {
+  ChartingIcon,
   CustomChartAttachment,
   CrossDatasetGridAttachment,
 } from '@epam/statgpt-conversation-view';
-import type { ChartingData, GridData } from '@epam/statgpt-conversation-view';
-import type { ColDef } from 'ag-grid-community';
 import { ATTACHMENT_TYPE } from '../constants/attachmentTypes';
+import type {
+  ChartAttachment,
+  CrossDatasetGridAttachmentData,
+} from '../types/attachments';
+
+const CHART_NAVIGATION_ICONS = {
+  [ChartingIcon.PREVIOUS]: <IconChevronLeft width={20} height={20} />,
+  [ChartingIcon.NEXT]: <IconChevronRight width={20} height={20} />,
+};
 
 type Tab = 'grid' | 'chart';
-
-interface ChartAttachment {
-  type: typeof ATTACHMENT_TYPE.CUSTOM_CHART;
-  title: string;
-  charting_data?: ChartingData;
-}
-
-interface CrossDatasetGridAttachmentData {
-  data: GridData[];
-  columns: ColDef[];
-}
 
 interface Props {
   chartAttachment: ChartAttachment | undefined;
@@ -96,7 +94,7 @@ export function DataView({
             className={classNames(
               'px-4 py-2 text-sm font-medium capitalize -mb-px border-b-2 transition-colors',
               effectiveTab === tab
-                ? 'border-primary text-primary'
+                ? 'border-semantic-info text-semantic-info'
                 : 'border-transparent text-neutrals-700 hover:text-neutrals-1000',
             )}
           >
@@ -117,6 +115,7 @@ export function DataView({
             attachment={chartAttachment}
             fillHeight={fillHeight}
             fixHeight={!fillHeight}
+            icons={CHART_NAVIGATION_ICONS}
           />
         )}
       </div>
