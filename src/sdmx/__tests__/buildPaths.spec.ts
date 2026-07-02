@@ -1,4 +1,4 @@
-import { dataPath } from '../buildPaths';
+import { dataPath, structurePath } from '../buildPaths';
 
 const q = {
   agency_id: 'IMF',
@@ -34,5 +34,32 @@ describe('dataPath', () => {
     const result = dataPath(qWithoutParams);
     expect(result).toContain('/sdmx/3.0/data/dataflow/IMF/BOP/1.0/A.US?');
     expect(result).toContain('attributes=all');
+  });
+});
+
+describe('structurePath', () => {
+  it('produces the correct path structure <base>/<agency>/<resource>/<version>?...', () => {
+    const result = structurePath(q);
+    expect(result).toContain('/sdmx/3.0/structure/dataflow/IMF/BOP/1.0?');
+  });
+
+  it('includes references=descendants', () => {
+    const result = structurePath(q);
+    expect(result).toContain('references=descendants');
+  });
+
+  it('includes detail=referencepartial', () => {
+    const result = structurePath(q);
+    expect(result).toContain('detail=referencepartial');
+  });
+
+  it('does not include the data key in the path', () => {
+    const result = structurePath(q);
+    expect(result).not.toContain('A.US');
+  });
+
+  it('does not include an attributes param', () => {
+    const result = structurePath(q);
+    expect(result).not.toContain('attributes=');
   });
 });

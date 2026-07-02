@@ -1,67 +1,37 @@
-import { useMemo } from 'react';
-import classNames from 'classnames';
 import { useSdmxData } from './hooks/useSdmxData';
 import { useHostLayout } from './hooks/useHostLayout';
 import { useHostTheme } from './hooks/useHostTheme';
-import { chartModelToChartingData } from './adapters/chartModelToChartingData';
-import { chartModelToCrossDatasetGrid } from './adapters/chartModelToCrossDatasetGrid';
+import { useDataAttachments } from './hooks/useDataAttachments';
 import { AppProviders } from './components/AppProviders';
-import { ConnectionStatus } from './components/ConnectionStatus';
-import { Loader } from './components/Loader';
-import { ATTACHMENT_TYPE } from './constants/attachmentTypes';
-import { DataView } from './components/DataView';
-import { ErrorBanner } from './components/ErrorBanner';
+import { AppContent } from './components/AppContent';
 
 export default function App() {
-  const { snapshot, meta, model, loading, error } = useSdmxData();
+  const { snapshot, meta, crossDataset, loading, error } = useSdmxData();
 
   useHostTheme(snapshot.hostContext);
-  const { isFillHeight } = useHostLayout(snapshot.hostContext);
+  const { isFillHeight, isFullscreen, locale } = useHostLayout(
+    snapshot.hostContext,
+  );
+  const effectiveLocale = locale ?? 'en';
 
-  const chartAttachment = useMemo(() => {
-    if (!model) return undefined;
-    return {
-      type: ATTACHMENT_TYPE.CUSTOM_CHART,
-      title: meta?.title ?? 'Chart',
-      charting_data: chartModelToChartingData(model),
-    };
-  }, [model, meta]);
-
-  const crossDatasetGridAttachment = useMemo(() => {
-    if (!model) return undefined;
-    return chartModelToCrossDatasetGrid(model);
-  }, [model]);
+  const { chartAttachment, crossDatasetGridAttachment } = useDataAttachments({
+    crossDataset,
+    meta,
+    effectiveLocale,
+    isFullscreen,
+  });
 
   return (
-    <AppProviders>
-      {snapshot.phase !== 'ready' && snapshot.phase !== 'tool-pending' ? (
-        <ConnectionStatus
-          phase={snapshot.phase}
-          lastError={snapshot.lastError}
-        />
-      ) : (
-        <div
-          className={classNames('flex flex-col gap-4 p-4', {
-            'h-full': isFillHeight,
-            'min-h-[var(--mcp-widget-min-height)]':
-              !isFillHeight && loading && !model,
-          })}
-        >
-          {error && <ErrorBanner message={error} />}
-
-          {loading && !model ? (
-            <div className="flex flex-1 items-center justify-center">
-              <Loader />
-            </div>
-          ) : (
-            <DataView
-              chartAttachment={chartAttachment}
-              crossDatasetGridAttachment={crossDatasetGridAttachment}
-              fillHeight={isFillHeight}
-            />
-          )}
-        </div>
-      )}
+    <AppProviders isMetadataInSidePanel={isFullscreen}>
+      <AppContent
+        snapshot={snapshot}
+        loading={loading}
+        error={error}
+        isFillHeight={isFillHeight}
+        isFullscreen={isFullscreen}
+        chartAttachment={chartAttachment}
+        crossDatasetGridAttachment={crossDatasetGridAttachment}
+      />
     </AppProviders>
   );
 }
