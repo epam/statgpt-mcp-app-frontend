@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import type { DataQuery } from '@epam/statgpt-shared-toolkit';
 import type { DataMessage, StructuralData } from '@epam/statgpt-sdmx-toolkit';
 import type { CrossDatasetInputs } from '../types/sdmx';
 import { bridge } from '../bridge';
@@ -8,7 +7,6 @@ import type { McpUiHostContext } from '@modelcontextprotocol/ext-apps';
 import type { BridgeSnapshot, WidgetMeta } from '../bridge/types';
 import { extractWidgetMeta } from '../bridge/parseToolResult';
 import { dataPath, structurePath } from '../sdmx/buildPaths';
-import { datasetUrn } from '../sdmx/urn';
 import {
   mockMeta,
   mockStructuralData,
@@ -56,12 +54,8 @@ export interface SdmxData {
 }
 
 /**
- * Fetches SDMX data and structure metadata for all queries in parallel and returns
- * the current load/error/crossDataset state.
- *
- * `dataQueries` entries carry empty dimension-role values (`countryDimension`,
- * `indicatorDimensions`) because the backend does not yet supply this metadata; the
- * cross-dataset builders degrade gracefully to blank role columns rather than crashing.
+ * Fetches SDMX data and structure metadata for all enabled queries in parallel and
+ * returns the current load/error/crossDataset state.
  */
 export function useSdmxData(): SdmxData {
   const snapshot = useBridgeSnapshot();
@@ -78,21 +72,26 @@ export function useSdmxData(): SdmxData {
     [snapshot.toolResult],
   );
 
+  const activeQueries = useMemo(
+    () => meta?.queries.filter((q) => !q.disabled) ?? [],
+    [meta],
+  );
+
   const fetchKey = useMemo(() => {
-    if (!meta?.queries.length) return '';
-    return JSON.stringify(meta.queries);
-  }, [meta?.queries]);
+    if (!activeQueries.length) return '';
+    return JSON.stringify(activeQueries);
+  }, [activeQueries]);
 
   const refresh = useCallback(async () => {
-    if (!meta?.queries.length) return;
+    if (!meta || !activeQueries.length) return;
     const token = ++fetchToken.current;
     setLoading(true);
     setError(null);
     try {
       const [rawResults, structureResults] = await Promise.all([
         Promise.all(
-          meta.queries.map(async (q) => {
-            const path = dataPath(q.sdmx);
+          activeQueries.map(async (q) => {
+            const path = dataPath(q);
             const raw = await bridge.callTool(meta.sdmxProxyToolName, {
               path,
             });
@@ -100,8 +99,8 @@ export function useSdmxData(): SdmxData {
           }),
         ),
         Promise.allSettled(
-          meta.queries.map(async (q) => {
-            const path = structurePath(q.sdmx);
+          activeQueries.map(async (q) => {
+            const path = structurePath(q);
             const raw = (await bridge.callTool(meta.sdmxProxyToolName, {
               path,
             })) as { data?: StructuralData };
@@ -113,31 +112,27 @@ export function useSdmxData(): SdmxData {
 
       const dataMessagesMap = new Map<string, DataMessage | null>();
       const structuresMap = new Map<string, StructuralData | undefined>();
-      const dataQueries: DataQuery[] = [];
 
-      meta.queries.forEach((q, i) => {
-        const urn = datasetUrn(q.sdmx);
-        dataMessagesMap.set(urn, rawResults[i]);
+      activeQueries.forEach((q, i) => {
+        dataMessagesMap.set(q.urn, rawResults[i]);
 
         const structureResult = structureResults[i];
         if (structureResult.status === 'fulfilled') {
-          structuresMap.set(urn, structureResult.value);
+          structuresMap.set(q.urn, structureResult.value);
         } else {
-          structuresMap.set(urn, undefined);
+          structuresMap.set(q.urn, undefined);
           console.error(
-            `[widget][sdmx_proxy][structure] ✗ ${urn}`,
+            `[widget][sdmx_proxy][structure] ✗ ${q.urn}`,
             structureResult.reason,
           );
         }
-
-        dataQueries.push({
-          urn,
-          metadata: { countryDimension: '', indicatorDimensions: [] },
-          filters: [],
-        });
       });
 
-      setCrossDataset({ structuresMap, dataMessagesMap, dataQueries });
+      setCrossDataset({
+        structuresMap,
+        dataMessagesMap,
+        dataQueries: activeQueries,
+      });
     } catch (e) {
       console.error('[widget] callTool ✗', meta.sdmxProxyToolName, e);
       if (token !== fetchToken.current) return;
@@ -145,7 +140,7 @@ export function useSdmxData(): SdmxData {
     } finally {
       if (token === fetchToken.current) setLoading(false);
     }
-  }, [meta]);
+  }, [meta, activeQueries]);
 
   useEffect(() => {
     if (snapshot.phase === 'ready' && fetchKey) void refresh();
@@ -153,20 +148,14 @@ export function useSdmxData(): SdmxData {
   }, [snapshot.phase, fetchKey]);
 
   if (USE_DEV_MODE) {
-    const devUrn = datasetUrn(mockMeta.queries[0].sdmx);
+    const devQuery = mockMeta.queries[0];
     return {
       snapshot: DEV_SNAPSHOT,
       meta: mockMeta,
       crossDataset: {
-        structuresMap: new Map([[devUrn, mockStructuralData]]),
-        dataMessagesMap: new Map([[devUrn, mockDataMessage]]),
-        dataQueries: [
-          {
-            urn: devUrn,
-            metadata: { countryDimension: '', indicatorDimensions: [] },
-            filters: [],
-          },
-        ],
+        structuresMap: new Map([[devQuery.urn, mockStructuralData]]),
+        dataMessagesMap: new Map([[devQuery.urn, mockDataMessage]]),
+        dataQueries: [devQuery],
       },
       loading: false,
       error: null,
@@ -181,7 +170,7 @@ export function useSdmxData(): SdmxData {
     loading:
       loading ||
       snapshot.phase === 'tool-pending' ||
-      (!!meta?.queries.length &&
+      (!!activeQueries.length &&
         !!snapshot.toolResult &&
         !crossDataset &&
         !error),
