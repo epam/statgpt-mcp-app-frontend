@@ -12,7 +12,7 @@ const minimalQuery = {
 const minimalToolResult = {
   version: 1 as const,
   queries: [minimalQuery],
-  tools: { sdmx_proxy: 'sdmx_proxy_tool' },
+  tools: { sdmxProxy: 'sdmx_proxy_tool' },
 };
 
 describe('extractWidgetMeta', () => {
@@ -25,7 +25,7 @@ describe('extractWidgetMeta', () => {
   });
 
   it('returns null for an object missing queries', () => {
-    expect(extractWidgetMeta({ tools: { sdmx_proxy: 'x' } })).toBeNull();
+    expect(extractWidgetMeta({ tools: { sdmxProxy: 'x' } })).toBeNull();
   });
 
   it('returns WidgetMeta from a direct WidgetToolResult object', () => {
@@ -34,6 +34,7 @@ describe('extractWidgetMeta', () => {
       queries: [minimalQuery],
       sdmxProxyToolName: 'sdmx_proxy_tool',
       title: undefined,
+      pythonCode: undefined,
     });
   });
 
@@ -44,7 +45,14 @@ describe('extractWidgetMeta', () => {
       queries: [minimalQuery],
       sdmxProxyToolName: 'sdmx_proxy_tool',
       title: undefined,
+      pythonCode: undefined,
     });
+  });
+
+  it('includes pythonCode when present', () => {
+    const withPythonCode = { ...minimalToolResult, pythonCode: 'print(1)' };
+    const result = extractWidgetMeta(withPythonCode);
+    expect(result?.pythonCode).toBe('print(1)');
   });
 
   it('includes title when present', () => {

@@ -18,10 +18,11 @@ export function extractWidgetMeta(toolResult: unknown): WidgetMeta | null {
       ? r.structuredContent
       : toolResult;
   const t = candidate as Partial<WidgetToolResult>;
-  if (!Array.isArray(t.queries) || !t.tools?.sdmx_proxy) return null;
+  if (!Array.isArray(t.queries) || !t.tools?.sdmxProxy) return null;
   return {
     title: typeof t.title === 'string' ? t.title : undefined,
     queries: t.queries,
-    sdmxProxyToolName: t.tools.sdmx_proxy,
+    sdmxProxyToolName: t.tools.sdmxProxy,
+    pythonCode: typeof t.pythonCode === 'string' ? t.pythonCode : undefined,
   };
 }
