@@ -38,12 +38,14 @@ describe('useSdmxData', () => {
     const validToolResult = {
       queries: [
         {
-          sdmx: {
-            context: 'dataflow',
-            agency_id: 'IMF',
-            resource_id: 'BOP',
-            version: '1.0',
-            key: 'A',
+          urn: 'IMF:BOP(1.0)',
+          filters: [
+            { componentCode: 'COUNTRY', operator: 'in', values: ['A'] },
+          ],
+          metadata: {
+            countryDimension: 'COUNTRY',
+            indicatorDimensions: [],
+            keyDimensionIdsInDsdOrder: ['COUNTRY'],
           },
         },
       ],

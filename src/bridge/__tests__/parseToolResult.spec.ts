@@ -1,12 +1,11 @@
 import { extractWidgetMeta } from '../parseToolResult';
 
 const minimalQuery = {
-  sdmx: {
-    context: 'dataflow',
-    agency_id: 'ESTAT',
-    resource_id: 'DS1',
-    version: '1.0',
-    key: 'A',
+  urn: 'ESTAT:DS1(1.0)',
+  filters: [{ componentCode: 'FREQ', operator: 'in', values: ['A'] }],
+  metadata: {
+    countryDimension: '',
+    indicatorDimensions: [],
   },
 };
 

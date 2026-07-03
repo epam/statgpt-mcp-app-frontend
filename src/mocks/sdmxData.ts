@@ -1,17 +1,34 @@
 import type { DataMessage, StructuralData } from '@epam/statgpt-sdmx-toolkit';
+import { QueryFilterType } from '@epam/statgpt-shared-toolkit';
 import type { WidgetMeta } from '../bridge/types';
 
 export const mockMeta: WidgetMeta = {
   title: 'Germany — Real GDP Growth',
   queries: [
     {
-      sdmx: {
-        context: 'dataflow',
-        agency_id: 'IMF.STA',
-        resource_id: 'QGDP',
-        version: '1.0',
-        key: 'DEU.B1GQ.....',
-        params: { startPeriod: '2010' },
+      urn: 'IMF.STA:QGDP(1.0)',
+      filters: [
+        {
+          componentCode: 'COUNTRY',
+          operator: QueryFilterType.IN,
+          values: ['DEU'],
+        },
+        {
+          componentCode: 'INDICATOR',
+          operator: QueryFilterType.IN,
+          values: ['B1GQ'],
+        },
+        {
+          componentCode: 'TIME_PERIOD',
+          operator: QueryFilterType.BETWEEN,
+          values: ['2010-01-01', '2024-12-31'],
+        },
+      ],
+      metadata: {
+        countryDimension: 'COUNTRY',
+        indicatorDimensions: ['INDICATOR'],
+        timePeriodDimension: 'TIME_PERIOD',
+        keyDimensionIdsInDsdOrder: ['COUNTRY', 'INDICATOR'],
       },
     },
   ],

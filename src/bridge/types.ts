@@ -1,4 +1,5 @@
 import type { McpUiHostContext } from '@modelcontextprotocol/ext-apps';
+import type { DataQuery } from '@epam/statgpt-shared-toolkit';
 
 export type BridgePhase =
   | 'connecting'
@@ -24,25 +25,13 @@ export interface BridgeSnapshot {
 export interface WidgetToolResult {
   version: 1;
   title?: string;
-  queries: SdmxQuery[];
+  queries: DataQuery[];
   tools: { sdmx_proxy: string };
-}
-
-export interface SdmxQuery {
-  dataset_id?: string;
-  sdmx: {
-    context: string;
-    agency_id: string;
-    resource_id: string;
-    version: string;
-    key: string;
-    params?: Record<string, string>;
-  };
 }
 
 export interface WidgetMeta {
   title?: string;
-  queries: SdmxQuery[];
+  queries: DataQuery[];
   sdmxProxyToolName: string;
 }
 
