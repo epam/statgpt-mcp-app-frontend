@@ -1,4 +1,11 @@
-import type { SdmxQuery } from '../bridge/types';
+import type { DataQuery } from '@epam/statgpt-shared-toolkit';
+import {
+  DimensionType,
+  getTimeQueryFilter,
+  getTimeSeriesFilterKey,
+  splitUrn,
+  type Dimension,
+} from '@epam/statgpt-sdmx-toolkit';
 import {
   SDMX_BASE_PATH,
   SDMX_DEFAULT_ATTRIBUTES,
@@ -8,18 +15,48 @@ import {
 } from '../constants/sdmx';
 
 /**
+ * `getTimeSeriesFilterKey`/`getTimeQueryFilter` only read `id`/`type` off each
+ * dimension, so these stubs stand in for the real DSD dimensions without
+ * requiring the structure fetch to resolve first, keeping data and structure
+ * requests concurrent.
+ */
+function keyDimensionStubs(ids: string[] | undefined): Dimension[] {
+  return (ids ?? []).map((id) => ({
+    id,
+    type: DimensionType.DIMENSION,
+    conceptIdentity: '',
+  }));
+}
+
+function timeDimensionStub(id: string | undefined): Dimension | undefined {
+  return id
+    ? { id, type: DimensionType.TIME_DIMENSION, conceptIdentity: '' }
+    : undefined;
+}
+
+/**
  * Builds the SDMX REST API path used as the `path` argument when calling the MCP tool proxy.
  *
- * @param q - SDMX query parameters containing agency ID, resource ID, version, key, and optional extra query params.
+ * @param q - The query's dataset URN, filters, and dimension-role metadata.
  * @returns A URL path string of the form `<base>/<agency>/<resource>/<version>/<key>?attributes=...&...`.
  */
-export function dataPath(q: SdmxQuery['sdmx']): string {
-  const base = `${SDMX_BASE_PATH}/${q.agency_id}/${q.resource_id}/${q.version}/${q.key}`;
+export function dataPath(q: DataQuery): string {
+  const { agency, id, version } = splitUrn(q.urn);
+  const key = getTimeSeriesFilterKey(
+    keyDimensionStubs(q.metadata.keyDimensionIdsInDsdOrder),
+    q.filters ?? [],
+  );
+  const timeDimension = timeDimensionStub(q.metadata.timePeriodDimension);
+  const timeFilter = timeDimension
+    ? getTimeQueryFilter(q, timeDimension)
+    : null;
+
+  const base = `${SDMX_BASE_PATH}/${agency}/${id}/${version}/${key || '*'}`;
   const params = new URLSearchParams({
     attributes: SDMX_DEFAULT_ATTRIBUTES,
-    ...(q.params ?? {}),
   });
-  return `${base}?${params}`;
+  const query = [timeFilter, params.toString()].filter(Boolean).join('&');
+  return `${base}?${query}`;
 }
 
 /**
@@ -31,11 +68,12 @@ export function dataPath(q: SdmxQuery['sdmx']): string {
  * value labelling, without the concept-scheme/description bloat that
  * `references=all` includes.
  *
- * @param q - SDMX query parameters containing agency ID, resource ID, and version.
+ * @param q - The query's dataset URN.
  * @returns A URL path string of the form `<base>/<agency>/<resource>/<version>?references=descendants&detail=referencepartial`.
  */
-export function structurePath(q: SdmxQuery['sdmx']): string {
-  const base = `${SDMX_STRUCTURE_BASE_PATH}/${q.agency_id}/${q.resource_id}/${q.version}`;
+export function structurePath(q: DataQuery): string {
+  const { agency, id, version } = splitUrn(q.urn);
+  const base = `${SDMX_STRUCTURE_BASE_PATH}/${agency}/${id}/${version}`;
   const params = new URLSearchParams({
     references: SDMX_STRUCTURE_REFERENCES,
     detail: SDMX_STRUCTURE_DETAIL,
