@@ -26,13 +26,15 @@ export interface WidgetToolResult {
   version: 1;
   title?: string;
   queries: DataQuery[];
-  tools: { sdmx_proxy: string };
+  tools: { sdmxProxy: string };
+  pythonCode?: string;
 }
 
 export interface WidgetMeta {
   title?: string;
   queries: DataQuery[];
   sdmxProxyToolName: string;
+  pythonCode?: string;
 }
 
 export class BridgeError extends Error {
