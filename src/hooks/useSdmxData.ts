@@ -8,6 +8,11 @@ import type { BridgeSnapshot, WidgetMeta } from '../bridge/types';
 import { extractWidgetMeta } from '../bridge/parseToolResult';
 import { dataPath, structurePath } from '../sdmx/buildPaths';
 import {
+  summarizeDataMessage,
+  summarizeStructuralData,
+} from '../sdmx/logSummary';
+import { logger } from '../log/logger';
+import {
   mockMeta,
   mockStructuralData,
   mockDataMessage,
@@ -67,10 +72,17 @@ export function useSdmxData(): SdmxData {
 
   const fetchToken = useRef(0);
 
-  const meta = useMemo(
-    () => extractWidgetMeta(snapshot.toolResult),
-    [snapshot.toolResult],
-  );
+  const meta = useMemo(() => {
+    const extracted = extractWidgetMeta(snapshot.toolResult);
+    if (!extracted && snapshot.toolResult) {
+      logger.warn(
+        'bridge',
+        'tool-result missing expected fields',
+        snapshot.toolResult,
+      );
+    }
+    return extracted;
+  }, [snapshot.toolResult]);
 
   const activeQueries = useMemo(
     () => meta?.queries.filter((q) => !q.disabled) ?? [],
@@ -92,18 +104,42 @@ export function useSdmxData(): SdmxData {
         Promise.all(
           activeQueries.map(async (q) => {
             const path = dataPath(q);
-            const raw = await bridge.callTool(meta.sdmxProxyToolName, {
+            logger.debug('sdmx_proxy', 'request', {
+              kind: 'data',
+              urn: q.urn,
               path,
             });
-            return raw as DataMessage;
+            const startedAt = performance.now();
+            const raw = (await bridge.callTool(meta.sdmxProxyToolName, {
+              path,
+            })) as DataMessage;
+            logger.debug('sdmx_proxy', 'response', {
+              kind: 'data',
+              urn: q.urn,
+              durationMs: Math.round(performance.now() - startedAt),
+              summary: summarizeDataMessage(raw),
+            });
+            return raw;
           }),
         ),
         Promise.allSettled(
           activeQueries.map(async (q) => {
             const path = structurePath(q);
+            logger.debug('sdmx_proxy', 'request', {
+              kind: 'structure',
+              urn: q.urn,
+              path,
+            });
+            const startedAt = performance.now();
             const raw = (await bridge.callTool(meta.sdmxProxyToolName, {
               path,
             })) as { data?: StructuralData };
+            logger.debug('sdmx_proxy', 'response', {
+              kind: 'structure',
+              urn: q.urn,
+              durationMs: Math.round(performance.now() - startedAt),
+              summary: raw?.data ? summarizeStructuralData(raw.data) : null,
+            });
             return raw?.data;
           }),
         ),
@@ -121,10 +157,9 @@ export function useSdmxData(): SdmxData {
           structuresMap.set(q.urn, structureResult.value);
         } else {
           structuresMap.set(q.urn, undefined);
-          console.error(
-            `[widget][sdmx_proxy][structure] ✗ ${q.urn}`,
-            structureResult.reason,
-          );
+          logger.error('sdmx_proxy', `structure fetch failed: ${q.urn}`, {
+            reason: structureResult.reason,
+          });
         }
       });
 
@@ -134,7 +169,11 @@ export function useSdmxData(): SdmxData {
         dataQueries: activeQueries,
       });
     } catch (e) {
-      console.error('[widget] callTool ✗', meta.sdmxProxyToolName, e);
+      logger.error(
+        'sdmx_proxy',
+        `callTool failed: ${meta.sdmxProxyToolName}`,
+        e,
+      );
       if (token !== fetchToken.current) return;
       setError((e as { message?: string }).message || String(e));
     } finally {

@@ -109,6 +109,14 @@ export default [
     },
   },
 
+  // ── Logger — the one sanctioned console.debug call site ──────────────────
+  {
+    files: ['src/log/logger.ts'],
+    rules: {
+      'no-console': ['error', { allow: ['warn', 'error', 'info', 'debug'] }],
+    },
+  },
+
   // ── Vitest globals for spec files ────────────────────────────────────────
   {
     files: ['**/*.{spec,test}.{ts,tsx}'],
