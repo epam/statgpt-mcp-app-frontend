@@ -7,11 +7,8 @@ import type { McpUiHostContext } from '@modelcontextprotocol/ext-apps';
 import type { BridgeSnapshot, WidgetMeta } from '../bridge/types';
 import { extractWidgetMeta } from '../bridge/parseToolResult';
 import { dataPath, structurePath } from '../sdmx/buildPaths';
-import {
-  summarizeDataMessage,
-  summarizeStructuralData,
-} from '../sdmx/logSummary';
 import { logger } from '../log/logger';
+import { truncateForLog } from '../log/truncateForLog';
 import {
   mockMeta,
   mockStructuralData,
@@ -117,7 +114,7 @@ export function useSdmxData(): SdmxData {
               kind: 'data',
               urn: q.urn,
               durationMs: Math.round(performance.now() - startedAt),
-              summary: summarizeDataMessage(raw),
+              response: truncateForLog(raw),
             });
             return raw;
           }),
@@ -138,7 +135,7 @@ export function useSdmxData(): SdmxData {
               kind: 'structure',
               urn: q.urn,
               durationMs: Math.round(performance.now() - startedAt),
-              summary: raw?.data ? summarizeStructuralData(raw.data) : null,
+              response: truncateForLog(raw?.data),
             });
             return raw?.data;
           }),
