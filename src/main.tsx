@@ -2,6 +2,7 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { AllCommunityModule, ModuleRegistry } from 'ag-grid-community';
 import './styles/global.scss';
+import './monaco/setupMonaco';
 import App from './App';
 import { bridge } from './bridge';
 

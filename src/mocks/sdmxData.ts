@@ -33,6 +33,19 @@ export const mockMeta: WidgetMeta = {
     },
   ],
   sdmxProxyToolName: 'sdmx_proxy',
+  pythonCode: [
+    '# Uses the sdmx1 library: https://pypi.org/project/sdmx1/',
+    '# pip install sdmx1',
+    '',
+    'import sdmx',
+    '',
+    'provider = sdmx.Client("IMF_STA")',
+    'data_msg = provider.data(',
+    '    "IMF.STA,QGDP,1.0",',
+    '    key="DEU.B1GQ",',
+    "    params={'startPeriod': '2010', 'endPeriod': '2024'}",
+    ')',
+  ].join('\n'),
 };
 
 export const mockStructuralData: StructuralData = {
