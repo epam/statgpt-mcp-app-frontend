@@ -3,7 +3,7 @@ import type { McpUiHostContext } from '@modelcontextprotocol/ext-apps';
 import { APP_NAME, APP_VERSION } from '../app.meta';
 import { logger } from '../log/logger';
 import { BridgeError, type BridgeSnapshot, type HostBridge } from './types';
-import { unwrapStructured } from './utils';
+import { extractCallToolPayload, unwrapStructured } from './utils';
 
 type Listener = () => void;
 
@@ -107,7 +107,7 @@ export function createSpecBridge(): HostBridge {
         name,
         arguments: args as Record<string, unknown>,
       });
-      return unwrapStructured(result);
+      return extractCallToolPayload(result);
     },
   };
 }

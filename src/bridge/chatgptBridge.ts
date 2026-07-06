@@ -1,6 +1,6 @@
 import type { McpUiHostContext } from '@modelcontextprotocol/ext-apps';
 import { BridgeError, type BridgeSnapshot, type HostBridge } from './types';
-import { unwrapStructured } from './utils';
+import { extractCallToolPayload } from './utils';
 
 declare global {
   interface Window {
@@ -119,7 +119,7 @@ export function createChatGPTBridge(): HostBridge {
         throw new BridgeError('window.openai.callTool not available');
       }
       const result = await window.openai.callTool(name, args);
-      return unwrapStructured(result);
+      return extractCallToolPayload(result);
     },
   };
 }
