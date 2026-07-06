@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { lazy, Suspense, useState } from 'react';
 import classNames from 'classnames';
 import { IconChevronLeft, IconChevronRight } from '@tabler/icons-react';
 import {
@@ -7,11 +7,19 @@ import {
   CrossDatasetGridAttachment,
 } from '@epam/statgpt-conversation-view';
 import { ATTACHMENT_TYPE } from '../constants/attachmentTypes';
-import { CodeAttachment } from './CodeAttachment';
+import { Loader } from './Loader';
 import type {
   ChartAttachment,
   CrossDatasetGridAttachmentData,
 } from '../types/attachments';
+
+/**
+ * Lazy so Monaco's editor bundle (see `CodeAttachment`/`setupMonaco`) is only
+ * fetched the first time the Code tab is actually opened, instead of at app boot.
+ */
+const CodeAttachment = lazy(() =>
+  import('./CodeAttachment').then((m) => ({ default: m.CodeAttachment })),
+);
 
 const CHART_NAVIGATION_ICONS = {
   [ChartingIcon.PREVIOUS]: <IconChevronLeft width={20} height={20} />,
@@ -129,11 +137,19 @@ export function DataView({
           />
         )}
         {effectiveTab === 'code' && pythonCode && (
-          <CodeAttachment
-            code={pythonCode}
-            theme={codeTheme}
-            fillHeight={fillHeight}
-          />
+          <Suspense
+            fallback={
+              <div className="flex h-[400px] items-center justify-center">
+                <Loader />
+              </div>
+            }
+          >
+            <CodeAttachment
+              code={pythonCode}
+              theme={codeTheme}
+              fillHeight={fillHeight}
+            />
+          </Suspense>
         )}
       </div>
     </div>
