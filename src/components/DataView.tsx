@@ -1,10 +1,11 @@
-import { lazy, Suspense, useState } from 'react';
+import { lazy, Suspense, useEffect, useState } from 'react';
 import classNames from 'classnames';
 import { IconChevronLeft, IconChevronRight } from '@tabler/icons-react';
 import {
   ChartingIcon,
   CustomChartAttachment,
   CrossDatasetGridAttachment,
+  useConversationViewSidePanelOptional,
 } from '@epam/statgpt-conversation-view';
 import { ATTACHMENT_TYPE } from '../constants/attachmentTypes';
 import { Loader } from './Loader';
@@ -76,9 +77,7 @@ export function DataView({
   fillHeight,
 }: Props) {
   const [activeTab, setActiveTab] = useState<Tab>('grid');
-
-  if (!chartAttachment && !crossDatasetGridAttachment && !pythonCode)
-    return null;
+  const closePanel = useConversationViewSidePanelOptional()?.closePanel;
 
   const availableTabs: Tab[] = [
     ...(crossDatasetGridAttachment ? ['grid' as Tab] : []),
@@ -89,6 +88,13 @@ export function DataView({
   const effectiveTab: Tab = availableTabs.includes(activeTab)
     ? activeTab
     : availableTabs[0];
+
+  useEffect(() => {
+    if (effectiveTab !== 'grid') closePanel?.();
+  }, [effectiveTab, closePanel]);
+
+  if (!chartAttachment && !crossDatasetGridAttachment && !pythonCode)
+    return null;
 
   const crossDatasetAttachment = crossDatasetGridAttachment
     ? {
