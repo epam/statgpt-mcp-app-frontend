@@ -31,6 +31,7 @@ export default function App() {
         isFullscreen={isFullscreen}
         chartAttachment={chartAttachment}
         crossDatasetGridAttachment={crossDatasetGridAttachment}
+        pythonCode={meta?.pythonCode}
       />
     </AppProviders>
   );
