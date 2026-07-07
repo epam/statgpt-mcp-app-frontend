@@ -1,5 +1,6 @@
 import classNames from 'classnames';
 import { Editor, OnMount } from '@monaco-editor/react';
+import '../monaco/setupMonaco';
 
 const MONACO_THEME: Record<'light' | 'dark', string> = {
   light: 'vs',
@@ -15,7 +16,10 @@ interface Props {
 
 /**
  * Read-only Python code viewer backed by the widget's locally bundled Monaco
- * build (see `src/monaco/setupMonaco.ts`).
+ * build (see `src/monaco/setupMonaco.ts`). This module is loaded via
+ * `React.lazy` in `DataView`, so the `setupMonaco` side-effect import above
+ * only fetches Monaco's editor bundle the first time a code attachment is
+ * actually shown, instead of at app boot.
  *
  * Monaco's `automaticLayout` measures its container's actual height, so
  * `h-full` alone collapses to a few px when the parent chain has no defined
