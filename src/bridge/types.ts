@@ -8,6 +8,8 @@ export type BridgePhase =
   | 'error'
   | 'torndown';
 
+export type HostKind = 'claude' | 'chatgpt' | 'generic';
+
 export interface HostBridge {
   start(): void;
   subscribe(listener: () => void): () => void;
@@ -17,6 +19,7 @@ export interface HostBridge {
 
 export interface BridgeSnapshot {
   phase: BridgePhase;
+  hostKind?: HostKind;
   hostContext?: McpUiHostContext;
   toolResult: unknown;
   lastError?: string;
