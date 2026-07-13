@@ -18,9 +18,16 @@
 @use './side-panel.scss';
 @use './metadata.scss';
 
+// `@epam/statgpt-ui-components/styles-tailwind.scss` applies
+// `h-full w-full ... overflow-hidden` to html/body, assuming the portal owns
+// the full page. This widget instead needs html/body to size to content so
+// the SDK's `max-content` measurement (see useInlineHeightSync) reflects the
+// real content height rather than being locked to whatever height was last
+// measured.
 html,
 body {
-  min-height: 100%;
+  height: auto;
+  overflow: visible;
 }
 
 body {
@@ -38,7 +45,7 @@ body {
 }
 
 :root {
-  --mcp-widget-min-height: 480px;
+  --mcp-widget-min-height: 180px;
 }
 
 #root {
@@ -50,6 +57,13 @@ body {
 :root[data-display-mode='pip'] body,
 :root[data-display-mode='fullscreen'] body {
   height: 100%;
+}
+
+:root:not([data-display-mode='pip']):not(
+    [data-display-mode='fullscreen']
+  )[data-active-tab='grid']
+  #root {
+  min-height: unset;
 }
 
 :root[data-display-mode='pip'] #root {
