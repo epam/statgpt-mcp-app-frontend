@@ -93,6 +93,13 @@ export function DataView({
     if (effectiveTab !== 'grid') closePanel?.();
   }, [effectiveTab, closePanel]);
 
+  useEffect(() => {
+    document.documentElement.dataset.activeTab = effectiveTab;
+    return () => {
+      delete document.documentElement.dataset.activeTab;
+    };
+  }, [effectiveTab]);
+
   if (!chartAttachment && !crossDatasetGridAttachment && !pythonCode)
     return null;
 
