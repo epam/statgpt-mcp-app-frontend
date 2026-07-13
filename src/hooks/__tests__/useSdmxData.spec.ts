@@ -49,7 +49,7 @@ describe('useSdmxData', () => {
           },
         },
       ],
-      tools: { sdmx_proxy: 'sdmx_proxy' },
+      tools: { sdmxProxy: 'sdmx_proxy' },
     };
 
     beforeEach(async () => {

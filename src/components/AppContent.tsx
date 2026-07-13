@@ -22,6 +22,7 @@ interface Props {
   isFullscreen: boolean;
   chartAttachment: ChartAttachment | undefined;
   crossDatasetGridAttachment: CrossDatasetGridAttachmentData | undefined;
+  pythonCode: string | undefined;
 }
 
 export function AppContent({
@@ -32,6 +33,7 @@ export function AppContent({
   isFullscreen,
   chartAttachment,
   crossDatasetGridAttachment,
+  pythonCode,
 }: Props) {
   const closePanel = useConversationViewSidePanelOptional()?.closePanel;
 
@@ -68,6 +70,8 @@ export function AppContent({
             <DataView
               chartAttachment={chartAttachment}
               crossDatasetGridAttachment={crossDatasetGridAttachment}
+              pythonCode={pythonCode}
+              codeTheme={snapshot.hostContext?.theme}
               fillHeight={isFillHeight}
             />
           </div>

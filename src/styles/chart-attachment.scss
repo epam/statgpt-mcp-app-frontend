@@ -6,7 +6,7 @@
   }
 
   .chart-area {
-    @apply border border-neutrals-500 rounded mt-4 px-3 py-5;
+    @apply gap-0;
   }
 }
 
@@ -19,8 +19,8 @@
 }
 
 :root[data-display-mode='inline'] .chart-attachment {
-  height: 400px;
-  max-height: 400px;
+  height: 488px;
+  max-height: 488px;
 }
 
 :root[data-display-mode='inline'] .chart-area {
@@ -28,5 +28,5 @@
   height: unset;
   min-height: 0;
   max-height: none;
-  overflow: hidden;
+  overflow: auto;
 }

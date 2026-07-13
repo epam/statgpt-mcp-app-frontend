@@ -109,6 +109,14 @@ export default [
     },
   },
 
+  // ── Logger — the one sanctioned console.debug call site ──────────────────
+  {
+    files: ['src/log/logger.ts'],
+    rules: {
+      'no-console': ['error', { allow: ['warn', 'error', 'info', 'debug'] }],
+    },
+  },
+
   // ── Vitest globals for spec files ────────────────────────────────────────
   {
     files: ['**/*.{spec,test}.{ts,tsx}'],
@@ -121,4 +129,16 @@ export default [
 
   // ── Tailwind CSS ─────────────────────────────────────────────────────────
   ...tailwindPlugin.configs['flat/recommended'],
+  {
+    files: ['**/*.{ts,tsx,js,jsx}'],
+    rules: {
+      // `mcp-side-panel-host` (src/styles/side-panel.scss) needs a real custom CSS
+      // hook to scope its `--primary` override — see AppContent.tsx. TODO: drop this
+      // once that's handled without a custom classname.
+      'tailwindcss/no-custom-classname': [
+        'warn',
+        { whitelist: ['mcp-side-panel-host'] },
+      ],
+    },
+  },
 ];

@@ -8,6 +8,8 @@ export type BridgePhase =
   | 'error'
   | 'torndown';
 
+export type HostKind = 'claude' | 'chatgpt' | 'generic';
+
 export interface HostBridge {
   start(): void;
   subscribe(listener: () => void): () => void;
@@ -17,6 +19,7 @@ export interface HostBridge {
 
 export interface BridgeSnapshot {
   phase: BridgePhase;
+  hostKind?: HostKind;
   hostContext?: McpUiHostContext;
   toolResult: unknown;
   lastError?: string;
@@ -26,13 +29,15 @@ export interface WidgetToolResult {
   version: 1;
   title?: string;
   queries: DataQuery[];
-  tools: { sdmx_proxy: string };
+  tools: { sdmxProxy: string };
+  pythonCode?: string;
 }
 
 export interface WidgetMeta {
   title?: string;
   queries: DataQuery[];
   sdmxProxyToolName: string;
+  pythonCode?: string;
 }
 
 export class BridgeError extends Error {

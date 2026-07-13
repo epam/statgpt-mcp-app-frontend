@@ -1,8 +1,10 @@
 import { App } from '@modelcontextprotocol/ext-apps';
 import type { McpUiHostContext } from '@modelcontextprotocol/ext-apps';
 import { APP_NAME, APP_VERSION } from '../app.meta';
+import { logger } from '../log/logger';
 import { BridgeError, type BridgeSnapshot, type HostBridge } from './types';
-import { unwrapStructured } from './utils';
+import { detectHostKind } from './detectHost';
+import { extractCallToolPayload, unwrapStructured } from './utils';
 
 type Listener = () => void;
 
@@ -40,17 +42,18 @@ export function createSpecBridge(): HostBridge {
     );
 
     sdkApp.ontoolinput = (_params) => {
+      logger.debug('bridge', 'tool-input received');
       patch({ phase: 'tool-pending', toolResult: null });
     };
 
     sdkApp.ontoolresult = (params) => {
-      patch({
-        phase: 'ready',
-        toolResult: unwrapStructured(params.structuredContent) ?? null,
-      });
+      const toolResult = unwrapStructured(params.structuredContent) ?? null;
+      logger.debug('bridge', 'tool-result received', toolResult);
+      patch({ phase: 'ready', toolResult });
     };
 
     sdkApp.ontoolcancelled = (params) => {
+      logger.warn('bridge', 'tool cancelled', params.reason);
       patch({
         phase: 'error',
         lastError: `Tool cancelled${params.reason ? ': ' + params.reason : ''}`,
@@ -58,14 +61,17 @@ export function createSpecBridge(): HostBridge {
     };
 
     sdkApp.onhostcontextchanged = (ctx: McpUiHostContext) => {
+      logger.debug('bridge', 'host-context changed', ctx);
       patch({ hostContext: { ...snapshot.hostContext, ...ctx } });
     };
 
     sdkApp.onerror = (err: Error) => {
+      logger.error('bridge', 'sdk error', err);
       patch({ phase: 'error', lastError: err.message });
     };
 
     sdkApp.onteardown = () => {
+      logger.debug('bridge', 'teardown');
       patch({ phase: 'torndown' });
       return {};
     };
@@ -73,12 +79,14 @@ export function createSpecBridge(): HostBridge {
     connectPromise = sdkApp
       .connect()
       .then(() => {
-        patch({
-          phase: 'ready',
-          hostContext: sdkApp!.getHostContext(),
-        });
+        const hostContext = sdkApp!.getHostContext();
+        const hostKind = detectHostKind(hostContext);
+        logger.info('bridge', 'host detected', hostKind);
+        logger.debug('bridge', 'handshake ok', hostContext);
+        patch({ phase: 'ready', hostContext, hostKind });
       })
       .catch((err: Error) => {
+        logger.error('bridge', 'handshake failed', err);
         patch({ phase: 'error', lastError: err.message });
       });
   }
@@ -93,13 +101,16 @@ export function createSpecBridge(): HostBridge {
       return snapshot;
     },
     async callTool(name: string, args: unknown) {
-      if (!sdkApp) throw new BridgeError('bridge not started');
+      if (!sdkApp) {
+        logger.error('bridge', 'callTool before start', name);
+        throw new BridgeError('bridge not started');
+      }
       await connectPromise;
       const result = await sdkApp.callServerTool({
         name,
         arguments: args as Record<string, unknown>,
       });
-      return unwrapStructured(result);
+      return extractCallToolPayload(result);
     },
   };
 }

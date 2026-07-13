@@ -17,7 +17,7 @@ const q: DataQuery = {
 describe('dataPath', () => {
   it('produces the correct path structure <base>/<agency>/<resource>/<version>/<key>?...', () => {
     const result = dataPath(q);
-    expect(result).toContain('/sdmx/3.0/data/dataflow/IMF/BOP/1.0/US?');
+    expect(result).toContain('/data/dataflow/IMF/BOP/1.0/US?');
   });
 
   it('includes the attributes query param', () => {
@@ -33,7 +33,7 @@ describe('dataPath', () => {
         keyDimensionIdsInDsdOrder: ['COUNTRY', 'INDICATOR'],
       },
     });
-    expect(result).toContain('/sdmx/3.0/data/dataflow/IMF/BOP/1.0/US.*?');
+    expect(result).toContain('/data/dataflow/IMF/BOP/1.0/US.*?');
   });
 
   it('joins multiple filter values with +', () => {
@@ -47,7 +47,7 @@ describe('dataPath', () => {
         },
       ],
     });
-    expect(result).toContain('/sdmx/3.0/data/dataflow/IMF/BOP/1.0/US+DE?');
+    expect(result).toContain('/data/dataflow/IMF/BOP/1.0/US+DE?');
   });
 
   it('builds a structured time-period query fragment from a BETWEEN filter', () => {
@@ -74,14 +74,14 @@ describe('dataPath', () => {
       filters: [],
       metadata: { ...q.metadata, keyDimensionIdsInDsdOrder: [] },
     });
-    expect(result).toContain('/sdmx/3.0/data/dataflow/IMF/BOP/1.0/*?');
+    expect(result).toContain('/data/dataflow/IMF/BOP/1.0/*?');
   });
 });
 
 describe('structurePath', () => {
   it('produces the correct path structure <base>/<agency>/<resource>/<version>?...', () => {
     const result = structurePath(q);
-    expect(result).toContain('/sdmx/3.0/structure/dataflow/IMF/BOP/1.0?');
+    expect(result).toContain('/structure/dataflow/IMF/BOP/1.0?');
   });
 
   it('includes references=descendants', () => {
