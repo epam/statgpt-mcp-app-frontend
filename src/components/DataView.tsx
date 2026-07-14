@@ -7,6 +7,7 @@ import {
   CrossDatasetGridAttachment,
   useConversationViewSidePanelOptional,
 } from '@epam/statgpt-conversation-view';
+import type { EChartsOption } from 'echarts-for-react/src/types';
 import { ATTACHMENT_TYPE } from '../constants/attachmentTypes';
 import { Loader } from './Loader';
 import type {
@@ -35,6 +36,10 @@ interface Props {
   pythonCode?: string;
   codeTheme?: 'light' | 'dark';
   fillHeight?: boolean;
+  chartTransformOption?: (
+    option: EChartsOption,
+    ctx: { isMobile: boolean },
+  ) => EChartsOption;
 }
 
 const TAB_LABELS: Record<Tab, string> = {
@@ -68,6 +73,7 @@ const CROSS_DATASET_GRID_TITLE = 'Cross Dataset Grid';
  * @param pythonCode - Python source for the Code tab; omit to hide that tab.
  * @param codeTheme - Monaco theme applied to the Code tab, following the host theme.
  * @param fillHeight - When true, the component stretches to fill its container's height for pip or fullscreen modes.
+ * @param chartTransformOption - Applied to the chart's ECharts option before render; used to recolor axis/legend text to match the widget's host-driven theme.
  */
 export function DataView({
   chartAttachment,
@@ -75,6 +81,7 @@ export function DataView({
   pythonCode,
   codeTheme,
   fillHeight,
+  chartTransformOption,
 }: Props) {
   const [activeTab, setActiveTab] = useState<Tab>('grid');
   const closePanel = useConversationViewSidePanelOptional()?.closePanel;
@@ -147,6 +154,11 @@ export function DataView({
             fillHeight={fillHeight}
             fixHeight={!fillHeight}
             icons={CHART_NAVIGATION_ICONS}
+            transformOption={chartTransformOption}
+            contentClassName="gap-2"
+            chartAreaClassName="gap-2"
+            chartBodyClassName="gap-1 mt-2"
+            sliderClassName="w-fit self-center"
           />
         )}
         {effectiveTab === 'code' && pythonCode && (

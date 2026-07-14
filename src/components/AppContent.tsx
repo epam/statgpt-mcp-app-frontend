@@ -4,6 +4,7 @@ import {
   ConversationViewSidePanelOutlet,
   useConversationViewSidePanelOptional,
 } from '@epam/statgpt-conversation-view';
+import type { EChartsOption } from 'echarts-for-react/src/types';
 import type { BridgeSnapshot } from '../bridge/types';
 import type {
   ChartAttachment,
@@ -23,6 +24,10 @@ interface Props {
   chartAttachment: ChartAttachment | undefined;
   crossDatasetGridAttachment: CrossDatasetGridAttachmentData | undefined;
   pythonCode: string | undefined;
+  chartTransformOption?: (
+    option: EChartsOption,
+    ctx: { isMobile: boolean },
+  ) => EChartsOption;
 }
 
 export function AppContent({
@@ -34,6 +39,7 @@ export function AppContent({
   chartAttachment,
   crossDatasetGridAttachment,
   pythonCode,
+  chartTransformOption,
 }: Props) {
   const closePanel = useConversationViewSidePanelOptional()?.closePanel;
 
@@ -73,6 +79,7 @@ export function AppContent({
               pythonCode={pythonCode}
               codeTheme={snapshot.hostContext?.theme}
               fillHeight={isFillHeight}
+              chartTransformOption={chartTransformOption}
             />
           </div>
           {isFullscreen && (
