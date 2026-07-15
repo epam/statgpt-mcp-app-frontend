@@ -1,14 +1,15 @@
 import { useEffect } from 'react';
 
 /**
- * Claude.ai reads the iframe's `<html>` height directly from the DOM instead
+ * Some hosts read the iframe's `<html>` height directly from the DOM instead
  * of listening to the spec's `ui/notifications/size-changed` postMessage, so
- * it never learns about a content shrink from the SDK's `autoResize` alone —
+ * they never learn about a content shrink from the SDK's `autoResize` alone —
  * that mechanism measures via a transient `max-content` override and then
- * restores the original inline style, leaving nothing persisted for Claude to
- * re-read. This hook mirrors the same measurement technique but writes the
- * result directly to `<html>.style.height` and leaves it there, so hosts that
- * read the DOM instead of the postMessage channel see the current height too.
+ * restores the original inline style, leaving nothing persisted for a
+ * DOM-reading host to pick up. This hook mirrors the same measurement
+ * technique but writes the result directly to `<html>.style.height` and
+ * leaves it there, so hosts that read the DOM instead of the postMessage
+ * channel see the current height too.
  *
  * Only meant for inline display mode — pip/fullscreen size `#root` from
  * `containerDimensions`/`100dvh` via CSS, and an inline style here would

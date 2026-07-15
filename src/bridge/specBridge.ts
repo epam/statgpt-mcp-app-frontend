@@ -3,7 +3,6 @@ import type { McpUiHostContext } from '@modelcontextprotocol/ext-apps';
 import { APP_NAME, APP_VERSION } from '../app.meta';
 import { logger } from '../log/logger';
 import { BridgeError, type BridgeSnapshot, type HostBridge } from './types';
-import { detectHostKind } from './detectHost';
 import { extractCallToolPayload, unwrapStructured } from './utils';
 
 type Listener = () => void;
@@ -80,10 +79,8 @@ export function createSpecBridge(): HostBridge {
       .connect()
       .then(() => {
         const hostContext = sdkApp!.getHostContext();
-        const hostKind = detectHostKind(hostContext);
-        logger.info('bridge', 'host detected', hostKind);
         logger.debug('bridge', 'handshake ok', hostContext);
-        patch({ phase: 'ready', hostContext, hostKind });
+        patch({ phase: 'ready', hostContext });
       })
       .catch((err: Error) => {
         logger.error('bridge', 'handshake failed', err);

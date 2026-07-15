@@ -11,10 +11,10 @@
   --blackout: #090d13b3;
   --highlight: #bedaff;
 
-  /* Neutrals — aliased to Claude structural tokens */
+  /* Neutrals — aliased to the host-supplied structural tokens */
   --neutrals-1000: var(--color-text-primary, #2b2b2d);
   --neutrals-900: var(--color-text-secondary, #3f404a);
-  /* neutrals-800 and -700 both map to tertiary — Claude has no 4th solid text step */
+  /* neutrals-800 and -700 both map to tertiary — the host token set has three text levels, not four */
   --neutrals-800: var(--color-text-tertiary, #757575);
   --neutrals-700: var(--color-text-tertiary, #89898b);
   --neutrals-600: var(--color-border-primary, #cfcfcf);
@@ -36,7 +36,7 @@
   --accent-700: #0094ff;
   --accent-300: #90a1ff;
 
-  /* Semantic — aliased to Claude state tokens */
+  /* Semantic — aliased to the host-supplied state tokens */
   --semantic-error: var(--color-text-danger, #d6323e);
   --semantic-error-light: var(
     --color-background-danger,
