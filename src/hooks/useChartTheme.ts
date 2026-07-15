@@ -48,6 +48,16 @@ function splitTopLevelArgs(input: string): string[] {
   return args;
 }
 
+interface LightDarkArgs {
+  light: string;
+  dark: string;
+}
+
+function parseLightDarkArgs(input: string): LightDarkArgs {
+  const [light, dark] = splitTopLevelArgs(input);
+  return { light, dark };
+}
+
 /**
  * Resolves a host token value that may be a CSS `light-dark(lightColor,
  * darkColor)` function string. The browser only evaluates `light-dark()`
@@ -63,8 +73,8 @@ function resolveLightDark(
   const match = value.match(LIGHT_DARK_FN_RE);
   if (!match) return value;
 
-  const [lightValue, darkValue] = splitTopLevelArgs(match[1]);
-  const resolved = theme === 'dark' ? darkValue : lightValue;
+  const { light, dark } = parseLightDarkArgs(match[1]);
+  const resolved = theme === 'dark' ? dark : light;
   return resolved ?? value;
 }
 
@@ -82,6 +92,39 @@ function colorsFromHostVariables(
     axisLine: readToken('--color-border-secondary'),
     splitLine: readToken('--color-border-tertiary'),
     legendText: readToken('--color-text-secondary'),
+  };
+}
+
+function applyAxisColors<
+  T extends {
+    axisLabel?: { color?: string };
+    axisLine?: { lineStyle?: { color?: string } };
+    splitLine?: { lineStyle?: { color?: string } };
+  },
+>(axis: T | undefined, colors: ChartColors): T | undefined {
+  if (!axis) return axis;
+
+  return {
+    ...axis,
+    axisLabel: {
+      ...axis.axisLabel,
+      ...(colors.axisLabel ? { color: colors.axisLabel } : {}),
+    },
+    axisLine: colors.axisLine
+      ? {
+          ...axis.axisLine,
+          lineStyle: { ...axis.axisLine?.lineStyle, color: colors.axisLine },
+        }
+      : axis.axisLine,
+    splitLine: colors.splitLine
+      ? {
+          ...axis.splitLine,
+          lineStyle: {
+            ...axis.splitLine?.lineStyle,
+            color: colors.splitLine,
+          },
+        }
+      : axis.splitLine,
   };
 }
 
@@ -105,60 +148,8 @@ function buildTransformOption(colors: ChartColors): TransformOption {
             },
           }
         : legend,
-      xAxis: xAxis
-        ? {
-            ...xAxis,
-            axisLabel: {
-              ...xAxis.axisLabel,
-              ...(colors.axisLabel ? { color: colors.axisLabel } : {}),
-            },
-            axisLine: colors.axisLine
-              ? {
-                  ...xAxis.axisLine,
-                  lineStyle: {
-                    ...xAxis.axisLine?.lineStyle,
-                    color: colors.axisLine,
-                  },
-                }
-              : xAxis.axisLine,
-            splitLine: colors.splitLine
-              ? {
-                  ...xAxis.splitLine,
-                  lineStyle: {
-                    ...xAxis.splitLine?.lineStyle,
-                    color: colors.splitLine,
-                  },
-                }
-              : xAxis.splitLine,
-          }
-        : xAxis,
-      yAxis: yAxis
-        ? {
-            ...yAxis,
-            axisLabel: {
-              ...yAxis.axisLabel,
-              ...(colors.axisLabel ? { color: colors.axisLabel } : {}),
-            },
-            axisLine: colors.axisLine
-              ? {
-                  ...yAxis.axisLine,
-                  lineStyle: {
-                    ...yAxis.axisLine?.lineStyle,
-                    color: colors.axisLine,
-                  },
-                }
-              : yAxis.axisLine,
-            splitLine: colors.splitLine
-              ? {
-                  ...yAxis.splitLine,
-                  lineStyle: {
-                    ...yAxis.splitLine?.lineStyle,
-                    color: colors.splitLine,
-                  },
-                }
-              : yAxis.splitLine,
-          }
-        : yAxis,
+      xAxis: applyAxisColors(xAxis, colors),
+      yAxis: applyAxisColors(yAxis, colors),
     };
   };
 }
