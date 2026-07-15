@@ -1,6 +1,7 @@
 import { useSdmxData } from './hooks/useSdmxData';
 import { useHostLayout } from './hooks/useHostLayout';
 import { useHostTheme } from './hooks/useHostTheme';
+import { useChartTheme } from './hooks/useChartTheme';
 import { useDataAttachments } from './hooks/useDataAttachments';
 import { useInlineHeightSync } from './hooks/useInlineHeightSync';
 import { AppProviders } from './components/AppProviders';
@@ -10,6 +11,7 @@ export default function App() {
   const { snapshot, meta, crossDataset, loading, error } = useSdmxData();
 
   useHostTheme(snapshot.hostContext);
+  const chartTransformOption = useChartTheme(snapshot.hostContext);
   const { isFillHeight, isFullscreen, locale } = useHostLayout(
     snapshot.hostContext,
   );
@@ -34,6 +36,7 @@ export default function App() {
         chartAttachment={chartAttachment}
         crossDatasetGridAttachment={crossDatasetGridAttachment}
         pythonCode={meta?.pythonCode}
+        chartTransformOption={chartTransformOption}
       />
     </AppProviders>
   );

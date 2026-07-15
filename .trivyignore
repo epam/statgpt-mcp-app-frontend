@@ -7,3 +7,7 @@ CVE-2026-45447 exp:2026-06-20
 
 # undici
 CVE-2026-12151 exp:2026-07-20
+
+# nginx-unprivileged:stable-alpine vulnerabilities — curl, libcurl
+CVE-2026-5773 exp:2026-08-15
+CVE-2026-6276 exp:2026-08-15
