@@ -15,6 +15,9 @@ export function useHostTheme(hostContext: McpUiHostContext | undefined): void {
   const fontStyleRef = useRef<HTMLStyleElement | null>(null);
 
   useEffect(() => {
+    // A host that omits `theme` is left on the browser's default color
+    // scheme, which resolves to light — an intentional light-only fallback,
+    // not an oversight.
     if (!theme) return;
     applyDocumentTheme(theme);
     return () => {

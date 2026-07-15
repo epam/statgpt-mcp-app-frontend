@@ -81,14 +81,14 @@ body {
 
 .ag-theme-quartz {
   --ag-font-family: var(--font-sans);
-  --ag-background-color: var(--color-background-primary);
-  --ag-foreground-color: var(--color-text-primary);
-  --ag-header-background-color: var(--color-background-secondary);
-  --ag-header-foreground-color: var(--color-text-secondary);
-  --ag-secondary-foreground-color: var(--color-text-tertiary);
-  --ag-border-color: var(--color-border-tertiary);
-  --ag-row-hover-color: var(--color-background-secondary);
-  --ag-odd-row-background-color: var(--color-background-tertiary);
+  --ag-background-color: var(--color-background-primary, #ffffff);
+  --ag-foreground-color: var(--color-text-primary, #2b2b2d);
+  --ag-header-background-color: var(--color-background-secondary, #f0f4f8);
+  --ag-header-foreground-color: var(--color-text-secondary, #3f404a);
+  --ag-secondary-foreground-color: var(--color-text-tertiary, #757575);
+  --ag-border-color: var(--color-border-tertiary, #e9eef6);
+  --ag-row-hover-color: var(--color-background-secondary, #f0f4f8);
+  --ag-odd-row-background-color: var(--color-background-tertiary, #f3f5ff);
 
   .ag-root-wrapper {
     color-scheme: inherit;

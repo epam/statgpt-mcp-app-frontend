@@ -2,6 +2,6 @@
   --primary: var(--semantic-info);
 
   .bg-white {
-    background-color: var(--color-background-primary);
+    background-color: var(--color-background-primary, #ffffff);
   }
 }
