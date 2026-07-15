@@ -70,6 +70,9 @@ export default {
           neutrals300: 'var(--neutrals-300-10)',
         },
       },
+      ringColor: {
+        primary: 'var(--ring-primary)',
+      },
       boxShadow: {
         drop: '0px 4px 4px 0px #BBBBBB40',
       },

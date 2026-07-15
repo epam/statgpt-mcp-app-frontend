@@ -131,6 +131,7 @@ export function DataView({
             onClick={() => setActiveTab(tab)}
             className={classNames(
               'px-4 py-2 text-sm font-medium capitalize -mb-px border-b-2 transition-colors',
+              'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-primary',
               effectiveTab === tab
                 ? 'border-semantic-info text-semantic-info'
                 : 'border-transparent text-neutrals-700 hover:text-neutrals-1000',
