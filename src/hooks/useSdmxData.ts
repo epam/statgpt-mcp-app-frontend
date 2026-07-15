@@ -35,15 +35,21 @@ const DEV_DISPLAY_MODE =
     : 'fullscreen';
 
 const DEV_BASE_CONTEXT =
-  DEV_THEME === 'dark' ? MOCK_HOST_CONTEXT_DARK : MOCK_HOST_CONTEXT_LIGHT;
+  DEV_THEME === 'none'
+    ? undefined
+    : DEV_THEME === 'dark'
+      ? MOCK_HOST_CONTEXT_DARK
+      : MOCK_HOST_CONTEXT_LIGHT;
 
 const DEV_SNAPSHOT: BridgeSnapshot = {
   phase: 'ready',
   toolResult: null,
-  hostContext: {
-    ...DEV_BASE_CONTEXT,
-    displayMode: DEV_DISPLAY_MODE as McpUiHostContext['displayMode'],
-  },
+  hostContext: DEV_BASE_CONTEXT
+    ? {
+        ...DEV_BASE_CONTEXT,
+        displayMode: DEV_DISPLAY_MODE as McpUiHostContext['displayMode'],
+      }
+    : undefined,
 };
 
 export interface SdmxData {

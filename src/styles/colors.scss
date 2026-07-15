@@ -4,6 +4,12 @@
 // tailwind.config.js (e.g. `primary` -> var(--primary)). The published
 // @epam/statgpt-ui-components styles reference these utility classes, so
 // both this file and the tailwind theme map must stay in sync.
+//
+// The var(--host-token, fallback) fallbacks below are light-mode only by
+// design: they don't adapt to a host that omits `theme` or to the user's
+// OS dark preference. Every host observed so far always pairs `theme` with
+// a full styles.variables set, so this is an accepted limitation, not an
+// oversight.
 :root {
   /* Base — brand identity, kept hardcoded */
   --primary: #414fff;
