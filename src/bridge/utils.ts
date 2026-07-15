@@ -2,8 +2,8 @@ import { BridgeError } from './types';
 
 /**
  * Normalizes the tool-call result envelope shapes returned by different MCP host
- * implementations (spec-compliant and ChatGPT) by extracting the innermost
- * `structuredContent` value.
+ * implementations — a spec-compliant nested `result.structuredContent` shape and a
+ * flatter top-level shape — by extracting the innermost `structuredContent` value.
  *
  * @param result - The raw tool-call result object received from the host.
  * @returns The innermost `structuredContent` (or `structured_content`) value when a
