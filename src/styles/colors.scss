@@ -42,6 +42,9 @@
   --accent-700: #0094ff;
   --accent-300: #90a1ff;
 
+  /* Ring — aliased to the host-supplied focus-ring token */
+  --ring-primary: var(--color-ring-primary, #3a83f7);
+
   /* Semantic — aliased to the host-supplied state tokens */
   --semantic-error: var(--color-text-danger, #d6323e);
   --semantic-error-light: var(
