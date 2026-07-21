@@ -76,7 +76,10 @@ body {
   height: 100dvh;
   min-height: unset;
   overflow-y: hidden;
+  padding-top: var(--mcp-safe-area-top, 0px);
+  padding-right: var(--mcp-safe-area-right, 0px);
   padding-bottom: var(--mcp-safe-area-bottom, 0px);
+  padding-left: var(--mcp-safe-area-left, 0px);
 }
 
 .ag-theme-quartz {

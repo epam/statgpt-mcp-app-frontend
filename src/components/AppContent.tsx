@@ -13,6 +13,7 @@ import type {
 import { ConnectionStatus } from './ConnectionStatus';
 import { DataView } from './DataView';
 import { ErrorBanner } from './ErrorBanner';
+import { FullscreenButton } from './FullscreenButton';
 import { Loader } from './Loader';
 
 interface Props {
@@ -21,6 +22,8 @@ interface Props {
   error: string | null;
   isFillHeight: boolean;
   isFullscreen: boolean;
+  canRequestFullscreen: boolean;
+  requestFullscreen: () => void;
   chartAttachment: ChartAttachment | undefined;
   crossDatasetGridAttachment: CrossDatasetGridAttachmentData | undefined;
   pythonCode: string | undefined;
@@ -36,6 +39,8 @@ export function AppContent({
   error,
   isFillHeight,
   isFullscreen,
+  canRequestFullscreen,
+  requestFullscreen,
   chartAttachment,
   crossDatasetGridAttachment,
   pythonCode,
@@ -58,12 +63,16 @@ export function AppContent({
 
   return (
     <div
-      className={classNames('flex flex-col', {
+      className={classNames('relative flex flex-col', {
         'm-4': !isFullscreen,
         'h-full': isFillHeight,
         'min-h-[var(--mcp-widget-min-height)]': !isFillHeight && showLoader,
       })}
     >
+      {canRequestFullscreen && !isFullscreen && !showLoader && (
+        <FullscreenButton onRequestFullscreen={requestFullscreen} />
+      )}
+
       {error && <ErrorBanner message={error} />}
 
       {showLoader ? (
