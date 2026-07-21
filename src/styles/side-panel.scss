@@ -4,4 +4,8 @@
   .bg-white {
     background-color: var(--color-background-primary, #ffffff);
   }
+
+  .border-l {
+    border-left-width: 0;
+  }
 }
