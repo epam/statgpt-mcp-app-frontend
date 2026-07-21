@@ -2,6 +2,12 @@ import { renderHook } from '@testing-library/react';
 import type { McpUiHostContext } from '@modelcontextprotocol/ext-apps';
 import { useHostLayout } from '../useHostLayout';
 
+vi.mock('../../bridge', () => ({
+  bridge: { requestDisplayMode: vi.fn() },
+}));
+
+import { bridge } from '../../bridge';
+
 function makeHostContext(
   overrides: Partial<McpUiHostContext> = {},
 ): McpUiHostContext {
@@ -195,6 +201,42 @@ describe('useHostLayout', () => {
       );
 
       expect(result.current.isFillHeight).toBe(true);
+    });
+  });
+
+  describe('canRequestFullscreen', () => {
+    it('is true when availableDisplayModes includes "fullscreen"', () => {
+      const { result } = renderHook(() =>
+        useHostLayout(
+          makeHostContext({ availableDisplayModes: ['inline', 'fullscreen'] }),
+        ),
+      );
+
+      expect(result.current.canRequestFullscreen).toBe(true);
+    });
+
+    it('is false when availableDisplayModes does not include "fullscreen"', () => {
+      const { result } = renderHook(() =>
+        useHostLayout(makeHostContext({ availableDisplayModes: ['inline'] })),
+      );
+
+      expect(result.current.canRequestFullscreen).toBe(false);
+    });
+
+    it('is false when availableDisplayModes is undefined', () => {
+      const { result } = renderHook(() => useHostLayout(makeHostContext()));
+
+      expect(result.current.canRequestFullscreen).toBe(false);
+    });
+  });
+
+  describe('requestFullscreen', () => {
+    it('calls bridge.requestDisplayMode with "fullscreen"', () => {
+      const { result } = renderHook(() => useHostLayout(makeHostContext()));
+
+      result.current.requestFullscreen();
+
+      expect(bridge.requestDisplayMode).toHaveBeenCalledWith('fullscreen');
     });
   });
 

@@ -36,7 +36,7 @@ export function createSpecBridge(): HostBridge {
 
     sdkApp = new App(
       { name: APP_NAME, version: APP_VERSION },
-      {},
+      { availableDisplayModes: ['inline', 'fullscreen', 'pip'] },
       { autoResize: true },
     );
 
@@ -61,6 +61,12 @@ export function createSpecBridge(): HostBridge {
 
     sdkApp.onhostcontextchanged = (ctx: McpUiHostContext) => {
       logger.debug('bridge', 'host-context changed', ctx);
+      if (ctx.displayMode) {
+        logger.debug('display-mode', 'changed', {
+          from: snapshot.hostContext?.displayMode,
+          to: ctx.displayMode,
+        });
+      }
       patch({ hostContext: { ...snapshot.hostContext, ...ctx } });
     };
 
@@ -80,6 +86,10 @@ export function createSpecBridge(): HostBridge {
       .then(() => {
         const hostContext = sdkApp!.getHostContext();
         logger.debug('bridge', 'handshake ok', hostContext);
+        logger.debug('display-mode', 'host support', {
+          displayMode: hostContext?.displayMode,
+          availableDisplayModes: hostContext?.availableDisplayModes,
+        });
         patch({ phase: 'ready', hostContext });
       })
       .catch((err: Error) => {
@@ -108,6 +118,29 @@ export function createSpecBridge(): HostBridge {
         arguments: args as Record<string, unknown>,
       });
       return extractCallToolPayload(result);
+    },
+    async requestDisplayMode(mode) {
+      if (!sdkApp) {
+        logger.error('bridge', 'requestDisplayMode before start', mode);
+        throw new BridgeError('bridge not started');
+      }
+      logger.debug('display-mode', 'requesting', { mode });
+      try {
+        const result = await sdkApp.requestDisplayMode({ mode });
+        if (result.mode === mode) {
+          logger.debug('display-mode', 'granted', {
+            requested: mode,
+            actual: result.mode,
+          });
+        } else {
+          logger.warn('display-mode', 'declined', {
+            requested: mode,
+            actual: result.mode,
+          });
+        }
+      } catch (err) {
+        logger.warn('display-mode', 'request failed', err);
+      }
     },
   };
 }

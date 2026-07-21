@@ -1,4 +1,7 @@
-import type { McpUiHostContext } from '@modelcontextprotocol/ext-apps';
+import type {
+  McpUiDisplayMode,
+  McpUiHostContext,
+} from '@modelcontextprotocol/ext-apps';
 import type { DataQuery } from '@epam/statgpt-shared-toolkit';
 
 export type BridgePhase =
@@ -13,6 +16,7 @@ export interface HostBridge {
   subscribe(listener: () => void): () => void;
   getSnapshot(): BridgeSnapshot;
   callTool(name: string, args: unknown): Promise<unknown>;
+  requestDisplayMode(mode: McpUiDisplayMode): Promise<void>;
 }
 
 export interface BridgeSnapshot {

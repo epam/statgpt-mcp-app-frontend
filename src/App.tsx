@@ -12,9 +12,13 @@ export default function App() {
 
   useHostTheme(snapshot.hostContext);
   const chartTransformOption = useChartTheme(snapshot.hostContext);
-  const { isFillHeight, isFullscreen, locale } = useHostLayout(
-    snapshot.hostContext,
-  );
+  const {
+    isFillHeight,
+    isFullscreen,
+    canRequestFullscreen,
+    requestFullscreen,
+    locale,
+  } = useHostLayout(snapshot.hostContext);
   useInlineHeightSync(!isFillHeight);
   const effectiveLocale = locale ?? 'en';
 
@@ -33,6 +37,8 @@ export default function App() {
         error={error}
         isFillHeight={isFillHeight}
         isFullscreen={isFullscreen}
+        canRequestFullscreen={canRequestFullscreen}
+        requestFullscreen={requestFullscreen}
         chartAttachment={chartAttachment}
         crossDatasetGridAttachment={crossDatasetGridAttachment}
         pythonCode={meta?.pythonCode}

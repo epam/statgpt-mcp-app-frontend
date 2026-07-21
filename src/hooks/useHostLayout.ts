@@ -1,9 +1,12 @@
-import { useEffect } from 'react';
+import { useCallback, useEffect } from 'react';
 import type { McpUiHostContext } from '@modelcontextprotocol/ext-apps';
+import { bridge } from '../bridge';
 
 export interface HostLayout {
   isFillHeight: boolean;
   isFullscreen: boolean;
+  canRequestFullscreen: boolean;
+  requestFullscreen: () => void;
   locale: string | undefined;
 }
 
@@ -62,9 +65,18 @@ export function useHostLayout(
     });
   }, [safeAreaInsets]);
 
+  const canRequestFullscreen =
+    hostContext?.availableDisplayModes?.includes('fullscreen') ?? false;
+
+  const requestFullscreen = useCallback(() => {
+    void bridge.requestDisplayMode('fullscreen');
+  }, []);
+
   return {
     isFillHeight: displayMode === 'pip' || displayMode === 'fullscreen',
     isFullscreen: displayMode === 'fullscreen',
+    canRequestFullscreen,
+    requestFullscreen,
     locale: hostContext?.locale,
   };
 }
