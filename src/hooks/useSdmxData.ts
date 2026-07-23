@@ -218,11 +218,13 @@ export function useSdmxData(): SdmxData {
           dataMessagesMap,
           dataQueries: succeededQueries,
         });
-        setError(
-          failedCount > 0
-            ? `${failedCount} of ${activeQueries.length} datasets failed to load.`
-            : null,
-        );
+        setError(null);
+        if (failedCount > 0) {
+          logger.warn(
+            'widget-empty',
+            `${failedCount} of ${activeQueries.length} datasets failed to load — rendering partial results with no user-facing indicator`,
+          );
+        }
       }
     } catch (e) {
       logger.error(
