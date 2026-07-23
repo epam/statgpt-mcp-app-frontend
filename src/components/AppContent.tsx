@@ -12,6 +12,7 @@ import type {
 } from '../types/attachments';
 import { ConnectionStatus } from './ConnectionStatus';
 import { DataView } from './DataView';
+import { EmptyState } from './EmptyState';
 import { ErrorBanner } from './ErrorBanner';
 import { FullscreenButton } from './FullscreenButton';
 import { Loader } from './Loader';
@@ -20,6 +21,7 @@ interface Props {
   snapshot: BridgeSnapshot;
   loading: boolean;
   error: string | null;
+  emptyResult: boolean;
   isFillHeight: boolean;
   isFullscreen: boolean;
   canRequestFullscreen: boolean;
@@ -37,6 +39,7 @@ export function AppContent({
   snapshot,
   loading,
   error,
+  emptyResult,
   isFillHeight,
   isFullscreen,
   canRequestFullscreen,
@@ -52,14 +55,64 @@ export function AppContent({
     if (!isFullscreen) closePanel?.();
   }, [isFullscreen, closePanel]);
 
+  const hasData = !!crossDatasetGridAttachment;
+  const showLoader = loading && !hasData;
+  const showEmptyState = !showLoader && !hasData && !error && emptyResult;
+
+  useEffect(() => {
+    if (showEmptyState) {
+      document.documentElement.dataset.emptyState = 'true';
+    } else {
+      delete document.documentElement.dataset.emptyState;
+    }
+    return () => {
+      delete document.documentElement.dataset.emptyState;
+    };
+  }, [showEmptyState]);
+
   if (snapshot.phase !== 'ready' && snapshot.phase !== 'tool-pending') {
     return (
       <ConnectionStatus phase={snapshot.phase} lastError={snapshot.lastError} />
     );
   }
 
-  const hasData = !!crossDatasetGridAttachment;
-  const showLoader = loading && !hasData;
+  function renderContent() {
+    if (showLoader) {
+      return (
+        <div className="flex flex-1 items-center justify-center">
+          <Loader />
+        </div>
+      );
+    }
+
+    if (showEmptyState) {
+      return (
+        <div className="flex items-center justify-center py-6">
+          <EmptyState message="No data found for this query. Try rephrasing your question." />
+        </div>
+      );
+    }
+
+    return (
+      <div className="flex min-h-0 flex-1 flex-row">
+        <div className="min-w-0 flex-1">
+          <DataView
+            chartAttachment={chartAttachment}
+            crossDatasetGridAttachment={crossDatasetGridAttachment}
+            pythonCode={pythonCode}
+            codeTheme={snapshot.hostContext?.theme}
+            fillHeight={isFillHeight}
+            chartTransformOption={chartTransformOption}
+          />
+        </div>
+        {isFullscreen && (
+          <div className="mcp-side-panel-host">
+            <ConversationViewSidePanelOutlet scope="conversation" />
+          </div>
+        )}
+      </div>
+    );
+  }
 
   return (
     <div
@@ -69,35 +122,16 @@ export function AppContent({
         'min-h-[var(--mcp-widget-min-height)]': !isFillHeight && showLoader,
       })}
     >
-      {canRequestFullscreen && !isFullscreen && !showLoader && (
-        <FullscreenButton onRequestFullscreen={requestFullscreen} />
-      )}
+      {canRequestFullscreen &&
+        !isFullscreen &&
+        !showLoader &&
+        !showEmptyState && (
+          <FullscreenButton onRequestFullscreen={requestFullscreen} />
+        )}
 
       {error && <ErrorBanner message={error} />}
 
-      {showLoader ? (
-        <div className="flex flex-1 items-center justify-center">
-          <Loader />
-        </div>
-      ) : (
-        <div className="flex min-h-0 flex-1 flex-row">
-          <div className="min-w-0 flex-1">
-            <DataView
-              chartAttachment={chartAttachment}
-              crossDatasetGridAttachment={crossDatasetGridAttachment}
-              pythonCode={pythonCode}
-              codeTheme={snapshot.hostContext?.theme}
-              fillHeight={isFillHeight}
-              chartTransformOption={chartTransformOption}
-            />
-          </div>
-          {isFullscreen && (
-            <div className="mcp-side-panel-host">
-              <ConversationViewSidePanelOutlet scope="conversation" />
-            </div>
-          )}
-        </div>
-      )}
+      {renderContent()}
     </div>
   );
 }
