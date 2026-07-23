@@ -1,8 +1,8 @@
 import { useSdmxData } from './hooks/useSdmxData';
+import { useDatasetsMetadata } from './hooks/useDatasetsMetadata';
 import { useHostLayout } from './hooks/useHostLayout';
 import { useHostTheme } from './hooks/useHostTheme';
 import { useChartTheme } from './hooks/useChartTheme';
-import { useDataAttachments } from './hooks/useDataAttachments';
 import { useInlineHeightSync } from './hooks/useInlineHeightSync';
 import { AppProviders } from './components/AppProviders';
 import { AppContent } from './components/AppContent';
@@ -10,6 +10,7 @@ import { AppContent } from './components/AppContent';
 export default function App() {
   const { snapshot, meta, crossDataset, loading, error, emptyResult } =
     useSdmxData();
+  const datasetsMetadata = useDatasetsMetadata(snapshot.phase);
 
   useHostTheme(snapshot.hostContext);
   const chartTransformOption = useChartTheme(snapshot.hostContext);
@@ -23,15 +24,11 @@ export default function App() {
   useInlineHeightSync(!isFillHeight);
   const effectiveLocale = locale ?? 'en';
 
-  const { chartAttachment, crossDatasetGridAttachment } = useDataAttachments({
-    crossDataset,
-    meta,
-    effectiveLocale,
-    isFullscreen,
-  });
-
   return (
-    <AppProviders isMetadataInSidePanel={isFullscreen}>
+    <AppProviders
+      isMetadataInSidePanel={isFullscreen}
+      datasetsMetadata={datasetsMetadata}
+    >
       <AppContent
         snapshot={snapshot}
         loading={loading}
@@ -41,8 +38,9 @@ export default function App() {
         isFullscreen={isFullscreen}
         canRequestFullscreen={canRequestFullscreen}
         requestFullscreen={requestFullscreen}
-        chartAttachment={chartAttachment}
-        crossDatasetGridAttachment={crossDatasetGridAttachment}
+        crossDataset={crossDataset}
+        meta={meta}
+        effectiveLocale={effectiveLocale}
         pythonCode={meta?.pythonCode}
         chartTransformOption={chartTransformOption}
       />

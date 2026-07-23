@@ -19,7 +19,14 @@ import {
   MOCK_HOST_CONTEXT_LIGHT,
 } from '../mocks/hostContext';
 
-const USE_DEV_MODE =
+/**
+ * True when running the widget directly in a browser tab (no host iframe
+ * parent) during local development — the bridge never completes its
+ * handshake in this mode, so this and `useDatasetsMetadata` both substitute
+ * mock/skip real tool calls instead of hanging or erroring against a host
+ * that isn't there.
+ */
+export const USE_DEV_MODE =
   import.meta.env.DEV &&
   typeof window !== 'undefined' &&
   window.parent === window;

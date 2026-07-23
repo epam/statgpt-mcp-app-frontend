@@ -4,12 +4,15 @@ import {
   ConversationViewFeatureTogglesProvider,
   ConversationViewSidePanelProvider,
   ConversationViewStylesProvider,
+  DatasetDimensionsMetadataMapProvider,
   OnboardingProvider,
 } from '@epam/statgpt-conversation-view';
+import type { DatasetsMetadataMaps } from '../hooks/useDatasetsMetadata';
 
 interface Props {
   children: ReactNode;
   isMetadataInSidePanel?: boolean;
+  datasetsMetadata: DatasetsMetadataMaps;
 }
 
 /**
@@ -17,8 +20,13 @@ interface Props {
  *
  * @param children - Application subtree that requires the conversation-view context stack.
  * @param isMetadataInSidePanel - When true, grid metadata indicators open in a side panel (rendered via `ConversationViewSidePanelOutlet`) instead of their inline modal fallback.
+ * @param datasetsMetadata - Dimensions/last-updated maps from the datasets-metadata tool; empty maps degrade gracefully to unresolved grid labels.
  */
-export function AppProviders({ children, isMetadataInSidePanel }: Props) {
+export function AppProviders({
+  children,
+  isMetadataInSidePanel,
+  datasetsMetadata,
+}: Props) {
   return (
     <ConversationViewStylesProvider>
       <OnboardingProvider>
@@ -27,7 +35,12 @@ export function AppProviders({ children, isMetadataInSidePanel }: Props) {
             isMetadataInSidePanel={isMetadataInSidePanel}
           >
             <ConversationViewSidePanelProvider>
-              {children}
+              <DatasetDimensionsMetadataMapProvider
+                map={datasetsMetadata.dimensionsMap}
+                lastUpdatedMap={datasetsMetadata.lastUpdatedMap}
+              >
+                {children}
+              </DatasetDimensionsMetadataMapProvider>
             </ConversationViewSidePanelProvider>
           </ConversationViewFeatureTogglesProvider>
         </AdvancedViewProvider>

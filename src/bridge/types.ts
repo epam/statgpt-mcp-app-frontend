@@ -15,7 +15,10 @@ export interface HostBridge {
   start(): void;
   subscribe(listener: () => void): () => void;
   getSnapshot(): BridgeSnapshot;
+  /** For passthrough tools whose actual payload is a JSON text content block (e.g. `sdmx_proxy`). */
   callTool(name: string, args: unknown): Promise<unknown>;
+  /** For tools whose payload IS the `structuredContent` and carry no text content block. */
+  callToolStructured(name: string, args: unknown): Promise<unknown>;
   requestDisplayMode(mode: McpUiDisplayMode): Promise<void>;
 }
 
