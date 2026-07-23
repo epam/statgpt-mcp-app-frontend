@@ -5,11 +5,9 @@ import {
   useConversationViewSidePanelOptional,
 } from '@epam/statgpt-conversation-view';
 import type { EChartsOption } from 'echarts-for-react/src/types';
-import type { BridgeSnapshot } from '../bridge/types';
-import type {
-  ChartAttachment,
-  CrossDatasetGridAttachmentData,
-} from '../types/attachments';
+import type { BridgeSnapshot, WidgetMeta } from '../bridge/types';
+import { useDataAttachments } from '../hooks/useDataAttachments';
+import type { CrossDatasetInputs } from '../types/sdmx';
 import { ConnectionStatus } from './ConnectionStatus';
 import { DataView } from './DataView';
 import { EmptyState } from './EmptyState';
@@ -26,8 +24,9 @@ interface Props {
   isFullscreen: boolean;
   canRequestFullscreen: boolean;
   requestFullscreen: () => void;
-  chartAttachment: ChartAttachment | undefined;
-  crossDatasetGridAttachment: CrossDatasetGridAttachmentData | undefined;
+  crossDataset: CrossDatasetInputs | null;
+  meta: WidgetMeta | null;
+  effectiveLocale: string;
   pythonCode: string | undefined;
   chartTransformOption?: (
     option: EChartsOption,
@@ -44,12 +43,19 @@ export function AppContent({
   isFullscreen,
   canRequestFullscreen,
   requestFullscreen,
-  chartAttachment,
-  crossDatasetGridAttachment,
+  crossDataset,
+  meta,
+  effectiveLocale,
   pythonCode,
   chartTransformOption,
 }: Props) {
   const closePanel = useConversationViewSidePanelOptional()?.closePanel;
+  const { chartAttachment, crossDatasetGridAttachment } = useDataAttachments({
+    crossDataset,
+    meta,
+    effectiveLocale,
+    isFullscreen,
+  });
 
   useEffect(() => {
     if (!isFullscreen) closePanel?.();

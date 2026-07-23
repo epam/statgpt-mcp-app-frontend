@@ -119,6 +119,27 @@ export function createSpecBridge(): HostBridge {
       });
       return extractCallToolPayload(result);
     },
+    async callToolStructured(name: string, args: unknown) {
+      if (!sdkApp) {
+        logger.error('bridge', 'callToolStructured before start', name);
+        throw new BridgeError('bridge not started');
+      }
+      await connectPromise;
+      const result = await sdkApp.callServerTool({
+        name,
+        arguments: args as Record<string, unknown>,
+      });
+      if ((result as { isError?: boolean } | undefined)?.isError) {
+        throw new BridgeError(`tool call failed: ${name}`);
+      }
+      const structured = unwrapStructured(result);
+      if (structured == null) {
+        throw new BridgeError(
+          `tool call result did not include structured content: ${name}`,
+        );
+      }
+      return structured;
+    },
     async requestDisplayMode(mode) {
       if (!sdkApp) {
         logger.error('bridge', 'requestDisplayMode before start', mode);

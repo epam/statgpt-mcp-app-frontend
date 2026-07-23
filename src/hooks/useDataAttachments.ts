@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import {
   buildCrossDatasetGridContent,
   buildCrossDatasetChartingData,
+  useDatasetDimensionsMetadataMapOptional,
 } from '@epam/statgpt-conversation-view';
 import type { WidgetMeta } from '../bridge/types';
 import type { CrossDatasetInputs } from '../types/sdmx';
@@ -44,19 +45,28 @@ export function useDataAttachments({
     };
   }, [crossDataset, meta, effectiveLocale]);
 
+  const getDimensionsScheme =
+    useDatasetDimensionsMetadataMapOptional()?.getDimensionsScheme;
+
   const crossDatasetGridAttachment = useMemo(():
     | CrossDatasetGridAttachmentData
     | undefined => {
     if (!crossDataset) return undefined;
+    const dimensionsSchemesMap = new Map(
+      crossDataset.dataQueries.map((q) => [
+        q.urn,
+        getDimensionsScheme?.(q.urn),
+      ]),
+    );
     const content = buildCrossDatasetGridContent(
       crossDataset.structuresMap,
       crossDataset.dataMessagesMap,
-      new Map(),
+      dimensionsSchemesMap,
       crossDataset.dataQueries,
       effectiveLocale,
     );
     return isFullscreen ? content : dropMetadataIconColumn(content);
-  }, [crossDataset, effectiveLocale, isFullscreen]);
+  }, [crossDataset, effectiveLocale, isFullscreen, getDimensionsScheme]);
 
   return { chartAttachment, crossDatasetGridAttachment };
 }
