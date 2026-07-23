@@ -8,7 +8,8 @@ import { AppProviders } from './components/AppProviders';
 import { AppContent } from './components/AppContent';
 
 export default function App() {
-  const { snapshot, meta, crossDataset, loading, error } = useSdmxData();
+  const { snapshot, meta, crossDataset, loading, error, emptyResult } =
+    useSdmxData();
 
   useHostTheme(snapshot.hostContext);
   const chartTransformOption = useChartTheme(snapshot.hostContext);
@@ -35,6 +36,7 @@ export default function App() {
         snapshot={snapshot}
         loading={loading}
         error={error}
+        emptyResult={emptyResult}
         isFillHeight={isFillHeight}
         isFullscreen={isFullscreen}
         canRequestFullscreen={canRequestFullscreen}

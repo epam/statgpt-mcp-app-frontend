@@ -58,6 +58,7 @@ export interface SdmxData {
   crossDataset: CrossDatasetInputs | null;
   loading: boolean;
   error: string | null;
+  emptyResult: boolean;
   refresh: () => void;
 }
 
@@ -79,8 +80,8 @@ export function useSdmxData(): SdmxData {
     const extracted = extractWidgetMeta(snapshot.toolResult);
     if (!extracted && snapshot.toolResult) {
       logger.warn(
-        'bridge',
-        'tool-result missing expected fields',
+        'widget-empty',
+        'tool-result missing expected fields (queries/tools.sdmxProxy) — widget will show an empty state',
         snapshot.toolResult,
       );
     }
@@ -91,6 +92,30 @@ export function useSdmxData(): SdmxData {
     () => meta?.queries.filter((q) => !q.disabled) ?? [],
     [meta],
   );
+
+  useEffect(() => {
+    if (!meta) return;
+    if (meta.queries.length === 0) {
+      logger.warn(
+        'widget-empty',
+        'tool-result contained an empty queries array — widget will show an empty state',
+        snapshot.toolResult,
+      );
+    } else if (activeQueries.length === 0) {
+      logger.warn(
+        'widget-empty',
+        'all queries in tool-result are disabled — widget will show an empty state',
+        meta.queries,
+      );
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [meta, activeQueries.length]);
+
+  // Clear stale data from a previous query as soon as a new one starts, so
+  // AppContent doesn't keep showing the old grid instead of the loader.
+  useEffect(() => {
+    if (snapshot.phase === 'tool-pending') setCrossDataset(null);
+  }, [snapshot.phase]);
 
   const fetchKey = useMemo(() => {
     if (!activeQueries.length) return '';
@@ -103,8 +128,8 @@ export function useSdmxData(): SdmxData {
     setLoading(true);
     setError(null);
     try {
-      const [rawResults, structureResults] = await Promise.all([
-        Promise.all(
+      const [dataResults, structureResults] = await Promise.all([
+        Promise.allSettled(
           activeQueries.map(async (q) => {
             const path = dataPath(q);
             logger.debug('sdmx_proxy', 'request', {
@@ -149,11 +174,23 @@ export function useSdmxData(): SdmxData {
       ]);
       if (token !== fetchToken.current) return;
 
+      const succeededQueries: typeof activeQueries = [];
       const dataMessagesMap = new Map<string, DataMessage | null>();
       const structuresMap = new Map<string, StructuralData | undefined>();
 
       activeQueries.forEach((q, i) => {
-        dataMessagesMap.set(q.urn, rawResults[i]);
+        const dataResult = dataResults[i];
+        if (dataResult.status === 'rejected') {
+          logger.warn(
+            'widget-empty',
+            `data fetch failed for dataset — excluded from view: ${q.urn}`,
+            { reason: dataResult.reason },
+          );
+          return;
+        }
+
+        succeededQueries.push(q);
+        dataMessagesMap.set(q.urn, dataResult.value);
 
         const structureResult = structureResults[i];
         if (structureResult.status === 'fulfilled') {
@@ -166,11 +203,27 @@ export function useSdmxData(): SdmxData {
         }
       });
 
-      setCrossDataset({
-        structuresMap,
-        dataMessagesMap,
-        dataQueries: activeQueries,
-      });
+      const failedCount = activeQueries.length - succeededQueries.length;
+
+      if (succeededQueries.length === 0) {
+        setCrossDataset(null);
+        const firstRejected = dataResults.find(
+          (r): r is PromiseRejectedResult => r.status === 'rejected',
+        );
+        const reason = firstRejected?.reason as { message?: string };
+        setError(reason?.message || String(firstRejected?.reason));
+      } else {
+        setCrossDataset({
+          structuresMap,
+          dataMessagesMap,
+          dataQueries: succeededQueries,
+        });
+        setError(
+          failedCount > 0
+            ? `${failedCount} of ${activeQueries.length} datasets failed to load.`
+            : null,
+        );
+      }
     } catch (e) {
       logger.error(
         'sdmx_proxy',
@@ -201,9 +254,13 @@ export function useSdmxData(): SdmxData {
       },
       loading: false,
       error: null,
+      emptyResult: false,
       refresh: () => {},
     };
   }
+
+  const awaitingFirstQuery =
+    snapshot.phase === 'ready' && snapshot.toolResult == null;
 
   return {
     snapshot,
@@ -212,11 +269,13 @@ export function useSdmxData(): SdmxData {
     loading:
       loading ||
       snapshot.phase === 'tool-pending' ||
+      awaitingFirstQuery ||
       (!!activeQueries.length &&
         !!snapshot.toolResult &&
         !crossDataset &&
         !error),
     error,
+    emptyResult: !!snapshot.toolResult && activeQueries.length === 0,
     refresh,
   };
 }
