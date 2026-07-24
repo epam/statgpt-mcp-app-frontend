@@ -10,11 +10,13 @@ import { useDataAttachments } from '../hooks/useDataAttachments';
 import type { CrossDatasetInputs } from '../types/sdmx';
 import { ConnectionStatus } from './ConnectionStatus';
 import { DataView } from './DataView';
-import { EmptyState } from './EmptyState';
 import { ErrorBanner } from './ErrorBanner';
 import { FullscreenButton } from './FullscreenButton';
 import { Loader } from './Loader';
 import { TextResponse } from './TextResponse';
+
+const NO_DATA_MESSAGE =
+  'No data was found for the provided query. Try to change the query.';
 
 interface Props {
   snapshot: BridgeSnapshot;
@@ -68,12 +70,11 @@ export function AppContent({
 
   const hasData = !!crossDatasetGridAttachment;
   const showLoader = loading && !hasData;
-  const showEmptyState = !showLoader && !hasData && !error && emptyResult;
-  const showTextFallback =
-    !showLoader && !hasData && !error && noStructuredContent;
+  const showFallback =
+    !showLoader && !hasData && !error && (emptyResult || noStructuredContent);
 
   useEffect(() => {
-    if (showEmptyState || showTextFallback) {
+    if (showFallback) {
       document.documentElement.dataset.emptyState = 'true';
     } else {
       delete document.documentElement.dataset.emptyState;
@@ -81,7 +82,7 @@ export function AppContent({
     return () => {
       delete document.documentElement.dataset.emptyState;
     };
-  }, [showEmptyState, showTextFallback]);
+  }, [showFallback]);
 
   if (snapshot.phase !== 'ready' && snapshot.phase !== 'tool-pending') {
     return (
@@ -98,22 +99,8 @@ export function AppContent({
       );
     }
 
-    if (showTextFallback) {
-      return toolResultText ? (
-        <TextResponse text={toolResultText} />
-      ) : (
-        <div className="flex items-center justify-center py-6">
-          <EmptyState message="No data was found for the provided query. Try to change the query." />
-        </div>
-      );
-    }
-
-    if (showEmptyState) {
-      return (
-        <div className="flex items-center justify-center py-6">
-          <EmptyState message="No data was found for the provided query. Try to change the query." />
-        </div>
-      );
+    if (showFallback) {
+      return <TextResponse text={toolResultText || NO_DATA_MESSAGE} />;
     }
 
     return (
@@ -148,8 +135,7 @@ export function AppContent({
       {canRequestFullscreen &&
         !isFullscreen &&
         !showLoader &&
-        !showEmptyState &&
-        !showTextFallback && (
+        !showFallback && (
           <FullscreenButton onRequestFullscreen={requestFullscreen} />
         )}
 
