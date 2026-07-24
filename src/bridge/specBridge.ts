@@ -47,7 +47,10 @@ export function createSpecBridge(): HostBridge {
 
     sdkApp.ontoolresult = (params) => {
       const toolResult = unwrapStructured(params.structuredContent) ?? null;
-      logger.debug('bridge', 'tool-result received', toolResult);
+      logger.debug('bridge', 'tool-result received', {
+        raw: params,
+        parsed: toolResult,
+      });
       patch({ phase: 'ready', toolResult });
     };
 
