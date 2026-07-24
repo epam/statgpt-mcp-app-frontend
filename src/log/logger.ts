@@ -1,7 +1,16 @@
+import { v4 as uuidv4 } from 'uuid';
+
 const DEBUG = import.meta.env.VITE_DEBUG !== 'false';
 
+/**
+ * Per-mount instance id, generated once when this module first loads. Lets
+ * logs from multiple concurrently mounted widgets (e.g. several tool calls
+ * in one chat) be told apart in the console.
+ */
+export const widgetId = uuidv4().slice(0, 8);
+
 function format(tag: string, message: string): string {
-  return `[widget][${tag}] ${message}`;
+  return `[widget:${widgetId}][${tag}] ${message}`;
 }
 
 /**

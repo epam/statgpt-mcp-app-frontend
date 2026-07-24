@@ -62,7 +62,8 @@ export function createSpecBridge(): HostBridge {
       const toolResult = unwrapStructured(params.structuredContent) ?? null;
       const toolResultText = findTextBlock(params.content)?.text;
       logger.debug('bridge', 'tool-result received', {
-        toolResult,
+        raw: params,
+        parsed: toolResult,
         toolResultText,
       });
       patch({
