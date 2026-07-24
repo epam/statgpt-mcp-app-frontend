@@ -14,12 +14,15 @@ import { EmptyState } from './EmptyState';
 import { ErrorBanner } from './ErrorBanner';
 import { FullscreenButton } from './FullscreenButton';
 import { Loader } from './Loader';
+import { TextResponse } from './TextResponse';
 
 interface Props {
   snapshot: BridgeSnapshot;
   loading: boolean;
   error: string | null;
   emptyResult: boolean;
+  noStructuredContent: boolean;
+  toolResultText?: string;
   isFillHeight: boolean;
   isFullscreen: boolean;
   canRequestFullscreen: boolean;
@@ -39,6 +42,8 @@ export function AppContent({
   loading,
   error,
   emptyResult,
+  noStructuredContent,
+  toolResultText,
   isFillHeight,
   isFullscreen,
   canRequestFullscreen,
@@ -64,9 +69,11 @@ export function AppContent({
   const hasData = !!crossDatasetGridAttachment;
   const showLoader = loading && !hasData;
   const showEmptyState = !showLoader && !hasData && !error && emptyResult;
+  const showTextFallback =
+    !showLoader && !hasData && !error && noStructuredContent;
 
   useEffect(() => {
-    if (showEmptyState) {
+    if (showEmptyState || showTextFallback) {
       document.documentElement.dataset.emptyState = 'true';
     } else {
       delete document.documentElement.dataset.emptyState;
@@ -74,7 +81,7 @@ export function AppContent({
     return () => {
       delete document.documentElement.dataset.emptyState;
     };
-  }, [showEmptyState]);
+  }, [showEmptyState, showTextFallback]);
 
   if (snapshot.phase !== 'ready' && snapshot.phase !== 'tool-pending') {
     return (
@@ -91,10 +98,20 @@ export function AppContent({
       );
     }
 
+    if (showTextFallback) {
+      return toolResultText ? (
+        <TextResponse text={toolResultText} />
+      ) : (
+        <div className="flex items-center justify-center py-6">
+          <EmptyState message="No data was found for the provided query. Try to change the query." />
+        </div>
+      );
+    }
+
     if (showEmptyState) {
       return (
         <div className="flex items-center justify-center py-6">
-          <EmptyState message="No data found for this query. Try rephrasing your question." />
+          <EmptyState message="No data was found for the provided query. Try to change the query." />
         </div>
       );
     }
@@ -131,7 +148,8 @@ export function AppContent({
       {canRequestFullscreen &&
         !isFullscreen &&
         !showLoader &&
-        !showEmptyState && (
+        !showEmptyState &&
+        !showTextFallback && (
           <FullscreenButton onRequestFullscreen={requestFullscreen} />
         )}
 

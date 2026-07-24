@@ -3,7 +3,11 @@ import type { McpUiHostContext } from '@modelcontextprotocol/ext-apps';
 import { APP_NAME, APP_VERSION } from '../app.meta';
 import { logger } from '../log/logger';
 import { BridgeError, type BridgeSnapshot, type HostBridge } from './types';
-import { extractCallToolPayload, unwrapStructured } from './utils';
+import {
+  extractCallToolPayload,
+  findTextBlock,
+  unwrapStructured,
+} from './utils';
 
 type Listener = () => void;
 
@@ -19,7 +23,11 @@ export function createSpecBridge(): HostBridge {
   let started = false;
   let connectPromise: Promise<void> | null = null;
   const listeners = new Set<Listener>();
-  let snapshot: BridgeSnapshot = { phase: 'connecting', toolResult: null };
+  let snapshot: BridgeSnapshot = {
+    phase: 'connecting',
+    toolResult: null,
+    toolResultReceived: false,
+  };
 
   function emit() {
     listeners.forEach((l) => l());
@@ -42,16 +50,28 @@ export function createSpecBridge(): HostBridge {
 
     sdkApp.ontoolinput = (_params) => {
       logger.debug('bridge', 'tool-input received');
-      patch({ phase: 'tool-pending', toolResult: null });
+      patch({
+        phase: 'tool-pending',
+        toolResult: null,
+        toolResultReceived: false,
+        toolResultText: undefined,
+      });
     };
 
     sdkApp.ontoolresult = (params) => {
       const toolResult = unwrapStructured(params.structuredContent) ?? null;
+      const toolResultText = findTextBlock(params.content)?.text;
       logger.debug('bridge', 'tool-result received', {
         raw: params,
         parsed: toolResult,
+        toolResultText,
       });
-      patch({ phase: 'ready', toolResult });
+      patch({
+        phase: 'ready',
+        toolResult,
+        toolResultReceived: true,
+        toolResultText,
+      });
     };
 
     sdkApp.ontoolcancelled = (params) => {

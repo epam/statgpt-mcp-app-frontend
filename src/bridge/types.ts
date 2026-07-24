@@ -26,6 +26,10 @@ export interface BridgeSnapshot {
   phase: BridgePhase;
   hostContext?: McpUiHostContext;
   toolResult: unknown;
+  /** True once a `tool-result` notification has been received for the current query, regardless of whether it carried `structuredContent`. Distinguishes "no result yet" from "received a result with nothing renderable" — both otherwise look like `toolResult == null`. */
+  toolResultReceived: boolean;
+  /** Text content accompanying the current `tool-result`, e.g. a model-facing summary. Present even when `structuredContent` is absent. */
+  toolResultText?: string;
   lastError?: string;
 }
 
