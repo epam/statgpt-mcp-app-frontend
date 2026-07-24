@@ -57,6 +57,7 @@ describe('useSdmxData', () => {
       currentSnapshot = {
         phase: 'connecting',
         toolResult: null,
+        toolResultReceived: false,
       };
 
       Object.defineProperty(window, 'parent', {
@@ -91,7 +92,11 @@ describe('useSdmxData', () => {
     });
 
     it('returns loading: false when phase is "connecting" and there is no toolResult', () => {
-      currentSnapshot = { phase: 'connecting', toolResult: null };
+      currentSnapshot = {
+        phase: 'connecting',
+        toolResult: null,
+        toolResultReceived: false,
+      };
       const { result } = renderHook(() => useSdmxData());
       expect(result.current.loading).toBe(false);
     });
@@ -99,7 +104,11 @@ describe('useSdmxData', () => {
     it('calls bridge.callTool when phase becomes "ready" and fetchKey is non-empty', async () => {
       mockCallTool.mockResolvedValue({});
 
-      currentSnapshot = { phase: 'ready', toolResult: validToolResult };
+      currentSnapshot = {
+        phase: 'ready',
+        toolResult: validToolResult,
+        toolResultReceived: true,
+      };
 
       const { result } = renderHook(() => useSdmxData());
 
@@ -122,7 +131,11 @@ describe('useSdmxData', () => {
         }),
       );
 
-      currentSnapshot = { phase: 'ready', toolResult: validToolResult };
+      currentSnapshot = {
+        phase: 'ready',
+        toolResult: validToolResult,
+        toolResultReceived: true,
+      };
 
       const { result } = renderHook(() => useSdmxData());
 
@@ -144,7 +157,11 @@ describe('useSdmxData', () => {
         .mockImplementation(() => {});
       mockCallTool.mockRejectedValue(new Error('network failure'));
 
-      currentSnapshot = { phase: 'ready', toolResult: validToolResult };
+      currentSnapshot = {
+        phase: 'ready',
+        toolResult: validToolResult,
+        toolResultReceived: true,
+      };
 
       const { result } = renderHook(() => useSdmxData());
 
