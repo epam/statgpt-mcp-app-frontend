@@ -27,7 +27,14 @@ function truncate(text: string, max = 200): string {
   return text.length > max ? `${text.slice(0, max)}…` : text;
 }
 
-function findTextBlock(content: unknown): { text: string } | undefined {
+/**
+ * Finds the first `type: "text"` content block in an MCP `content` array and
+ * returns its text, e.g. a model-facing summary accompanying a tool result.
+ *
+ * @param content - The `content` array from a tool-call result.
+ * @returns The text of the first text block, or `undefined` if there is none.
+ */
+export function findTextBlock(content: unknown): { text: string } | undefined {
   if (!Array.isArray(content)) return undefined;
   return content.find(
     (block): block is { type: string; text: string } =>

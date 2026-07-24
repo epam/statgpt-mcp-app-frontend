@@ -51,6 +51,7 @@ const DEV_BASE_CONTEXT =
 const DEV_SNAPSHOT: BridgeSnapshot = {
   phase: 'ready',
   toolResult: null,
+  toolResultReceived: true,
   hostContext: DEV_BASE_CONTEXT
     ? {
         ...DEV_BASE_CONTEXT,
@@ -66,6 +67,8 @@ export interface SdmxData {
   loading: boolean;
   error: string | null;
   emptyResult: boolean;
+  noStructuredContent: boolean;
+  toolResultText?: string;
   refresh: () => void;
 }
 
@@ -119,9 +122,13 @@ export function useSdmxData(): SdmxData {
   }, [meta, activeQueries.length]);
 
   // Clear stale data from a previous query as soon as a new one starts, so
-  // AppContent doesn't keep showing the old grid instead of the loader.
+  // AppContent doesn't keep showing the old grid, error banner, or fallback
+  // state instead of the loader.
   useEffect(() => {
-    if (snapshot.phase === 'tool-pending') setCrossDataset(null);
+    if (snapshot.phase === 'tool-pending') {
+      setCrossDataset(null);
+      setError(null);
+    }
   }, [snapshot.phase]);
 
   const fetchKey = useMemo(() => {
@@ -264,12 +271,21 @@ export function useSdmxData(): SdmxData {
       loading: false,
       error: null,
       emptyResult: false,
+      noStructuredContent: false,
+      toolResultText: undefined,
       refresh: () => {},
     };
   }
 
   const awaitingFirstQuery =
-    snapshot.phase === 'ready' && snapshot.toolResult == null;
+    snapshot.phase === 'ready' && !snapshot.toolResultReceived;
+
+  // A tool-result arrived but carried no structuredContent at all — distinct
+  // from `emptyResult`, which is structuredContent present but empty/malformed.
+  const noStructuredContent =
+    snapshot.phase === 'ready' &&
+    snapshot.toolResultReceived &&
+    snapshot.toolResult == null;
 
   return {
     snapshot,
@@ -285,6 +301,8 @@ export function useSdmxData(): SdmxData {
         !error),
     error,
     emptyResult: !!snapshot.toolResult && activeQueries.length === 0,
+    noStructuredContent,
+    toolResultText: snapshot.toolResultText,
     refresh,
   };
 }
