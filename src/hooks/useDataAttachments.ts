@@ -8,6 +8,7 @@ import type { WidgetMeta } from '../bridge/types';
 import type { CrossDatasetInputs } from '../types/sdmx';
 import { dropMetadataIconColumn } from '../adapters/gridColumns';
 import { ATTACHMENT_TYPE } from '../constants/attachmentTypes';
+import { formatNumbers } from '../constants/format-numbers';
 import type {
   ChartAttachment,
   CrossDatasetGridAttachmentData,
@@ -41,6 +42,8 @@ export function useDataAttachments({
         crossDataset.dataMessagesMap,
         crossDataset.dataQueries,
         effectiveLocale,
+        undefined,
+        formatNumbers,
       ),
     };
   }, [crossDataset, meta, effectiveLocale]);
@@ -64,6 +67,7 @@ export function useDataAttachments({
       dimensionsSchemesMap,
       crossDataset.dataQueries,
       effectiveLocale,
+      formatNumbers,
     );
     return isFullscreen ? content : dropMetadataIconColumn(content);
   }, [crossDataset, effectiveLocale, isFullscreen, getDimensionsScheme]);
