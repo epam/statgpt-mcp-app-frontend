@@ -6,17 +6,16 @@ interface Props {
 }
 
 /**
- * Renders the model-facing text accompanying a tool result when there is no
- * `structuredContent` to build an interactive view from (e.g. the model
- * couldn't resolve the user's query into a dataset). Left-aligned, matching
- * how a host renders the model's own text turns, rather than the centered
- * {@link EmptyState} treatment used for a resolved-but-empty query.
+ * Renders the model-facing text accompanying a tool result, or a fallback
+ * message when there is nothing to show (no `structuredContent` and no
+ * result text). Left-aligned, matching how a host renders the model's own
+ * text turns.
  *
  * @param text - The markdown text content to display.
  */
 export function TextResponse({ text }: Props) {
   return (
-    <div className="prose prose-sm max-w-none px-4 py-6 text-neutrals-900">
+    <div className="prose prose-sm max-w-none text-neutrals-900">
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
         components={{
