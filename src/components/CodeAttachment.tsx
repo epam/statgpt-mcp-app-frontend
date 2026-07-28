@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import classNames from 'classnames';
 import { Editor, OnMount } from '@monaco-editor/react';
 import '../monaco/setupMonaco';
@@ -21,11 +22,14 @@ interface Props {
  * only fetches Monaco's editor bundle the first time a code attachment is
  * actually shown, instead of at app boot.
  *
- * Monaco's `automaticLayout` measures its container's actual height, so
- * `h-full` alone collapses to a few px when the parent chain has no defined
- * height (e.g. outside fullscreen, where `DataView`'s tab content pane is
- * auto-height). Mirrors the fixed-height fallback used by
- * `CustomChartAttachment`/`CrossDatasetGridAttachment` for the same reason.
+ * The container is sized to the editor's actual content height (via
+ * `getContentHeight`/`onDidContentSizeChange`) rather than a fixed height,
+ * so short snippets don't carry redundant blank space. A precomputed
+ * line-count estimate isn't reliable here because `wordWrap: 'on'` means the
+ * visual line count depends on the container's current width, which is only
+ * known once Monaco has actually laid the text out. `max-h-[400px]` caps the
+ * visible height the same way the grid tab caps its rows, with Monaco's own
+ * internal scrollbar handling the overflow.
  */
 export function CodeAttachment({
   code,
@@ -33,17 +37,28 @@ export function CodeAttachment({
   fillHeight,
   className,
 }: Props) {
+  const [contentHeight, setContentHeight] = useState<number | null>(null);
+
   const handleMount: OnMount = (editor, monacoInstance) => {
     editor.addCommand(monacoInstance.KeyCode.F1, () => {});
+
+    const measure = () => setContentHeight(editor.getContentHeight());
+    measure();
+    editor.onDidContentSizeChange(measure);
   };
 
   return (
     <div
       className={classNames(
         'w-full [&_.cursors-layer]:hidden',
-        fillHeight ? 'h-full' : 'h-[400px] max-h-[400px] min-h-[400px]',
+        fillHeight ? 'h-full' : 'max-h-[400px] min-h-[120px]',
         className,
       )}
+      style={
+        fillHeight || contentHeight === null
+          ? undefined
+          : { height: contentHeight }
+      }
     >
       <Editor
         value={code}
