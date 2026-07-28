@@ -1,10 +1,11 @@
 import type { BridgePhase } from '../bridge/types';
-import { Centered } from './Centered';
-import { Loader } from './Loader';
+import { MainPlaceholder } from './MainPlaceholder';
+import { TextResponse } from './TextResponse';
 
 /**
- * Renders UI for non-ready bridge phases: a spinner for `connecting`, an error
- * message for `error`, and a "session ended" message for `torndown`.
+ * Renders UI for non-ready bridge phases: a skeleton placeholder for
+ * `connecting`, an error message for `error`, and a "session ended" message
+ * for `torndown`.
  *
  * The parent (`App`) only mounts this component when the phase is not `ready`
  * or `tool-pending`, so the component handles all pre-ready and terminal phases.
@@ -26,30 +27,20 @@ export function ConnectionStatus({
   lastError?: string;
 }) {
   if (phase === 'connecting') {
-    return (
-      <Centered>
-        <Loader />
-        <p className="mt-3 text-sm text-neutrals-700">
-          Connecting to the host…
-        </p>
-      </Centered>
-    );
+    return <MainPlaceholder />;
   }
   if (phase === 'error') {
     return (
-      <Centered>
-        <p className="font-semibold text-semantic-error">
-          Could not connect to the host
-        </p>
-        <p className="mt-2 max-w-md text-center text-sm text-neutrals-700">
-          {lastError}
-        </p>
-      </Centered>
+      <div className="m-4">
+        <TextResponse
+          text={`**Could not connect to the host**\n\n${lastError ?? ''}`}
+        />
+      </div>
     );
   }
   return (
-    <Centered>
-      <p className="text-sm text-neutrals-700">Session ended by the host.</p>
-    </Centered>
+    <div className="m-4">
+      <TextResponse text="Session ended by the host." />
+    </div>
   );
 }

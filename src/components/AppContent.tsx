@@ -12,7 +12,7 @@ import { ConnectionStatus } from './ConnectionStatus';
 import { DataView } from './DataView';
 import { ErrorBanner } from './ErrorBanner';
 import { FullscreenButton } from './FullscreenButton';
-import { Loader } from './Loader';
+import { MainPlaceholder } from './MainPlaceholder';
 import { TextResponse } from './TextResponse';
 
 const NO_DATA_MESSAGE =
@@ -92,11 +92,7 @@ export function AppContent({
 
   function renderContent() {
     if (showLoader) {
-      return (
-        <div className="flex flex-1 items-center justify-center">
-          <Loader />
-        </div>
-      );
+      return <MainPlaceholder />;
     }
 
     if (showFallback) {

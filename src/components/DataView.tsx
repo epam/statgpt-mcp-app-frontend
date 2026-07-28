@@ -9,7 +9,7 @@ import {
 } from '@epam/statgpt-conversation-view';
 import type { EChartsOption } from 'echarts-for-react/src/types';
 import { ATTACHMENT_TYPE } from '../constants/attachmentTypes';
-import { Loader } from './Loader';
+import { CodePlaceholder } from './CodePlaceholder';
 import type {
   ChartAttachment,
   CrossDatasetGridAttachmentData,
@@ -163,13 +163,7 @@ export function DataView({
           />
         )}
         {effectiveTab === 'code' && pythonCode && (
-          <Suspense
-            fallback={
-              <div className="flex h-[400px] items-center justify-center">
-                <Loader />
-              </div>
-            }
-          >
+          <Suspense fallback={<CodePlaceholder />}>
             <CodeAttachment
               code={pythonCode}
               theme={codeTheme}
