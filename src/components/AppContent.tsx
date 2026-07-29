@@ -6,6 +6,7 @@ import {
 } from '@epam/statgpt-conversation-view';
 import type { EChartsOption } from 'echarts-for-react/src/types';
 import type { BridgeSnapshot, WidgetMeta } from '../bridge/types';
+import { usePlatform } from '../host/hostContext';
 import { useDataAttachments } from '../hooks/useDataAttachments';
 import type { CrossDatasetInputs } from '../types/sdmx';
 import { ConnectionStatus } from './ConnectionStatus';
@@ -57,6 +58,7 @@ export function AppContent({
   chartTransformOption,
 }: Props) {
   const closePanel = useConversationViewSidePanelOptional()?.closePanel;
+  const platform = usePlatform(snapshot.hostContext);
   const { chartAttachment, crossDatasetGridAttachment } = useDataAttachments({
     crossDataset,
     meta,
@@ -132,7 +134,10 @@ export function AppContent({
         !isFullscreen &&
         !showLoader &&
         !showFallback && (
-          <FullscreenButton onRequestFullscreen={requestFullscreen} />
+          <FullscreenButton
+            onRequestFullscreen={requestFullscreen}
+            platform={platform}
+          />
         )}
 
       {error && <ErrorBanner message={error} />}
