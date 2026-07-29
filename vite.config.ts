@@ -1,5 +1,6 @@
 import { defineConfig } from 'vitest/config';
 import react from '@vitejs/plugin-react';
+import svgr from 'vite-plugin-svgr';
 import type { Plugin } from 'vite';
 import type { IncomingMessage, ServerResponse } from 'node:http';
 
@@ -47,7 +48,7 @@ function mcpAppEndpoint(): Plugin {
 // Dev default (http://localhost:4300) is set in the `start` npm script.
 export default defineConfig({
   base: process.env.VITE_BASE_URL ?? '/',
-  plugins: [react(), mcpAppEndpoint()],
+  plugins: [react(), svgr(), mcpAppEndpoint()],
   server: {
     port: 4300,
     strictPort: true,
