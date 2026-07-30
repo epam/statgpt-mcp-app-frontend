@@ -20,11 +20,11 @@ export function CodePlaceholder() {
         >
           <div
             data-testid="placeholder-bullet"
-            className="h-4 w-8 shrink-0 animate-pulse rounded-full bg-neutrals-300"
+            className="h-4 w-8 shrink-0 animate-pulse rounded-full bg-neutrals-500"
           />
           <div
             data-testid="placeholder-bar"
-            className="h-4 flex-1 animate-pulse rounded-md bg-neutrals-300"
+            className="h-4 flex-1 animate-pulse rounded-md bg-neutrals-500"
             style={{ maxWidth }}
           />
         </div>
