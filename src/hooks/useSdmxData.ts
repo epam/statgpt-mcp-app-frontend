@@ -3,62 +3,11 @@ import type { DataMessage, StructuralData } from '@epam/statgpt-sdmx-toolkit';
 import type { CrossDatasetInputs } from '../types/sdmx';
 import { bridge } from '../bridge';
 import { useBridgeSnapshot } from '../bridge/useBridge';
-import type { McpUiHostContext } from '@modelcontextprotocol/ext-apps';
 import type { BridgeSnapshot, WidgetMeta } from '../bridge/types';
 import { extractWidgetMeta } from '../bridge/parseToolResult';
 import { dataPath, structurePath } from '../sdmx/buildPaths';
 import { logger } from '../log/logger';
 import { truncateForLog } from '../log/truncateForLog';
-import {
-  mockMeta,
-  mockStructuralData,
-  mockDataMessage,
-} from '../mocks/sdmxData';
-import {
-  MOCK_HOST_CONTEXT_DARK,
-  MOCK_HOST_CONTEXT_LIGHT,
-} from '../mocks/hostContext';
-
-/**
- * True when running the widget directly in a browser tab (no host iframe
- * parent) during local development — the bridge never completes its
- * handshake in this mode, so this and `useDatasetsMetadata` both substitute
- * mock/skip real tool calls instead of hanging or erroring against a host
- * that isn't there.
- */
-export const USE_DEV_MODE =
-  import.meta.env.DEV &&
-  typeof window !== 'undefined' &&
-  window.parent === window;
-
-const DEV_THEME =
-  typeof window !== 'undefined'
-    ? (new URLSearchParams(window.location.search).get('theme') ?? 'light')
-    : 'light';
-
-const DEV_DISPLAY_MODE =
-  typeof window !== 'undefined'
-    ? (new URLSearchParams(window.location.search).get('mode') ?? 'fullscreen')
-    : 'fullscreen';
-
-const DEV_BASE_CONTEXT =
-  DEV_THEME === 'none'
-    ? undefined
-    : DEV_THEME === 'dark'
-      ? MOCK_HOST_CONTEXT_DARK
-      : MOCK_HOST_CONTEXT_LIGHT;
-
-const DEV_SNAPSHOT: BridgeSnapshot = {
-  phase: 'ready',
-  toolResult: null,
-  toolResultReceived: true,
-  hostContext: DEV_BASE_CONTEXT
-    ? {
-        ...DEV_BASE_CONTEXT,
-        displayMode: DEV_DISPLAY_MODE as McpUiHostContext['displayMode'],
-      }
-    : undefined,
-};
 
 export interface SdmxData {
   snapshot: BridgeSnapshot;
@@ -257,25 +206,6 @@ export function useSdmxData(): SdmxData {
     if (snapshot.phase === 'ready' && fetchKey) void refresh();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [snapshot.phase, fetchKey]);
-
-  if (USE_DEV_MODE) {
-    const devQuery = mockMeta.queries[0];
-    return {
-      snapshot: DEV_SNAPSHOT,
-      meta: mockMeta,
-      crossDataset: {
-        structuresMap: new Map([[devQuery.urn, mockStructuralData]]),
-        dataMessagesMap: new Map([[devQuery.urn, mockDataMessage]]),
-        dataQueries: [devQuery],
-      },
-      loading: false,
-      error: null,
-      emptyResult: false,
-      noStructuredContent: false,
-      toolResultText: undefined,
-      refresh: () => {},
-    };
-  }
 
   const awaitingFirstQuery =
     snapshot.phase === 'ready' && !snapshot.toolResultReceived;

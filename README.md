@@ -29,31 +29,22 @@ Local builds bake `VITE_BASE_URL` into the static output via Vite's `base`. The 
 
 ### Where each value comes from
 
-- **`npm run start`** — no `VITE_BASE_URL`; `base` falls back to `/`. Fine for standalone UI iteration at `http://localhost:4300`.
+- **`npm run start`** — no `VITE_BASE_URL`; `base` falls back to `/`. Only useful for compiling/type-checking during iteration — the widget still needs a real host bridge (see [Run locally](#run-locally)) to show anything.
 - **`npm run build:local`** — hardcodes `VITE_BASE_URL=http://localhost:4300` for MCPJam testing.
 - **Docker / production** — the image is built once with a placeholder origin; the real origin is supplied at run time: `make docker-run VITE_BASE_URL=https://widget.example.com` (or `docker run -e VITE_BASE_URL=...`). The startup script rewrites the placeholder in the built assets before nginx serves them.
 
 ## Run locally
-
-### Scenario 1 — mock data (no MCP server needed)
-
-```bash
-npm install
-npm run start    # http://localhost:4300
-```
-
-The widget runs with mock SDMX data and a mock host context. Use this for UI iteration — no MCP server or host chat required.
-
-### Scenario 2 — connected to a local MCP server
 
 ```bash
 npm run build:local    # build with absolute asset URLs → http://localhost:4300
 npm run preview        # serve dist/ at http://localhost:4300
 ```
 
-The widget is now available at `/_mcp-app/index.html`. A local MCP server can read this endpoint via `resources/read` and expose the HTML as a `ui://` resource. The host (Claude, ChatGPT, MCPJam) loads the widget in a sandboxed iframe when the model calls `query_data`.
+The widget is now available at `/_mcp-app/index.html`. A local MCP server can read this endpoint via `resources/read` and expose the HTML as a `ui://` resource. A host that speaks the MCP-UI spec (Claude, ChatGPT, MCPJam) loads the widget in a sandboxed iframe when the model calls `query_data`.
 
 `build:local` is required here (not `start`) because asset URLs must be absolute — root-relative paths would resolve against the host's sandbox origin and 404.
+
+The widget always drives its data and host context through the real bridge handshake, so a spec-compliant host or test harness is required for any local run — there is no standalone mode that fabricates data in the widget itself.
 
 The MCP server setup is on the developer's side and is not provided in this repository.
 

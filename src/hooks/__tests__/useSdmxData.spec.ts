@@ -1,35 +1,6 @@
 import { renderHook, act } from '@testing-library/react';
-import { mockMeta } from '../../mocks/sdmxData';
 
 describe('useSdmxData', () => {
-  describe('dev mode', () => {
-    let useSdmxData: () => import('../useSdmxData').SdmxData;
-
-    beforeAll(async () => {
-      ({ useSdmxData } = await import('../useSdmxData'));
-    });
-
-    it('returns loading: false', () => {
-      const { result } = renderHook(() => useSdmxData());
-      expect(result.current.loading).toBe(false);
-    });
-
-    it('returns error: null', () => {
-      const { result } = renderHook(() => useSdmxData());
-      expect(result.current.error).toBeNull();
-    });
-
-    it('returns the mock meta', () => {
-      const { result } = renderHook(() => useSdmxData());
-      expect(result.current.meta).toEqual(mockMeta);
-    });
-
-    it('returns snapshot.phase as "ready"', () => {
-      const { result } = renderHook(() => useSdmxData());
-      expect(result.current.snapshot.phase).toBe('ready');
-    });
-  });
-
   describe('production mode', () => {
     let useSdmxData: () => import('../useSdmxData').SdmxData;
     let mockCallTool: ReturnType<typeof vi.fn>;
