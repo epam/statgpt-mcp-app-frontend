@@ -1,9 +1,11 @@
 import type { McpUiHostContext } from '@modelcontextprotocol/ext-apps';
 import {
   detectHostKind,
+  DisplayMode,
   HostKind,
   Platform,
   usePlatform,
+  useDisplayMode,
 } from '../hostContext';
 
 function makeHostContext(
@@ -49,5 +51,33 @@ describe('usePlatform', () => {
 
   it('returns Platform.Desktop when hostContext is undefined', () => {
     expect(usePlatform(undefined)).toBe(Platform.Desktop);
+  });
+});
+
+describe('useDisplayMode', () => {
+  it('returns DisplayMode.Fullscreen when hostContext.displayMode is "fullscreen"', () => {
+    expect(useDisplayMode(makeHostContext({ displayMode: 'fullscreen' }))).toBe(
+      DisplayMode.Fullscreen,
+    );
+  });
+
+  it('returns DisplayMode.Pip when hostContext.displayMode is "pip"', () => {
+    expect(useDisplayMode(makeHostContext({ displayMode: 'pip' }))).toBe(
+      DisplayMode.Pip,
+    );
+  });
+
+  it('returns DisplayMode.Inline when hostContext.displayMode is "inline"', () => {
+    expect(useDisplayMode(makeHostContext({ displayMode: 'inline' }))).toBe(
+      DisplayMode.Inline,
+    );
+  });
+
+  it('returns DisplayMode.Inline when displayMode is not set', () => {
+    expect(useDisplayMode(makeHostContext())).toBe(DisplayMode.Inline);
+  });
+
+  it('returns DisplayMode.Inline when hostContext is undefined', () => {
+    expect(useDisplayMode(undefined)).toBe(DisplayMode.Inline);
   });
 });

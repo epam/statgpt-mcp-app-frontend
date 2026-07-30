@@ -1,6 +1,12 @@
 import { useCallback, useEffect } from 'react';
 import type { McpUiHostContext } from '@modelcontextprotocol/ext-apps';
 import { bridge } from '../bridge';
+import {
+  detectHostKind,
+  useDisplayMode,
+  usePlatform,
+} from '../host/hostContext';
+import { resolveEffectiveSafeArea, resolveMinSafeArea } from '../host/safeArea';
 
 export interface HostLayout {
   isFillHeight: boolean;
@@ -53,17 +59,37 @@ export function useHostLayout(
   }, [containerDimensions]);
 
   const safeAreaInsets = hostContext?.safeAreaInsets;
+  const platform = usePlatform(hostContext);
+  const currentDisplayMode = useDisplayMode(hostContext);
   useEffect(() => {
+    const host = {
+      top: safeAreaInsets?.top ?? 0,
+      right: safeAreaInsets?.right ?? 0,
+      bottom: safeAreaInsets?.bottom ?? 0,
+      left: safeAreaInsets?.left ?? 0,
+    };
+    const min = resolveMinSafeArea(
+      detectHostKind(),
+      platform,
+      currentDisplayMode,
+    );
+    const effective = resolveEffectiveSafeArea(host, min);
+
     (['top', 'right', 'bottom', 'left'] as const).forEach((side) => {
-      const value = safeAreaInsets?.[side];
-      const prop = `--mcp-safe-area-${side}`;
-      if (value != null && value > 0) {
-        document.documentElement.style.setProperty(prop, `${value}px`);
-      } else {
-        document.documentElement.style.removeProperty(prop);
-      }
+      document.documentElement.style.setProperty(
+        `--mcp-safe-area-host-${side}`,
+        `${host[side]}px`,
+      );
+      document.documentElement.style.setProperty(
+        `--mcp-safe-area-min-${side}`,
+        `${min[side]}px`,
+      );
+      document.documentElement.style.setProperty(
+        `--mcp-safe-area-${side}`,
+        `${effective[side]}px`,
+      );
     });
-  }, [safeAreaInsets]);
+  }, [safeAreaInsets, platform, currentDisplayMode]);
 
   const canRequestFullscreen =
     hostContext?.availableDisplayModes?.includes('fullscreen') ?? false;
