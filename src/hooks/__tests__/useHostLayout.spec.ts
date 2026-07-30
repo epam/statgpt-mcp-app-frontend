@@ -21,6 +21,14 @@ const CSS_PROPS = [
   '--mcp-safe-area-right',
   '--mcp-safe-area-bottom',
   '--mcp-safe-area-left',
+  '--mcp-safe-area-host-top',
+  '--mcp-safe-area-host-right',
+  '--mcp-safe-area-host-bottom',
+  '--mcp-safe-area-host-left',
+  '--mcp-safe-area-min-top',
+  '--mcp-safe-area-min-right',
+  '--mcp-safe-area-min-bottom',
+  '--mcp-safe-area-min-left',
 ] as const;
 
 afterEach(() => {
@@ -114,7 +122,7 @@ describe('useHostLayout', () => {
   });
 
   describe('safeAreaInsets → CSS vars', () => {
-    it('sets --mcp-safe-area-* when safeAreaInsets has positive values', () => {
+    it('writes --mcp-safe-area-host-* from safeAreaInsets, unconditionally', () => {
       renderHook(() =>
         useHostLayout(
           makeHostContext({
@@ -124,16 +132,66 @@ describe('useHostLayout', () => {
       );
 
       expect(
-        document.documentElement.style.getPropertyValue('--mcp-safe-area-top'),
+        document.documentElement.style.getPropertyValue(
+          '--mcp-safe-area-host-top',
+        ),
       ).toBe('44px');
       expect(
         document.documentElement.style.getPropertyValue(
-          '--mcp-safe-area-bottom',
+          '--mcp-safe-area-host-right',
+        ),
+      ).toBe('0px');
+      expect(
+        document.documentElement.style.getPropertyValue(
+          '--mcp-safe-area-host-bottom',
         ),
       ).toBe('34px');
     });
 
-    it('removes --mcp-safe-area-top when the value is 0', () => {
+    it('writes --mcp-safe-area-host-* as 0px when safeAreaInsets is undefined', () => {
+      renderHook(() => useHostLayout(makeHostContext()));
+
+      expect(
+        document.documentElement.style.getPropertyValue(
+          '--mcp-safe-area-host-top',
+        ),
+      ).toBe('0px');
+    });
+
+    it('writes --mcp-safe-area-min-* from the resolved minimum for the current cell', () => {
+      renderHook(() =>
+        useHostLayout(makeHostContext({ displayMode: 'fullscreen' })),
+      );
+
+      // Default minimums are currently all-zero; this asserts the plumbing
+      // writes the resolved value, not that the value itself is nonzero.
+      expect(
+        document.documentElement.style.getPropertyValue(
+          '--mcp-safe-area-min-top',
+        ),
+      ).toBe('0px');
+    });
+
+    it('writes --mcp-safe-area-* (effective) as max(host, min) per side', () => {
+      renderHook(() =>
+        useHostLayout(
+          makeHostContext({
+            safeAreaInsets: { top: 44, right: 0, bottom: 0, left: 0 },
+          }),
+        ),
+      );
+
+      expect(
+        document.documentElement.style.getPropertyValue('--mcp-safe-area-top'),
+      ).toBe('44px');
+      expect(
+        document.documentElement.style.getPropertyValue(
+          '--mcp-safe-area-right',
+        ),
+      ).toBe('0px');
+    });
+
+    it('updates all safe-area CSS vars on rerender with a new hostContext', () => {
       const { rerender } = renderHook(
         ({ ctx }: { ctx: McpUiHostContext | undefined }) => useHostLayout(ctx),
         {
@@ -156,25 +214,7 @@ describe('useHostLayout', () => {
       });
       expect(
         document.documentElement.style.getPropertyValue('--mcp-safe-area-top'),
-      ).toBe('');
-    });
-
-    it('removes --mcp-safe-area-top when safeAreaInsets is undefined', () => {
-      const { rerender } = renderHook(
-        ({ ctx }: { ctx: McpUiHostContext | undefined }) => useHostLayout(ctx),
-        {
-          initialProps: {
-            ctx: makeHostContext({
-              safeAreaInsets: { top: 44, right: 0, bottom: 0, left: 0 },
-            }),
-          },
-        },
-      );
-
-      rerender({ ctx: makeHostContext() });
-      expect(
-        document.documentElement.style.getPropertyValue('--mcp-safe-area-top'),
-      ).toBe('');
+      ).toBe('0px');
     });
   });
 

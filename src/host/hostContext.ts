@@ -6,6 +6,13 @@ export type HostKind = (typeof HostKind)[keyof typeof HostKind];
 export const Platform = { Desktop: 'desktop', Mobile: 'mobile' } as const;
 export type Platform = (typeof Platform)[keyof typeof Platform];
 
+export const DisplayMode = {
+  Inline: 'inline',
+  Fullscreen: 'fullscreen',
+  Pip: 'pip',
+} as const;
+export type DisplayMode = (typeof DisplayMode)[keyof typeof DisplayMode];
+
 /**
  * Detects which AI host is running the widget. ChatGPT injects a global
  * `window.openai` object; Claude does not, so its absence is treated as the
@@ -30,4 +37,16 @@ export function usePlatform(
   return hostContext?.platform === 'mobile'
     ? Platform.Mobile
     : Platform.Desktop;
+}
+
+/**
+ * Derives the current display mode from `hostContext.displayMode`, which is
+ * only present once the host handshake has completed. Defaults to
+ * `DisplayMode.Inline` beforehand, mirroring `usePlatform`'s default.
+ * @param hostContext - The current spec host context, once available post-handshake.
+ */
+export function useDisplayMode(
+  hostContext: McpUiHostContext | undefined,
+): DisplayMode {
+  return hostContext?.displayMode ?? DisplayMode.Inline;
 }
