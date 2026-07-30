@@ -6,7 +6,6 @@ import {
   buildDatasetLastUpdatedMap,
 } from '../adapters/datasetsMetadataMap';
 import { DATASETS_METADATA_APP_TOOL_NAME } from '../constants/tools';
-import { USE_DEV_MODE } from './useSdmxData';
 import { logger } from '../log/logger';
 import { truncateForLog } from '../log/truncateForLog';
 import type {
@@ -36,7 +35,7 @@ export function useDatasetsMetadata(phase: BridgePhase): DatasetsMetadataMaps {
   const fetchedRef = useRef(false);
 
   useEffect(() => {
-    if (USE_DEV_MODE || phase !== 'ready' || fetchedRef.current) return;
+    if (phase !== 'ready' || fetchedRef.current) return;
     fetchedRef.current = true;
 
     void (async () => {
