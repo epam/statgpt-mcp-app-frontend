@@ -17,10 +17,10 @@
     "test:watch": "vitest"
   },
   "dependencies": {
-    "@epam/statgpt-conversation-view": "0.8.0-dev.2",
-    "@epam/statgpt-sdmx-toolkit": "0.8.0-dev.2",
-    "@epam/statgpt-shared-toolkit": "0.8.0-dev.2",
-    "@epam/statgpt-ui-components": "0.8.0-dev.2",
+    "@epam/statgpt-conversation-view": "0.8.0-dev.5",
+    "@epam/statgpt-sdmx-toolkit": "0.8.0-dev.5",
+    "@epam/statgpt-shared-toolkit": "0.8.0-dev.5",
+    "@epam/statgpt-ui-components": "0.8.0-dev.5",
     "@modelcontextprotocol/ext-apps": "^1.7.4",
     "@monaco-editor/react": "^4.7.0",
     "@tabler/icons-react": "^3.44.0",
@@ -72,6 +72,7 @@
     "vitest": "^4.1.9"
   },
   "overrides": {
-    "dompurify": "3.4.12"
+    "dompurify": "3.4.12",
+    "brace-expansion": "5.0.9"
   }
 }
