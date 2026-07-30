@@ -14,14 +14,14 @@ export function MainPlaceholder() {
     >
       <div
         data-testid="placeholder-title"
-        className="h-4 w-2/5 animate-pulse rounded-lg bg-neutrals-200"
+        className="h-4 w-2/5 animate-pulse rounded-lg bg-neutrals-500"
       />
       <div className="grid grid-cols-4 gap-3">
         {Array.from({ length: BLOCK_COUNT }, (_, index) => (
           <div
             key={index}
             data-testid="placeholder-block"
-            className="h-6 animate-pulse rounded-lg bg-neutrals-300"
+            className="h-6 animate-pulse rounded-lg bg-neutrals-500"
           />
         ))}
       </div>
