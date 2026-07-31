@@ -1,15 +1,20 @@
 import type { ReactNode } from 'react';
+import { useMemo } from 'react';
 import {
   AdvancedViewProvider,
   ConversationViewFeatureTogglesProvider,
   ConversationViewSidePanelProvider,
   ConversationViewStylesProvider,
   DatasetDimensionsMetadataMapProvider,
+  DatasetInfoDetailsProvider,
   OnboardingProvider,
   SidePanelCustomizationProvider,
 } from '@epam/statgpt-conversation-view';
 import type { DatasetsMetadataMaps } from '../hooks/useDatasetsMetadata';
 import { Platform } from '../host/hostContext';
+import { CloseIcon } from '../icons/CloseIcon';
+import { DatasetIcon } from '../icons/DatasetIcon';
+import { HostIconButton } from './HostIconButton';
 
 interface Props {
   children: ReactNode;
@@ -40,6 +45,21 @@ export function AppProviders({
       ? `${SIDE_PANEL_THEME_CLASSES} absolute inset-0 z-10 w-full`
       : SIDE_PANEL_THEME_CLASSES;
 
+  const closeControl = useMemo(() => {
+    function PanelCloseButton({ onClose }: { onClose: () => void }) {
+      return (
+        <HostIconButton
+          icon={CloseIcon}
+          platform={platform}
+          onClick={onClose}
+          ariaLabel="Close panel"
+          className="relative"
+        />
+      );
+    }
+    return PanelCloseButton;
+  }, [platform]);
+
   return (
     <ConversationViewStylesProvider>
       <OnboardingProvider>
@@ -49,14 +69,28 @@ export function AppProviders({
           >
             <ConversationViewSidePanelProvider>
               <SidePanelCustomizationProvider
-                value={{ classes: { panel: panelClassName } }}
+                value={{
+                  closeControl,
+                  classes: { panel: panelClassName },
+                }}
               >
-                <DatasetDimensionsMetadataMapProvider
-                  map={datasetsMetadata.dimensionsMap}
-                  lastUpdatedMap={datasetsMetadata.lastUpdatedMap}
+                <DatasetInfoDetailsProvider
+                  value={{
+                    icon: (
+                      <DatasetIcon
+                        platform={platform}
+                        className="size-4 text-neutrals-700"
+                      />
+                    ),
+                  }}
                 >
-                  {children}
-                </DatasetDimensionsMetadataMapProvider>
+                  <DatasetDimensionsMetadataMapProvider
+                    map={datasetsMetadata.dimensionsMap}
+                    lastUpdatedMap={datasetsMetadata.lastUpdatedMap}
+                  >
+                    {children}
+                  </DatasetDimensionsMetadataMapProvider>
+                </DatasetInfoDetailsProvider>
               </SidePanelCustomizationProvider>
             </ConversationViewSidePanelProvider>
           </ConversationViewFeatureTogglesProvider>
