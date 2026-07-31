@@ -6,7 +6,7 @@ import {
 } from '@epam/statgpt-conversation-view';
 import type { EChartsOption } from 'echarts-for-react/src/types';
 import type { BridgeSnapshot, WidgetMeta } from '../bridge/types';
-import { usePlatform } from '../host/hostContext';
+import type { Platform } from '../host/hostContext';
 import { useDataAttachments } from '../hooks/useDataAttachments';
 import type { CrossDatasetInputs } from '../types/sdmx';
 import { ConnectionStatus } from './ConnectionStatus';
@@ -38,6 +38,7 @@ interface Props {
     option: EChartsOption,
     ctx: { isMobile: boolean },
   ) => EChartsOption;
+  platform: Platform;
 }
 
 export function AppContent({
@@ -56,9 +57,9 @@ export function AppContent({
   effectiveLocale,
   pythonCode,
   chartTransformOption,
+  platform,
 }: Props) {
   const closePanel = useConversationViewSidePanelOptional()?.closePanel;
-  const platform = usePlatform(snapshot.hostContext);
   const { chartAttachment, crossDatasetGridAttachment } = useDataAttachments({
     crossDataset,
     meta,
@@ -102,7 +103,7 @@ export function AppContent({
     }
 
     return (
-      <div className="flex min-h-0 flex-1 flex-row">
+      <div className="relative flex min-h-0 flex-1 flex-row">
         <div className="min-w-0 flex-1">
           <DataView
             chartAttachment={chartAttachment}
@@ -114,9 +115,7 @@ export function AppContent({
           />
         </div>
         {isFullscreen && (
-          <div className="mcp-side-panel-host">
-            <ConversationViewSidePanelOutlet scope="conversation" />
-          </div>
+          <ConversationViewSidePanelOutlet scope="conversation" />
         )}
       </div>
     );

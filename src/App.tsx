@@ -4,6 +4,7 @@ import { useHostLayout } from './hooks/useHostLayout';
 import { useHostTheme } from './hooks/useHostTheme';
 import { useChartTheme } from './hooks/useChartTheme';
 import { useInlineHeightSync } from './hooks/useInlineHeightSync';
+import { usePlatform } from './host/hostContext';
 import { AppProviders } from './components/AppProviders';
 import { AppContent } from './components/AppContent';
 
@@ -29,6 +30,7 @@ export default function App() {
     requestFullscreen,
     locale,
   } = useHostLayout(snapshot.hostContext);
+  const platform = usePlatform(snapshot.hostContext);
   useInlineHeightSync(!isFillHeight);
   const effectiveLocale = locale ?? 'en';
 
@@ -36,6 +38,7 @@ export default function App() {
     <AppProviders
       isMetadataInSidePanel={isFullscreen}
       datasetsMetadata={datasetsMetadata}
+      platform={platform}
     >
       <AppContent
         snapshot={snapshot}
@@ -53,6 +56,7 @@ export default function App() {
         effectiveLocale={effectiveLocale}
         pythonCode={meta?.pythonCode}
         chartTransformOption={chartTransformOption}
+        platform={platform}
       />
     </AppProviders>
   );
