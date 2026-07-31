@@ -6,14 +6,20 @@ import {
   ConversationViewStylesProvider,
   DatasetDimensionsMetadataMapProvider,
   OnboardingProvider,
+  SidePanelCustomizationProvider,
 } from '@epam/statgpt-conversation-view';
 import type { DatasetsMetadataMaps } from '../hooks/useDatasetsMetadata';
+import { Platform } from '../host/hostContext';
 
 interface Props {
   children: ReactNode;
   isMetadataInSidePanel?: boolean;
   datasetsMetadata: DatasetsMetadataMaps;
+  platform: Platform;
 }
+
+const SIDE_PANEL_THEME_CLASSES =
+  '[--primary:var(--semantic-info)] bg-[var(--color-background-primary,#fff)] border-l-0';
 
 /**
  * Composes the required `@epam/statgpt-conversation-view` context providers into a single wrapper.
@@ -21,12 +27,19 @@ interface Props {
  * @param children - Application subtree that requires the conversation-view context stack.
  * @param isMetadataInSidePanel - When true, grid metadata indicators open in a side panel (rendered via `ConversationViewSidePanelOutlet`) instead of their inline modal fallback.
  * @param datasetsMetadata - Dimensions/last-updated maps from the datasets-metadata tool; empty maps degrade gracefully to unresolved grid labels.
+ * @param platform - Desktop/mobile bucket from the host context; drives the mobile-only full-width side panel override.
  */
 export function AppProviders({
   children,
   isMetadataInSidePanel,
   datasetsMetadata,
+  platform,
 }: Props) {
+  const panelClassName =
+    platform === Platform.Mobile
+      ? `${SIDE_PANEL_THEME_CLASSES} absolute inset-0 z-10 w-full`
+      : SIDE_PANEL_THEME_CLASSES;
+
   return (
     <ConversationViewStylesProvider>
       <OnboardingProvider>
@@ -35,12 +48,16 @@ export function AppProviders({
             isMetadataInSidePanel={isMetadataInSidePanel}
           >
             <ConversationViewSidePanelProvider>
-              <DatasetDimensionsMetadataMapProvider
-                map={datasetsMetadata.dimensionsMap}
-                lastUpdatedMap={datasetsMetadata.lastUpdatedMap}
+              <SidePanelCustomizationProvider
+                value={{ classes: { panel: panelClassName } }}
               >
-                {children}
-              </DatasetDimensionsMetadataMapProvider>
+                <DatasetDimensionsMetadataMapProvider
+                  map={datasetsMetadata.dimensionsMap}
+                  lastUpdatedMap={datasetsMetadata.lastUpdatedMap}
+                >
+                  {children}
+                </DatasetDimensionsMetadataMapProvider>
+              </SidePanelCustomizationProvider>
             </ConversationViewSidePanelProvider>
           </ConversationViewFeatureTogglesProvider>
         </AdvancedViewProvider>
