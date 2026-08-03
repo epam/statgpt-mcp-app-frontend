@@ -1,15 +1,14 @@
 import { lazy, Suspense, useEffect, useState } from 'react';
 import classNames from 'classnames';
-import { IconChevronLeft, IconChevronRight } from '@tabler/icons-react';
 import {
-  ChartingIcon,
-  CustomChartAttachment,
   CrossDatasetGridAttachment,
   useConversationViewSidePanelOptional,
 } from '@epam/statgpt-conversation-view';
 import type { EChartsOption } from 'echarts-for-react/src/types';
+import type { Platform } from '../host/hostContext';
 import { ATTACHMENT_TYPE } from '../constants/attachmentTypes';
 import { CodePlaceholder } from './CodePlaceholder';
+import { ChartView } from './Chart/ChartView';
 import type {
   ChartAttachment,
   CrossDatasetGridAttachmentData,
@@ -23,11 +22,6 @@ const CodeAttachment = lazy(() =>
   import('./CodeAttachment').then((m) => ({ default: m.CodeAttachment })),
 );
 
-const CHART_NAVIGATION_ICONS = {
-  [ChartingIcon.PREVIOUS]: <IconChevronLeft width={20} height={20} />,
-  [ChartingIcon.NEXT]: <IconChevronRight width={20} height={20} />,
-};
-
 type Tab = 'grid' | 'chart' | 'code';
 
 interface Props {
@@ -40,6 +34,8 @@ interface Props {
     option: EChartsOption,
     ctx: { isMobile: boolean },
   ) => EChartsOption;
+  platform: Platform;
+  isFullscreen: boolean;
 }
 
 const TAB_LABELS: Record<Tab, string> = {
@@ -74,6 +70,8 @@ const CROSS_DATASET_GRID_TITLE = 'Cross Dataset Grid';
  * @param codeTheme - Monaco theme applied to the Code tab, following the host theme.
  * @param fillHeight - When true, the component stretches to fill its container's height for pip or fullscreen modes.
  * @param chartTransformOption - Applied to the chart's ECharts option before render; used to recolor axis/legend text to match the widget's host-driven theme.
+ * @param platform - The desktop/mobile bucket derived from the host context; drives the chart pager's icon sizing.
+ * @param isFullscreen - Whether the widget is currently in fullscreen display mode; puts the chart canvas and its dimension list side-by-side instead of stacked.
  */
 export function DataView({
   chartAttachment,
@@ -82,6 +80,8 @@ export function DataView({
   codeTheme,
   fillHeight,
   chartTransformOption,
+  platform,
+  isFullscreen,
 }: Props) {
   const [activeTab, setActiveTab] = useState<Tab>('grid');
   const closePanel = useConversationViewSidePanelOptional()?.closePanel;
@@ -120,7 +120,7 @@ export function DataView({
 
   return (
     <div
-      className={classNames('flex flex-col gap-4', {
+      className={classNames('flex flex-col gap-3', {
         'h-full min-h-0': fillHeight,
       })}
     >
@@ -150,16 +150,12 @@ export function DataView({
           />
         )}
         {effectiveTab === 'chart' && chartAttachment && (
-          <CustomChartAttachment
+          <ChartView
             attachment={chartAttachment}
-            fillHeight={fillHeight}
-            fixHeight={!fillHeight}
-            icons={CHART_NAVIGATION_ICONS}
             transformOption={chartTransformOption}
-            contentClassName="gap-2"
-            chartAreaClassName="gap-2"
-            chartBodyClassName="gap-1 mt-2"
-            sliderClassName="w-fit self-center"
+            platform={platform}
+            fillHeight={fillHeight}
+            isFullscreen={isFullscreen}
           />
         )}
         {effectiveTab === 'code' && pythonCode && (

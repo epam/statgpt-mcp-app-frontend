@@ -23,7 +23,6 @@
     "@epam/statgpt-ui-components": "0.8.0-dev.5",
     "@modelcontextprotocol/ext-apps": "^1.7.4",
     "@monaco-editor/react": "^4.7.0",
-    "@tabler/icons-react": "^3.44.0",
     "ag-grid-community": "33.3.2",
     "ag-grid-react": "^33.3.2",
     "classnames": "^2.5.1",

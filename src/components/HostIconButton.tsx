@@ -3,13 +3,21 @@ import classNames from 'classnames';
 import { ICON_SIZE } from '../icons/iconSize';
 import { Platform } from '../host/hostContext';
 
+type Variant = 'plain' | 'bordered';
+
 interface Props {
   icon: ComponentType<{ platform: Platform } & SVGProps<SVGSVGElement>>;
   platform: Platform;
   onClick: () => void;
   ariaLabel: string;
+  variant?: Variant;
   className?: string;
 }
+
+const VARIANT_CLASSES: Record<Variant, string> = {
+  plain: 'rounded-md',
+  bordered: 'rounded-[8px] border border-neutrals-400',
+};
 
 /**
  * Shared chrome for a clickable host-native icon: resolves the icon's
@@ -25,6 +33,7 @@ interface Props {
  * @param platform - The desktop/mobile bucket derived from the host context; drives icon size and the mobile hit-slop.
  * @param onClick - Called when the button is clicked.
  * @param ariaLabel - Accessible label for the button.
+ * @param variant - `'plain'` (default) for a borderless icon button, or `'bordered'` for a bordered chip — e.g. a pager's prev/next buttons.
  * @param className - Additional classes; must include a non-`static` `position` utility.
  */
 export function HostIconButton({
@@ -32,6 +41,7 @@ export function HostIconButton({
   platform,
   onClick,
   ariaLabel,
+  variant = 'plain',
   className,
 }: Props) {
   const size = ICON_SIZE[platform];
@@ -42,8 +52,9 @@ export function HostIconButton({
       onClick={onClick}
       aria-label={ariaLabel}
       className={classNames(
-        'z-10 rounded-md p-1.5 text-neutrals-700 hover:bg-neutrals-200 hover:text-neutrals-1000 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-1',
+        'z-10 p-1.5 text-neutrals-700 hover:bg-neutrals-200 hover:text-neutrals-1000 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-1',
         isMobile && "before:absolute before:inset-[-4px] before:content-['']",
+        VARIANT_CLASSES[variant],
         className,
       )}
     >
