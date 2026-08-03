@@ -7,7 +7,12 @@ import classNames from 'classnames';
 import { Platform } from '../../host/hostContext';
 import { DatasetIcon } from '../../icons/DatasetIcon';
 import type { ChartAttachment } from '../../types/attachments';
-import { alignLegendLeft, tightenGrid } from './chartOptionTransforms';
+import {
+  getLegendItems,
+  hideLegend,
+  tightenGrid,
+} from './chartOptionTransforms';
+import { ChartLegend } from './ChartLegend';
 import { ChartPager } from './ChartPager';
 import { DimensionsList } from './DimensionsList';
 
@@ -52,10 +57,12 @@ interface Props {
  * Renders one SDMX chart attachment: an ECharts canvas that never shrinks
  * below a fixed floor regardless of how dimension labels wrap (a flat height
  * in inline mode, a `min-height` that grows to fill available space in
- * fillHeight/pip/fullscreen modes), a pager for stepping between chart units
- * when there's more than one, and the unit's dimension values as horizontal
- * label/value rows below it — stacked under the chart normally, or beside it
- * in a fixed 220px column in fullscreen.
+ * fillHeight/pip/fullscreen modes), a DOM-rendered legend below the canvas
+ * that wraps freely to as many rows as the series list needs instead of
+ * competing with the plot for space or scrolling, a pager for stepping
+ * between chart units when there's more than one, and the unit's dimension
+ * values as horizontal label/value rows — stacked under the chart normally,
+ * or beside it in a fixed 220px column in fullscreen.
  * @param attachment - Chart attachment data, built by `useDataAttachments`.
  * @param transformOption - Recolors the chart option per the current host theme, from `useChartTheme`.
  * @param platform - The desktop/mobile bucket derived from the host context; drives the pager's icon sizing.
@@ -72,6 +79,9 @@ export function ChartView({
   className,
 }: Props) {
   const [chartIndex, setChartIndex] = useState(0);
+  const [legendSelected, setLegendSelected] = useState<Record<string, boolean>>(
+    {},
+  );
   const flatUnits = flattenChartingData(attachment.charting_data);
   const chartRef = useRef<ReactEChartsRef>(null);
   const canvasContainerRef = useRef<HTMLDivElement>(null);
@@ -79,6 +89,10 @@ export function ChartView({
   useEffect(() => {
     setChartIndex(0);
   }, [attachment.charting_data]);
+
+  useEffect(() => {
+    setLegendSelected({});
+  }, [chartIndex]);
 
   /**
    * `echarts-for-react` measures its inner wrapper's `clientHeight` once at
@@ -108,18 +122,22 @@ export function ChartView({
     setChartIndex((prev) => Math.min(prev + 1, flatUnits.length - 1));
   }, [flatUnits.length]);
 
+  const handleToggleLegend = useCallback((name: string) => {
+    chartRef.current
+      ?.getEchartsInstance()
+      .dispatchAction({ type: 'legendToggleSelect', name });
+  }, []);
+
   const currentFlatUnit = flatUnits[chartIndex] ?? flatUnits[0];
   if (!currentFlatUnit) return null;
 
   const { unit, groupTitle } = currentFlatUnit;
   const isMobile = platform === Platform.Mobile;
-  const option = tightenGrid(
-    alignLegendLeft(
-      transformOption
-        ? transformOption(unit.config, { isMobile })
-        : unit.config,
-    ),
-  );
+  const themedOption = transformOption
+    ? transformOption(unit.config, { isMobile })
+    : unit.config;
+  const legendItems = getLegendItems(themedOption);
+  const option = tightenGrid(hideLegend(themedOption));
 
   /**
    * `echarts-for-react`'s inner wrapper is `height: 100%`, which only
@@ -171,16 +189,33 @@ export function ChartView({
         )}
       >
         <div
-          ref={canvasContainerRef}
-          className={classNames('min-w-0', fillHeight && 'flex-1')}
-          style={canvasStyle}
+          className={classNames(
+            'flex min-w-0 flex-col gap-2',
+            fillHeight && 'min-h-0 flex-1',
+          )}
         >
-          <ReactECharts
-            ref={chartRef}
-            notMerge
-            lazyUpdate={false}
-            option={option}
-            style={{ width: '100%', height: '100%' }}
+          <div
+            ref={canvasContainerRef}
+            className={classNames('min-w-0', fillHeight && 'flex-1')}
+            style={canvasStyle}
+          >
+            <ReactECharts
+              ref={chartRef}
+              notMerge
+              lazyUpdate={false}
+              option={option}
+              onEvents={{
+                legendselectchanged: (params: {
+                  selected: Record<string, boolean>;
+                }) => setLegendSelected(params.selected),
+              }}
+              style={{ width: '100%', height: '100%' }}
+            />
+          </div>
+          <ChartLegend
+            items={legendItems}
+            selected={legendSelected}
+            onToggle={handleToggleLegend}
           />
         </div>
         <DimensionsList

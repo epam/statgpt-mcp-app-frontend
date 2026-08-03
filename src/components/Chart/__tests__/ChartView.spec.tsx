@@ -8,13 +8,25 @@ import type { ChartAttachment } from '../../../types/attachments';
 import { ATTACHMENT_TYPE } from '../../../constants/attachmentTypes';
 import { ChartView } from '../ChartView';
 
+const { dispatchActionMock } = vi.hoisted(() => ({
+  dispatchActionMock: vi.fn(),
+}));
+
 vi.mock('echarts-for-react', () => ({
   default: forwardRef(function MockReactECharts(
     { option }: { option: unknown },
-    ref: Ref<{ getEchartsInstance: () => { resize: () => void } }>,
+    ref: Ref<{
+      getEchartsInstance: () => {
+        resize: () => void;
+        dispatchAction: typeof dispatchActionMock;
+      };
+    }>,
   ) {
     useImperativeHandle(ref, () => ({
-      getEchartsInstance: () => ({ resize: vi.fn() }),
+      getEchartsInstance: () => ({
+        resize: vi.fn(),
+        dispatchAction: dispatchActionMock,
+      }),
     }));
     return <div data-testid="mock-chart">{JSON.stringify(option)}</div>;
   }),
@@ -142,7 +154,7 @@ describe('ChartView', () => {
     expect(screen.getByText('Chart: 2/2')).toBeInTheDocument();
   });
 
-  it('left-aligns the chart legend', () => {
+  it("hides ECharts' own legend rendering", () => {
     render(
       <ChartView
         attachment={makeAttachment({
@@ -153,8 +165,45 @@ describe('ChartView', () => {
       />,
     );
     expect(screen.getByTestId('mock-chart')).toHaveTextContent(
-      '"legend":{"top":0,"left":"left"}',
+      '"legend":{"top":0,"show":false}',
     );
+  });
+
+  it('renders a DOM legend item per named series', () => {
+    render(
+      <ChartView
+        attachment={makeAttachment({
+          units: [
+            makeUnit({
+              config: {
+                series: [{ name: 'Exports' }, { name: 'Imports' }],
+              },
+            }),
+          ],
+        })}
+        platform={Platform.Desktop}
+        isFullscreen={false}
+      />,
+    );
+    expect(screen.getByRole('button', { name: 'Exports' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Imports' })).toBeInTheDocument();
+  });
+
+  it('toggles a series on the chart instance when its legend item is clicked', async () => {
+    render(
+      <ChartView
+        attachment={makeAttachment({
+          units: [makeUnit({ config: { series: [{ name: 'Exports' }] } })],
+        })}
+        platform={Platform.Desktop}
+        isFullscreen={false}
+      />,
+    );
+    await userEvent.click(screen.getByRole('button', { name: 'Exports' }));
+    expect(dispatchActionMock).toHaveBeenCalledWith({
+      type: 'legendToggleSelect',
+      name: 'Exports',
+    });
   });
 
   it('flattens grouped units and shows the group title', () => {
