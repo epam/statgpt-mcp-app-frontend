@@ -20,6 +20,8 @@ export interface HostBridge {
   /** For tools whose payload IS the `structuredContent` and carry no text content block. */
   callToolStructured(name: string, args: unknown): Promise<unknown>;
   requestDisplayMode(mode: McpUiDisplayMode): Promise<void>;
+  /** Asks the host to open a URL on its own privileged side (`ui/open-link`), sidestepping iframe-sandbox popup and mobile-WebView new-window-delegate questions entirely. */
+  openLink(url: string): Promise<void>;
 }
 
 export interface BridgeSnapshot {
