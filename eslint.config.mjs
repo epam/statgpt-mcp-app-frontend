@@ -58,7 +58,7 @@ export default [
       'react/jsx-uses-react': 'off',
       'react/prop-types': 'off',
       'react/no-danger': 'error',
-      'react/jsx-props-no-spreading': 'warn',
+      'react/jsx-props-no-spreading': 'off',
       'react-hooks/exhaustive-deps': 'error',
       'no-redeclare': 'off',
       '@typescript-eslint/triple-slash-reference': 'off',
@@ -132,12 +132,11 @@ export default [
   {
     files: ['**/*.{ts,tsx,js,jsx}'],
     rules: {
-      // `mcp-side-panel-host` (src/styles/side-panel.scss) needs a real custom CSS
-      // hook to scope its `--primary` override — see AppContent.tsx. TODO: drop this
-      // once that's handled without a custom classname.
+      // `h4`/`caption` are typography utilities from src/styles/fonts.scss, applied
+      // directly to non-heading elements that need that font styling.
       'tailwindcss/no-custom-classname': [
         'warn',
-        { whitelist: ['mcp-side-panel-host'] },
+        { whitelist: ['h4', 'caption'] },
       ],
     },
   },

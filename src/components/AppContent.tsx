@@ -112,6 +112,8 @@ export function AppContent({
             codeTheme={snapshot.hostContext?.theme}
             fillHeight={isFillHeight}
             chartTransformOption={chartTransformOption}
+            platform={platform}
+            isFullscreen={isFullscreen}
           />
         </div>
         {isFullscreen && (
