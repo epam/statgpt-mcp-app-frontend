@@ -186,5 +186,17 @@ export function createSpecBridge(): HostBridge {
         logger.warn('display-mode', 'request failed', err);
       }
     },
+    async openLink(url) {
+      if (!sdkApp) {
+        logger.error('bridge', 'openLink before start', url);
+        throw new BridgeError('bridge not started');
+      }
+      await connectPromise;
+      try {
+        await sdkApp.openLink({ url });
+      } catch (err) {
+        logger.warn('open-link', 'request failed', err);
+      }
+    },
   };
 }
