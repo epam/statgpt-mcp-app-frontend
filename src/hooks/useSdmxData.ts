@@ -5,6 +5,11 @@ import { bridge } from '../bridge';
 import { useBridgeSnapshot } from '../bridge/useBridge';
 import type { BridgeSnapshot, WidgetMeta } from '../bridge/types';
 import { extractWidgetMeta } from '../bridge/parseToolResult';
+import {
+  buildEmptyState,
+  isDataAvailable,
+  type EmptyStateContent,
+} from '../bridge/emptyState';
 import { dataPath, structurePath } from '../sdmx/buildPaths';
 import { logger } from '../log/logger';
 import { truncateForLog } from '../log/truncateForLog';
@@ -15,9 +20,7 @@ export interface SdmxData {
   crossDataset: CrossDatasetInputs | null;
   loading: boolean;
   error: string | null;
-  emptyResult: boolean;
-  noStructuredContent: boolean;
-  toolResultText?: string;
+  emptyState: EmptyStateContent | null;
   refresh: () => void;
 }
 
@@ -47,14 +50,21 @@ export function useSdmxData(): SdmxData {
     return extracted;
   }, [snapshot.toolResult]);
 
+  const dataAvailable = isDataAvailable(meta);
+
   const activeQueries = useMemo(
-    () => meta?.queries.filter((q) => !q.disabled) ?? [],
-    [meta],
+    () => (dataAvailable ? meta!.queries.filter((q) => !q.disabled) : []),
+    [meta, dataAvailable],
+  );
+
+  const emptyState = useMemo(
+    () => buildEmptyState(meta, snapshot.toolResultText),
+    [meta, snapshot.toolResultText],
   );
 
   useEffect(() => {
-    if (!meta) return;
-    if (meta.queries.length === 0) {
+    if (!dataAvailable) return;
+    if (meta!.queries.length === 0) {
       logger.warn(
         'widget-empty',
         'tool-result contained an empty queries array — widget will show an empty state',
@@ -64,11 +74,11 @@ export function useSdmxData(): SdmxData {
       logger.warn(
         'widget-empty',
         'all queries in tool-result are disabled — widget will show an empty state',
-        meta.queries,
+        meta!.queries,
       );
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [meta, activeQueries.length]);
+  }, [meta, dataAvailable, activeQueries.length]);
 
   // Clear stale data from a previous query as soon as a new one starts, so
   // AppContent doesn't keep showing the old grid, error banner, or fallback
@@ -203,19 +213,12 @@ export function useSdmxData(): SdmxData {
   }, [meta, activeQueries]);
 
   useEffect(() => {
-    if (snapshot.phase === 'ready' && fetchKey) void refresh();
+    if (snapshot.phase === 'ready' && dataAvailable && fetchKey) void refresh();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [snapshot.phase, fetchKey]);
+  }, [snapshot.phase, dataAvailable, fetchKey]);
 
   const awaitingFirstQuery =
     snapshot.phase === 'ready' && !snapshot.toolResultReceived;
-
-  // A tool-result arrived but carried no structuredContent at all — distinct
-  // from `emptyResult`, which is structuredContent present but empty/malformed.
-  const noStructuredContent =
-    snapshot.phase === 'ready' &&
-    snapshot.toolResultReceived &&
-    snapshot.toolResult == null;
 
   return {
     snapshot,
@@ -230,9 +233,7 @@ export function useSdmxData(): SdmxData {
         !crossDataset &&
         !error),
     error,
-    emptyResult: !!snapshot.toolResult && activeQueries.length === 0,
-    noStructuredContent,
-    toolResultText: snapshot.toolResultText,
+    emptyState,
     refresh,
   };
 }

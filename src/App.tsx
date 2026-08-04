@@ -9,16 +9,8 @@ import { AppProviders } from './components/AppProviders';
 import { AppContent } from './components/AppContent';
 
 export default function App() {
-  const {
-    snapshot,
-    meta,
-    crossDataset,
-    loading,
-    error,
-    emptyResult,
-    noStructuredContent,
-    toolResultText,
-  } = useSdmxData();
+  const { snapshot, meta, crossDataset, loading, error, emptyState } =
+    useSdmxData();
   const datasetsMetadata = useDatasetsMetadata(snapshot.phase);
 
   useHostTheme(snapshot.hostContext);
@@ -44,9 +36,7 @@ export default function App() {
         snapshot={snapshot}
         loading={loading}
         error={error}
-        emptyResult={emptyResult}
-        noStructuredContent={noStructuredContent}
-        toolResultText={toolResultText}
+        emptyState={emptyState}
         isFillHeight={isFillHeight}
         isFullscreen={isFullscreen}
         canRequestFullscreen={canRequestFullscreen}

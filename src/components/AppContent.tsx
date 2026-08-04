@@ -6,6 +6,7 @@ import {
 } from '@epam/statgpt-conversation-view';
 import type { EChartsOption } from 'echarts-for-react/src/types';
 import type { BridgeSnapshot, WidgetMeta } from '../bridge/types';
+import { EmptyStateKind, type EmptyStateContent } from '../bridge/emptyState';
 import type { Platform } from '../host/hostContext';
 import { useDataAttachments } from '../hooks/useDataAttachments';
 import type { CrossDatasetInputs } from '../types/sdmx';
@@ -16,16 +17,11 @@ import { FullscreenButton } from './FullscreenButton';
 import { MainPlaceholder } from './MainPlaceholder';
 import { TextResponse } from './TextResponse';
 
-const NO_DATA_MESSAGE =
-  'No data was found for the provided query. Try to change the query.';
-
 interface Props {
   snapshot: BridgeSnapshot;
   loading: boolean;
   error: string | null;
-  emptyResult: boolean;
-  noStructuredContent: boolean;
-  toolResultText?: string;
+  emptyState: EmptyStateContent | null;
   isFillHeight: boolean;
   isFullscreen: boolean;
   canRequestFullscreen: boolean;
@@ -45,9 +41,7 @@ export function AppContent({
   snapshot,
   loading,
   error,
-  emptyResult,
-  noStructuredContent,
-  toolResultText,
+  emptyState,
   isFillHeight,
   isFullscreen,
   canRequestFullscreen,
@@ -74,8 +68,7 @@ export function AppContent({
 
   const hasData = !!crossDatasetGridAttachment;
   const showLoader = loading && !hasData;
-  const showFallback =
-    !showLoader && !hasData && !error && (emptyResult || noStructuredContent);
+  const showFallback = !showLoader && !hasData && !error && !!emptyState;
 
   useEffect(() => {
     if (showFallback) {
@@ -99,8 +92,12 @@ export function AppContent({
       return <MainPlaceholder />;
     }
 
-    if (showFallback) {
-      return <TextResponse text={toolResultText || NO_DATA_MESSAGE} />;
+    if (emptyState) {
+      return emptyState.kind === EmptyStateKind.Error ? (
+        <ErrorBanner message={emptyState.message} />
+      ) : (
+        <TextResponse text={emptyState.message} />
+      );
     }
 
     return (

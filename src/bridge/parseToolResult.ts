@@ -20,9 +20,19 @@ export function extractWidgetMeta(toolResult: unknown): WidgetMeta | null {
   const t = candidate as Partial<WidgetToolResult>;
   if (!Array.isArray(t.queries) || !t.tools?.sdmxProxy) return null;
   return {
+    version: t.version === 1 || t.version === 2 ? t.version : undefined,
     title: typeof t.title === 'string' ? t.title : undefined,
     queries: t.queries,
     sdmxProxyToolName: t.tools.sdmxProxy,
     pythonCode: typeof t.pythonCode === 'string' ? t.pythonCode : undefined,
+    status: typeof t.status === 'string' ? t.status : undefined,
+    message: typeof t.message === 'string' ? t.message : undefined,
+    candidateDatasets: Array.isArray(t.candidateDatasets)
+      ? t.candidateDatasets
+      : undefined,
+    missingDimensions:
+      t.missingDimensions && typeof t.missingDimensions === 'object'
+        ? t.missingDimensions
+        : undefined,
   };
 }

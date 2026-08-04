@@ -1,4 +1,6 @@
 import { renderHook, act } from '@testing-library/react';
+import { DataQueryStatus } from '../../bridge/types';
+import { EmptyStateKind } from '../../bridge/emptyState';
 
 describe('useSdmxData', () => {
   describe('production mode', () => {
@@ -7,6 +9,8 @@ describe('useSdmxData', () => {
     let currentSnapshot: import('../../bridge/types').BridgeSnapshot;
 
     const validToolResult = {
+      version: 2 as const,
+      status: DataQueryStatus.DataAvailable,
       queries: [
         {
           urn: 'IMF:BOP(1.0)',
@@ -144,6 +148,136 @@ describe('useSdmxData', () => {
       expect(result.current.error).toBe('network failure');
       expect(result.current.loading).toBe(false);
       consoleError.mockRestore();
+    });
+
+    it('calls bridge.callTool for a schema-v1 payload with no status field at all', async () => {
+      mockCallTool.mockResolvedValue({});
+      const { status: _status, version: _version, ...rest } = validToolResult;
+      const v1ToolResult = { ...rest, version: 1 as const };
+
+      currentSnapshot = {
+        phase: 'ready',
+        toolResult: v1ToolResult,
+        toolResultReceived: true,
+      };
+
+      const { result } = renderHook(() => useSdmxData());
+
+      await act(async () => {
+        await Promise.resolve();
+      });
+
+      expect(mockCallTool).toHaveBeenCalledWith(
+        'sdmx_proxy',
+        expect.objectContaining({ path: expect.any(String) }),
+      );
+      expect(result.current.emptyState).toBeNull();
+    });
+
+    it('does not call bridge.callTool for a schema-v2 payload missing status (likely a bug, not v1)', async () => {
+      const { status: _status, ...rest } = validToolResult;
+
+      currentSnapshot = {
+        phase: 'ready',
+        toolResult: rest,
+        toolResultReceived: true,
+      };
+
+      renderHook(() => useSdmxData());
+
+      await act(async () => {
+        await Promise.resolve();
+      });
+
+      expect(mockCallTool).not.toHaveBeenCalled();
+    });
+
+    it('does not call bridge.callTool when status is not "data_available"', async () => {
+      currentSnapshot = {
+        phase: 'ready',
+        toolResult: {
+          ...validToolResult,
+          status: DataQueryStatus.ExecutedNoData,
+        },
+        toolResultReceived: true,
+      };
+
+      renderHook(() => useSdmxData());
+
+      await act(async () => {
+        await Promise.resolve();
+      });
+
+      expect(mockCallTool).not.toHaveBeenCalled();
+    });
+
+    it('returns a "text" emptyState with the resolved message when status is "no_data"', async () => {
+      currentSnapshot = {
+        phase: 'ready',
+        toolResult: {
+          status: DataQueryStatus.NoData,
+          queries: [],
+          tools: { sdmxProxy: 'sdmx_proxy' },
+          message: 'No relevant data found for the query.',
+        },
+        toolResultReceived: true,
+      };
+
+      const { result } = renderHook(() => useSdmxData());
+
+      await act(async () => {
+        await Promise.resolve();
+      });
+
+      expect(result.current.emptyState).toEqual({
+        kind: EmptyStateKind.Text,
+        message: 'No relevant data found for the query.',
+      });
+    });
+
+    it('returns an "error" emptyState when status is "failed"', async () => {
+      currentSnapshot = {
+        phase: 'ready',
+        toolResult: {
+          status: DataQueryStatus.Failed,
+          queries: [],
+          tools: { sdmxProxy: 'sdmx_proxy' },
+        },
+        toolResultReceived: true,
+        toolResultText: 'The following queries were executed...',
+      };
+
+      const { result } = renderHook(() => useSdmxData());
+
+      await act(async () => {
+        await Promise.resolve();
+      });
+
+      expect(result.current.emptyState).toEqual({
+        kind: EmptyStateKind.Error,
+        message: 'The following queries were executed...',
+      });
+      expect(mockCallTool).not.toHaveBeenCalled();
+    });
+
+    it('returns emptyState with the default fallback when there is no structuredContent at all', async () => {
+      currentSnapshot = {
+        phase: 'ready',
+        toolResult: null,
+        toolResultReceived: true,
+      };
+
+      const { result } = renderHook(() => useSdmxData());
+
+      await act(async () => {
+        await Promise.resolve();
+      });
+
+      expect(result.current.emptyState).toEqual({
+        kind: EmptyStateKind.Text,
+        message:
+          'No data was found for the provided query. Try to change the query.',
+      });
     });
   });
 });
