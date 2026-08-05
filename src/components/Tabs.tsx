@@ -1,44 +1,41 @@
-import { useState, type ReactNode } from 'react';
+import type { ReactNode } from 'react';
 import classNames from 'classnames';
 
-export interface TabItem {
-  id: string;
+export interface TabItem<Id extends string = string> {
+  id: Id;
   label: string;
   content: ReactNode;
 }
 
-interface Props {
-  items: TabItem[];
-  /** Expands to fill its container's height (fullscreen/pip), matching `DataView`'s `fillHeight`. */
+interface Props<Id extends string> {
+  items: TabItem<Id>[];
+  activeId: Id | undefined;
+  onSelect: (id: Id) => void;
   fillHeight?: boolean;
 }
 
 /**
- * Generic tab strip + panel, styled to match `DataView.tsx`'s existing
+ * Generic, fully controlled tab strip + panel, styled to match `DataView`'s
  * Grid/Chart/Code tab bar so tabs look consistent wherever they appear in
- * the widget.
+ * the widget. Renders whichever item's `id` matches `activeId` — it holds
+ * no state of its own; pair it with `useActiveTab` for the usual
+ * "default to first item, fall back to first when the active id
+ * disappears" behavior.
  *
- * `DataView.tsx` intentionally does NOT use this component for its own
- * tabs — its tab switching carries side effects specific to its fixed
- * Grid/Chart/Code set (closing the metadata side panel on tab change,
- * writing `document.documentElement.dataset.activeTab` for e2e hooks,
- * computing `availableTabs` from which attachment props are present).
- * Generalizing that logic to also serve a dynamic tab list was judged
- * higher-risk than beneficial for the empty-state feature this component
- * was built for — it would touch working, shipped code for no behavioral
- * gain. Revisit unifying the two if a third tabbed-UI consumer appears.
- *
- * @param items - Tabs to render, in order. The first item's content is
- * shown by default.
+ * @param items - Tabs to render, in order.
+ * @param activeId - The currently active item's id; nothing renders below
+ * the tab bar if no item matches.
+ * @param onSelect - Called with an item's id when its button is clicked.
  * @param fillHeight - When true, the tab panel and active content stretch
  * to fill the container's height instead of sizing to their content.
  */
-export function Tabs({ items, fillHeight }: Props) {
-  const [activeId, setActiveId] = useState<string | undefined>(items[0]?.id);
-  const effectiveId = items.some((item) => item.id === activeId)
-    ? activeId
-    : items[0]?.id;
-  const activeItem = items.find((item) => item.id === effectiveId);
+export function Tabs<Id extends string>({
+  items,
+  activeId,
+  onSelect,
+  fillHeight,
+}: Props<Id>) {
+  const activeItem = items.find((item) => item.id === activeId);
 
   return (
     <div
@@ -50,11 +47,11 @@ export function Tabs({ items, fillHeight }: Props) {
         {items.map((item) => (
           <button
             key={item.id}
-            onClick={() => setActiveId(item.id)}
+            onClick={() => onSelect(item.id)}
             className={classNames(
               'px-4 py-2 text-sm font-medium -mb-px border-b-2 transition-colors',
               'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-primary',
-              effectiveId === item.id
+              activeId === item.id
                 ? 'border-semantic-info text-semantic-info'
                 : 'border-transparent text-neutrals-700 hover:text-neutrals-1000',
             )}
