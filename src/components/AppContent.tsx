@@ -12,6 +12,7 @@ import { useDataAttachments } from '../hooks/useDataAttachments';
 import type { CrossDatasetInputs } from '../types/sdmx';
 import { ConnectionStatus } from './ConnectionStatus';
 import { DataView } from './DataView';
+import { EmptyStateTabs } from './EmptyStateTabs';
 import { ErrorBanner } from './ErrorBanner';
 import { FullscreenButton } from './FullscreenButton';
 import { MainPlaceholder } from './MainPlaceholder';
@@ -69,6 +70,7 @@ export function AppContent({
   const hasData = !!crossDatasetGridAttachment;
   const showLoader = loading && !hasData;
   const showFallback = !showLoader && !hasData && !error && !!emptyState;
+  const hasEmptyStateGrid = !!emptyState && emptyState.tabs.length > 0;
 
   useEffect(() => {
     if (showFallback) {
@@ -96,7 +98,14 @@ export function AppContent({
       return emptyState.kind === EmptyStateKind.Error ? (
         <ErrorBanner message={emptyState.message} />
       ) : (
-        <TextResponse text={emptyState.message} />
+        <div
+          className={classNames('flex flex-col gap-1', {
+            'min-h-0 flex-1': isFillHeight,
+          })}
+        >
+          <TextResponse text={emptyState.message} />
+          <EmptyStateTabs tabs={emptyState.tabs} fillHeight={isFillHeight} />
+        </div>
       );
     }
 
@@ -133,7 +142,7 @@ export function AppContent({
       {canRequestFullscreen &&
         !isFullscreen &&
         !showLoader &&
-        !showFallback && (
+        (!showFallback || hasEmptyStateGrid) && (
           <FullscreenButton
             onRequestFullscreen={requestFullscreen}
             platform={platform}

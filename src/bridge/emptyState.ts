@@ -1,12 +1,32 @@
-import { DataQueryStatus, type WidgetMeta } from './types';
+import {
+  DataQueryStatus,
+  type DataSetChoice,
+  type DimensionValueInfo,
+  type WidgetMeta,
+} from './types';
 
 export const EmptyStateKind = { Error: 'error', Text: 'text' } as const;
 export type EmptyStateKind =
   (typeof EmptyStateKind)[keyof typeof EmptyStateKind];
 
+export type EmptyStateTab =
+  | {
+      kind: 'datasets';
+      id: 'datasets';
+      label: 'Datasets';
+      datasets: DataSetChoice[];
+    }
+  | {
+      kind: 'dimension';
+      id: string;
+      label: string;
+      values: DimensionValueInfo[];
+    };
+
 export interface EmptyStateContent {
   kind: EmptyStateKind;
   message: string;
+  tabs: EmptyStateTab[];
 }
 
 export const DEFAULT_FALLBACK_MESSAGE =
@@ -33,6 +53,40 @@ export function isDataAvailable(meta: WidgetMeta | null): boolean {
 }
 
 /**
+ * Builds the tab list for an empty state's candidate datasets and/or missing
+ * dimensions, independent of `status` — driven purely by which fields are
+ * non-empty. A dimension whose `availableValues` is empty is excluded (no
+ * tab for an unusable, empty grid).
+ *
+ * @param meta - Parsed structuredContent, or `null` if the tool result carried none.
+ */
+export function buildEmptyStateTabs(meta: WidgetMeta | null): EmptyStateTab[] {
+  const tabs: EmptyStateTab[] = [];
+
+  if (meta?.candidateDatasets?.length) {
+    tabs.push({
+      kind: 'datasets',
+      id: 'datasets',
+      label: 'Datasets',
+      datasets: meta.candidateDatasets,
+    });
+  }
+
+  for (const dimension of meta?.missingDimensions?.dimensions ?? []) {
+    if (dimension.availableValues.length) {
+      tabs.push({
+        kind: 'dimension',
+        id: dimension.dimensionId,
+        label: dimension.name,
+        values: dimension.availableValues,
+      });
+    }
+  }
+
+  return tabs;
+}
+
+/**
  * Maps a parsed tool result to what the widget should show in place of the data table,
  * or `null` when {@link isDataAvailable} and the normal fetch/render path should
  * proceed instead.
@@ -47,37 +101,11 @@ export function buildEmptyState(
   if (isDataAvailable(meta)) return null;
 
   const message = meta?.message ?? toolResultText ?? DEFAULT_FALLBACK_MESSAGE;
+  const tabs = buildEmptyStateTabs(meta);
 
   if (meta?.status === DataQueryStatus.Failed) {
-    return { kind: EmptyStateKind.Error, message };
+    return { kind: EmptyStateKind.Error, message, tabs };
   }
 
-  return { kind: EmptyStateKind.Text, message: appendLists(message, meta) };
-}
-
-/**
- * Appends a plain comma-separated list of names below the message, as its own markdown
- * paragraph, for the two statuses that carry a structured list.
- */
-function appendLists(message: string, meta: WidgetMeta | null): string {
-  if (meta?.status === DataQueryStatus.DatasetSelectionRequired) {
-    const items = (meta.candidateDatasets ?? []).map((d) => d.name);
-    return items.length ? `${message}\n\n${items.join(', ')}` : message;
-  }
-
-  if (
-    meta?.status === DataQueryStatus.MissingDimensions &&
-    meta.missingDimensions
-  ) {
-    const { dimensions } = meta.missingDimensions;
-    if (!dimensions.length) return message;
-    const multiple = dimensions.length > 1;
-    const paragraphs = dimensions.map((d) => {
-      const items = d.availableValues.map((v) => v.name).join(', ');
-      return multiple ? `${d.name}: ${items}` : items;
-    });
-    return [message, ...paragraphs].join('\n\n');
-  }
-
-  return message;
+  return { kind: EmptyStateKind.Text, message, tabs };
 }
