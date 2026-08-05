@@ -163,4 +163,83 @@ describe('AppContent — empty state tabs', () => {
       screen.queryByRole('button', { name: 'Expand to fullscreen' }),
     ).not.toBeInTheDocument();
   });
+
+  it.each([
+    ['desktop' as const, 'pr-10'],
+    ['mobile' as const, 'pr-11'],
+  ])(
+    'reserves a %s-sized gutter on the message when the fullscreen button is shown beside it',
+    (platform, gutterClass) => {
+      render(
+        <AppContent
+          snapshot={baseSnapshot()}
+          loading={false}
+          error={null}
+          emptyState={{
+            kind: EmptyStateKind.Text,
+            message: 'Multiple datasets match your query.',
+            tabs: [
+              {
+                kind: 'datasets',
+                id: 'datasets',
+                label: 'Datasets',
+                datasets: [{ id: 'a', name: 'Dataset A', isOfficial: true }],
+              },
+            ],
+          }}
+          isFillHeight={false}
+          isFullscreen={false}
+          canRequestFullscreen={true}
+          requestFullscreen={noopRequestFullscreen}
+          crossDataset={null}
+          meta={null}
+          effectiveLocale="en"
+          pythonCode={undefined}
+          platform={platform}
+        />,
+      );
+
+      const messageGutter = screen.getByText(
+        'Multiple datasets match your query.',
+      ).parentElement?.parentElement;
+      expect(messageGutter?.className).toContain(gutterClass);
+    },
+  );
+
+  it('does not reserve a gutter on the message when the fullscreen button is hidden', () => {
+    render(
+      <AppContent
+        snapshot={baseSnapshot()}
+        loading={false}
+        error={null}
+        emptyState={{
+          kind: EmptyStateKind.Text,
+          message: 'Multiple datasets match your query.',
+          tabs: [
+            {
+              kind: 'datasets',
+              id: 'datasets',
+              label: 'Datasets',
+              datasets: [{ id: 'a', name: 'Dataset A', isOfficial: true }],
+            },
+          ],
+        }}
+        isFillHeight={false}
+        isFullscreen={false}
+        canRequestFullscreen={false}
+        requestFullscreen={noopRequestFullscreen}
+        crossDataset={null}
+        meta={null}
+        effectiveLocale="en"
+        pythonCode={undefined}
+        platform="desktop"
+      />,
+    );
+
+    const messageGutter = screen.getByText(
+      'Multiple datasets match your query.',
+    ).parentElement?.parentElement;
+    expect(messageGutter?.className).not.toContain('pr-10');
+    expect(messageGutter?.className).not.toContain('pr-11');
+  });
 });
