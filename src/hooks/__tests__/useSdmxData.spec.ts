@@ -232,6 +232,7 @@ describe('useSdmxData', () => {
       expect(result.current.emptyState).toEqual({
         kind: EmptyStateKind.Text,
         message: 'No relevant data found for the query.',
+        tabs: [],
       });
     });
 
@@ -256,6 +257,7 @@ describe('useSdmxData', () => {
       expect(result.current.emptyState).toEqual({
         kind: EmptyStateKind.Error,
         message: 'The following queries were executed...',
+        tabs: [],
       });
       expect(mockCallTool).not.toHaveBeenCalled();
     });
@@ -277,6 +279,7 @@ describe('useSdmxData', () => {
         kind: EmptyStateKind.Text,
         message:
           'No data was found for the provided query. Try to change the query.',
+        tabs: [],
       });
     });
   });
