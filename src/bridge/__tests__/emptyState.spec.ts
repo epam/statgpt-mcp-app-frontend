@@ -1,5 +1,6 @@
 import {
   buildEmptyState,
+  buildEmptyStateTabs,
   DEFAULT_FALLBACK_MESSAGE,
   EmptyStateKind,
   isDataAvailable,
@@ -45,6 +46,7 @@ describe('buildEmptyState', () => {
     expect(buildEmptyState(null, undefined)).toEqual({
       kind: EmptyStateKind.Text,
       message: DEFAULT_FALLBACK_MESSAGE,
+      tabs: [],
     });
   });
 
@@ -52,6 +54,7 @@ describe('buildEmptyState', () => {
     expect(buildEmptyState(null, 'raw text content')).toEqual({
       kind: EmptyStateKind.Text,
       message: 'raw text content',
+      tabs: [],
     });
   });
 
@@ -63,6 +66,7 @@ describe('buildEmptyState', () => {
     expect(result).toEqual({
       kind: EmptyStateKind.Text,
       message: 'structured message',
+      tabs: [],
     });
   });
 
@@ -74,6 +78,7 @@ describe('buildEmptyState', () => {
     expect(result).toEqual({
       kind: EmptyStateKind.Text,
       message: 'text block message',
+      tabs: [],
     });
   });
 
@@ -85,6 +90,7 @@ describe('buildEmptyState', () => {
     expect(result).toEqual({
       kind: EmptyStateKind.Text,
       message: DEFAULT_FALLBACK_MESSAGE,
+      tabs: [],
     });
   });
 
@@ -96,6 +102,7 @@ describe('buildEmptyState', () => {
     expect(result).toEqual({
       kind: EmptyStateKind.Error,
       message: 'the following queries were executed...',
+      tabs: [],
     });
   });
 
@@ -112,7 +119,7 @@ describe('buildEmptyState', () => {
     }
   });
 
-  it('appends an unlabeled comma-separated paragraph from candidateDatasets for dataset_selection_required', () => {
+  it('carries the datasets tab through from buildEmptyStateTabs, message left unchanged', () => {
     const result = buildEmptyState(
       meta({
         status: DataQueryStatus.DatasetSelectionRequired,
@@ -126,27 +133,57 @@ describe('buildEmptyState', () => {
     );
     expect(result).toEqual({
       kind: EmptyStateKind.Text,
-      message: 'Multiple datasets match.\n\nDataset A, Dataset B',
+      message: 'Multiple datasets match.',
+      tabs: [
+        {
+          kind: 'datasets',
+          id: 'datasets',
+          label: 'Datasets',
+          datasets: [
+            { id: 'a', name: 'Dataset A', isOfficial: true },
+            { id: 'b', name: 'Dataset B', isOfficial: false },
+          ],
+        },
+      ],
     });
   });
+});
 
-  it('appends nothing for dataset_selection_required when candidateDatasets is empty', () => {
-    const result = buildEmptyState(
-      meta({
-        status: DataQueryStatus.DatasetSelectionRequired,
-        message: 'Multiple datasets match.',
-        candidateDatasets: [],
-      }),
-      undefined,
-    );
-    expect(result?.message).toBe('Multiple datasets match.');
+describe('buildEmptyStateTabs', () => {
+  it('returns an empty array when there are no lists at all', () => {
+    expect(buildEmptyStateTabs(meta())).toEqual([]);
+    expect(buildEmptyStateTabs(null)).toEqual([]);
   });
 
-  it('appends one unlabeled paragraph for a single missing dimension', () => {
-    const result = buildEmptyState(
+  it('produces a single "datasets" tab from candidateDatasets', () => {
+    const result = buildEmptyStateTabs(
       meta({
-        status: DataQueryStatus.MissingDimensions,
-        message: 'Your query is missing the Country dimension.',
+        candidateDatasets: [
+          { id: 'a', name: 'Dataset A', isOfficial: true },
+          { id: 'b', name: 'Dataset B', isOfficial: false },
+        ],
+      }),
+    );
+    expect(result).toEqual([
+      {
+        kind: 'datasets',
+        id: 'datasets',
+        label: 'Datasets',
+        datasets: [
+          { id: 'a', name: 'Dataset A', isOfficial: true },
+          { id: 'b', name: 'Dataset B', isOfficial: false },
+        ],
+      },
+    ]);
+  });
+
+  it('produces no tab when candidateDatasets is empty', () => {
+    expect(buildEmptyStateTabs(meta({ candidateDatasets: [] }))).toEqual([]);
+  });
+
+  it('produces one dimension tab for a single missing dimension', () => {
+    const result = buildEmptyStateTabs(
+      meta({
         missingDimensions: {
           datasetId: 'ds1',
           dimensions: [
@@ -161,20 +198,23 @@ describe('buildEmptyState', () => {
           ],
         },
       }),
-      undefined,
     );
-    expect(result).toEqual({
-      kind: EmptyStateKind.Text,
-      message:
-        'Your query is missing the Country dimension.\n\nUnited States, France',
-    });
+    expect(result).toEqual([
+      {
+        kind: 'dimension',
+        id: 'COUNTRY',
+        label: 'Country',
+        values: [
+          { id: 'USA', name: 'United States' },
+          { id: 'FRA', name: 'France' },
+        ],
+      },
+    ]);
   });
 
-  it('labels each paragraph with the dimension name when more than one dimension is missing', () => {
-    const result = buildEmptyState(
+  it('produces one tab per missing dimension when several are missing', () => {
+    const result = buildEmptyStateTabs(
       meta({
-        status: DataQueryStatus.MissingDimensions,
-        message: 'Two dimensions are missing.',
         missingDimensions: {
           datasetId: 'ds1',
           dimensions: [
@@ -191,18 +231,26 @@ describe('buildEmptyState', () => {
           ],
         },
       }),
-      undefined,
     );
-    expect(result?.message).toBe(
-      'Two dimensions are missing.\n\nCountry: United States\n\nIndicator: GDP',
-    );
+    expect(result).toEqual([
+      {
+        kind: 'dimension',
+        id: 'COUNTRY',
+        label: 'Country',
+        values: [{ id: 'USA', name: 'United States' }],
+      },
+      {
+        kind: 'dimension',
+        id: 'INDICATOR',
+        label: 'Indicator',
+        values: [{ id: 'GDP', name: 'GDP' }],
+      },
+    ]);
   });
 
-  it('keeps an empty paragraph for a dimension with no available values rather than dropping it', () => {
-    const result = buildEmptyState(
+  it('excludes a dimension tab when its availableValues is empty', () => {
+    const result = buildEmptyStateTabs(
       meta({
-        status: DataQueryStatus.MissingDimensions,
-        message: 'm',
         missingDimensions: {
           datasetId: 'ds1',
           dimensions: [
@@ -215,9 +263,47 @@ describe('buildEmptyState', () => {
           ],
         },
       }),
-      undefined,
     );
-    expect(result?.message).toBe('m\n\nCountry: \n\nIndicator: GDP');
+    expect(result).toEqual([
+      {
+        kind: 'dimension',
+        id: 'INDICATOR',
+        label: 'Indicator',
+        values: [{ id: 'GDP', name: 'GDP' }],
+      },
+    ]);
+  });
+
+  it('produces both a datasets tab and dimension tabs when both are populated (defensive, status-independent)', () => {
+    const result = buildEmptyStateTabs(
+      meta({
+        candidateDatasets: [{ id: 'a', name: 'Dataset A', isOfficial: true }],
+        missingDimensions: {
+          datasetId: 'ds1',
+          dimensions: [
+            {
+              dimensionId: 'COUNTRY',
+              name: 'Country',
+              availableValues: [{ id: 'USA', name: 'United States' }],
+            },
+          ],
+        },
+      }),
+    );
+    expect(result).toEqual([
+      {
+        kind: 'datasets',
+        id: 'datasets',
+        label: 'Datasets',
+        datasets: [{ id: 'a', name: 'Dataset A', isOfficial: true }],
+      },
+      {
+        kind: 'dimension',
+        id: 'COUNTRY',
+        label: 'Country',
+        values: [{ id: 'USA', name: 'United States' }],
+      },
+    ]);
   });
 });
 

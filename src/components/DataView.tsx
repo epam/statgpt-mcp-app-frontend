@@ -1,5 +1,4 @@
-import { lazy, Suspense, useEffect, useState } from 'react';
-import classNames from 'classnames';
+import { lazy, Suspense, useEffect, useMemo } from 'react';
 import {
   CrossDatasetGridAttachment,
   useConversationViewSidePanelOptional,
@@ -7,8 +6,10 @@ import {
 import type { EChartsOption } from 'echarts-for-react/src/types';
 import type { Platform } from '../host/hostContext';
 import { ATTACHMENT_TYPE } from '../constants/attachmentTypes';
+import { useActiveTab } from '../hooks/useActiveTab';
 import { CodePlaceholder } from './CodePlaceholder';
 import { ChartView } from './Chart/ChartView';
+import { Tabs, type TabItem } from './Tabs';
 import type {
   ChartAttachment,
   CrossDatasetGridAttachmentData,
@@ -38,12 +39,6 @@ interface Props {
   platform: Platform;
   isFullscreen: boolean;
 }
-
-const TAB_LABELS: Record<Tab, string> = {
-  grid: 'Grid',
-  chart: 'Chart',
-  code: 'Code',
-};
 
 const CROSS_DATASET_GRID_TITLE = 'Cross Dataset Grid';
 
@@ -86,92 +81,116 @@ export function DataView({
   platform,
   isFullscreen,
 }: Props) {
-  const [activeTab, setActiveTab] = useState<Tab>('grid');
   const closePanel = useConversationViewSidePanelOptional()?.closePanel;
 
-  const availableTabs: Tab[] = [
-    ...(crossDatasetGridAttachment ? ['grid' as Tab] : []),
-    ...(chartAttachment ? ['chart' as Tab] : []),
-    ...(pythonCode ? ['code' as Tab] : []),
-  ];
+  const crossDatasetAttachment = useMemo(
+    () =>
+      crossDatasetGridAttachment
+        ? {
+            type: ATTACHMENT_TYPE.CROSS_DATASET_GRID,
+            title: CROSS_DATASET_GRID_TITLE,
+            gridContent: crossDatasetGridAttachment,
+          }
+        : undefined,
+    [crossDatasetGridAttachment],
+  );
 
-  const effectiveTab: Tab = availableTabs.includes(activeTab)
-    ? activeTab
-    : availableTabs[0];
+  /**
+   * Memoized so the active tab's content element keeps the same identity
+   * across re-renders that don't actually change any of these dependencies
+   * (e.g. a parent re-render triggered by unrelated state). `useMemo` skips
+   * re-running this callback in that case, so `Tabs` receives the exact
+   * same React element it did before — React then bails out of
+   * re-rendering `CrossDatasetGridAttachment`/`ChartView`/`CodeAttachment`
+   * for that tab entirely, without needing `React.memo` on any of them.
+   */
+  const items: TabItem<Tab>[] = useMemo(
+    () => [
+      ...(crossDatasetAttachment
+        ? [
+            {
+              id: 'grid' as Tab,
+              label: 'Grid',
+              content: (
+                <CrossDatasetGridAttachment
+                  attachment={crossDatasetAttachment}
+                  fixHeight={!fillHeight}
+                  externalLinksMap={externalLinksMap}
+                />
+              ),
+            },
+          ]
+        : []),
+      ...(chartAttachment
+        ? [
+            {
+              id: 'chart' as Tab,
+              label: 'Chart',
+              content: (
+                <ChartView
+                  attachment={chartAttachment}
+                  transformOption={chartTransformOption}
+                  platform={platform}
+                  fillHeight={fillHeight}
+                  isFullscreen={isFullscreen}
+                />
+              ),
+            },
+          ]
+        : []),
+      ...(pythonCode
+        ? [
+            {
+              id: 'code' as Tab,
+              label: 'Code',
+              content: (
+                <Suspense fallback={<CodePlaceholder />}>
+                  <CodeAttachment
+                    code={pythonCode}
+                    theme={codeTheme}
+                    fillHeight={fillHeight}
+                  />
+                </Suspense>
+              ),
+            },
+          ]
+        : []),
+    ],
+    [
+      crossDatasetAttachment,
+      fillHeight,
+      externalLinksMap,
+      chartAttachment,
+      chartTransformOption,
+      platform,
+      isFullscreen,
+      pythonCode,
+      codeTheme,
+    ],
+  );
+
+  const [activeTab, setActiveTab] = useActiveTab(items);
 
   useEffect(() => {
-    if (effectiveTab !== 'grid') closePanel?.();
-  }, [effectiveTab, closePanel]);
+    if (activeTab !== 'grid') closePanel?.();
+  }, [activeTab, closePanel]);
 
   useEffect(() => {
-    document.documentElement.dataset.activeTab = effectiveTab;
+    document.documentElement.dataset.activeTab = activeTab;
     return () => {
       delete document.documentElement.dataset.activeTab;
     };
-  }, [effectiveTab]);
+  }, [activeTab]);
 
   if (!chartAttachment && !crossDatasetGridAttachment && !pythonCode)
     return null;
 
-  const crossDatasetAttachment = crossDatasetGridAttachment
-    ? {
-        type: ATTACHMENT_TYPE.CROSS_DATASET_GRID,
-        title: CROSS_DATASET_GRID_TITLE,
-        gridContent: crossDatasetGridAttachment,
-      }
-    : undefined;
-
   return (
-    <div
-      className={classNames('flex flex-col gap-3', {
-        'h-full min-h-0': fillHeight,
-      })}
-    >
-      <div className="flex border-b border-neutrals-400">
-        {availableTabs.map((tab) => (
-          <button
-            key={tab}
-            onClick={() => setActiveTab(tab)}
-            className={classNames(
-              'px-4 py-2 text-sm font-medium capitalize -mb-px border-b-2 transition-colors',
-              'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-primary',
-              effectiveTab === tab
-                ? 'border-semantic-info text-semantic-info'
-                : 'border-transparent text-neutrals-700 hover:text-neutrals-1000',
-            )}
-          >
-            {TAB_LABELS[tab]}
-          </button>
-        ))}
-      </div>
-
-      <div className={classNames({ 'flex-1 min-h-0': fillHeight })}>
-        {effectiveTab === 'grid' && crossDatasetAttachment && (
-          <CrossDatasetGridAttachment
-            attachment={crossDatasetAttachment}
-            fixHeight={!fillHeight}
-            externalLinksMap={externalLinksMap}
-          />
-        )}
-        {effectiveTab === 'chart' && chartAttachment && (
-          <ChartView
-            attachment={chartAttachment}
-            transformOption={chartTransformOption}
-            platform={platform}
-            fillHeight={fillHeight}
-            isFullscreen={isFullscreen}
-          />
-        )}
-        {effectiveTab === 'code' && pythonCode && (
-          <Suspense fallback={<CodePlaceholder />}>
-            <CodeAttachment
-              code={pythonCode}
-              theme={codeTheme}
-              fillHeight={fillHeight}
-            />
-          </Suspense>
-        )}
-      </div>
-    </div>
+    <Tabs
+      items={items}
+      activeId={activeTab}
+      onSelect={setActiveTab}
+      fillHeight={fillHeight}
+    />
   );
 }
