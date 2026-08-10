@@ -41,21 +41,24 @@ describe('CodeAttachment', () => {
     expect(box.style.height).toBe('250px');
   });
 
-  it('caps the visible height at 400px via CSS while keeping the full content height available for scroll', () => {
+  it('caps the visible height at 400px via a scrollable wrapper while keeping the full content height available for scroll', () => {
     contentHeight = 1200;
     const { container } = render(<CodeAttachment code="print(1)" />);
-    const box = container.querySelector('[data-testid="mock-editor"]')
+    const sizingBox = container.querySelector('[data-testid="mock-editor"]')
       ?.parentElement as HTMLElement;
-    expect(box.style.height).toBe('1200px');
-    expect(box.className).toContain('max-h-[400px]');
+    const scrollWrapper = sizingBox.parentElement as HTMLElement;
+    expect(sizingBox.style.height).toBe('1200px');
+    expect(scrollWrapper.className).toContain('max-h-[400px]');
+    expect(scrollWrapper.className).toContain('overflow-auto');
   });
 
   it('applies a minimum height floor for very short content', () => {
     contentHeight = 20;
     const { container } = render(<CodeAttachment code="x = 1" />);
-    const box = container.querySelector('[data-testid="mock-editor"]')
+    const sizingBox = container.querySelector('[data-testid="mock-editor"]')
       ?.parentElement as HTMLElement;
-    expect(box.className).toContain('min-h-[120px]');
+    const scrollWrapper = sizingBox.parentElement as HTMLElement;
+    expect(scrollWrapper.className).toContain('min-h-[120px]');
   });
 
   it('re-measures when the editor reports a content size change (e.g. rewrap on resize)', () => {
