@@ -27,9 +27,14 @@ interface Props {
  * so short snippets don't carry redundant blank space. A precomputed
  * line-count estimate isn't reliable here because `wordWrap: 'on'` means the
  * visual line count depends on the container's current width, which is only
- * known once Monaco has actually laid the text out. `max-h-[400px]` caps the
- * visible height the same way the grid tab caps its rows, with Monaco's own
- * internal scrollbar handling the overflow.
+ * known once Monaco has actually laid the text out.
+ *
+ * Monaco's own scrollbar is disabled entirely and the editor is always
+ * sized to its full, uncapped content height; an `overflow-auto` wrapper
+ * one level up (capped at `max-h-[400px]` inline, or `h-full` for
+ * pip/fullscreen) provides the scrolling instead, so the visible scrollbar
+ * is the browser's native one rather than Monaco's custom-drawn widget
+ * (matching the grid tab's scrollbar).
  */
 export function CodeAttachment({
   code,
@@ -50,31 +55,37 @@ export function CodeAttachment({
   return (
     <div
       className={classNames(
-        'w-full [&_.cursors-layer]:hidden',
+        'w-full overflow-auto [&_.cursors-layer]:hidden',
         fillHeight ? 'h-full' : 'max-h-[400px] min-h-[120px]',
         className,
       )}
-      style={
-        fillHeight || contentHeight === null
-          ? undefined
-          : { height: contentHeight }
-      }
     >
-      <Editor
-        value={code}
-        language="python"
-        theme={MONACO_THEME[theme]}
-        onMount={handleMount}
-        options={{
-          readOnly: true,
-          contextmenu: false,
-          scrollBeyondLastLine: false,
-          minimap: { enabled: false },
-          wordWrap: 'on',
-          automaticLayout: true,
-          tabSize: 4,
-        }}
-      />
+      <div
+        className="w-full"
+        style={contentHeight === null ? undefined : { height: contentHeight }}
+      >
+        <Editor
+          value={code}
+          language="python"
+          theme={MONACO_THEME[theme]}
+          onMount={handleMount}
+          options={{
+            readOnly: true,
+            contextmenu: false,
+            scrollBeyondLastLine: false,
+            minimap: { enabled: false },
+            wordWrap: 'on',
+            automaticLayout: true,
+            tabSize: 4,
+            overviewRulerLanes: 0,
+            scrollbar: {
+              vertical: 'hidden',
+              horizontal: 'hidden',
+              handleMouseWheel: false,
+            },
+          }}
+        />
+      </div>
     </div>
   );
 }
