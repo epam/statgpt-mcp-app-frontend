@@ -282,5 +282,108 @@ describe('useSdmxData', () => {
         tabs: [],
       });
     });
+
+    describe('window.openai widget state', () => {
+      afterEach(() => {
+        delete (window as unknown as { openai?: unknown }).openai;
+      });
+
+      it('persists meta via window.openai.setWidgetState when a full tool-result arrives', async () => {
+        const setWidgetState = vi.fn();
+        (window as unknown as { openai?: unknown }).openai = {
+          setWidgetState,
+        };
+        mockCallTool.mockResolvedValue({});
+
+        currentSnapshot = {
+          phase: 'ready',
+          toolResult: validToolResult,
+          toolResultReceived: true,
+        };
+
+        renderHook(() => useSdmxData());
+
+        await act(async () => {
+          await Promise.resolve();
+        });
+
+        expect(setWidgetState).toHaveBeenCalledWith(
+          expect.objectContaining({
+            queries: validToolResult.queries,
+            sdmxProxyToolName: 'sdmx_proxy',
+          }),
+        );
+      });
+
+      it('does not throw when window.openai is undefined and a full tool-result arrives', async () => {
+        delete (window as unknown as { openai?: unknown }).openai;
+        mockCallTool.mockResolvedValue({});
+
+        currentSnapshot = {
+          phase: 'ready',
+          toolResult: validToolResult,
+          toolResultReceived: true,
+        };
+
+        expect(() => renderHook(() => useSdmxData())).not.toThrow();
+
+        await act(async () => {
+          await Promise.resolve();
+        });
+      });
+
+      it('falls back to window.openai.widgetState when tool-result is missing queries/tools.sdmxProxy', async () => {
+        mockCallTool.mockResolvedValue({});
+        (window as unknown as { openai?: unknown }).openai = {
+          widgetState: {
+            status: DataQueryStatus.DataAvailable,
+            queries: validToolResult.queries,
+            sdmxProxyToolName: 'sdmx_proxy',
+          },
+        };
+
+        currentSnapshot = {
+          phase: 'ready',
+          toolResult: { status: DataQueryStatus.DataAvailable, version: 2 },
+          toolResultReceived: true,
+        };
+
+        const { result } = renderHook(() => useSdmxData());
+
+        await act(async () => {
+          await Promise.resolve();
+        });
+
+        expect(mockCallTool).toHaveBeenCalledWith(
+          'sdmx_proxy',
+          expect.objectContaining({ path: expect.any(String) }),
+        );
+        expect(result.current.emptyState).toBeNull();
+      });
+
+      it('shows the empty state when tool-result is incomplete and window.openai.widgetState has nothing usable', async () => {
+        (window as unknown as { openai?: unknown }).openai = {};
+
+        currentSnapshot = {
+          phase: 'ready',
+          toolResult: { status: DataQueryStatus.DataAvailable, version: 2 },
+          toolResultReceived: true,
+        };
+
+        const { result } = renderHook(() => useSdmxData());
+
+        await act(async () => {
+          await Promise.resolve();
+        });
+
+        expect(mockCallTool).not.toHaveBeenCalled();
+        expect(result.current.emptyState).toEqual({
+          kind: EmptyStateKind.Text,
+          message:
+            'No data was found for the provided query. Try to change the query.',
+          tabs: [],
+        });
+      });
+    });
   });
 });

@@ -13,6 +13,7 @@ import {
 import { dataPath, structurePath } from '../sdmx/buildPaths';
 import { logger } from '../log/logger';
 import { truncateForLog } from '../log/truncateForLog';
+import { getPersistedWidgetMeta, persistWidgetMeta } from '../host/widgetState';
 
 export interface SdmxData {
   snapshot: BridgeSnapshot;
@@ -38,17 +39,40 @@ export function useSdmxData(): SdmxData {
 
   const fetchToken = useRef(0);
 
+  const liveMeta = useMemo(
+    () => extractWidgetMeta(snapshot.toolResult),
+    [snapshot.toolResult],
+  );
+
   const meta = useMemo(() => {
-    const extracted = extractWidgetMeta(snapshot.toolResult);
-    if (!extracted && snapshot.toolResult) {
+    if (liveMeta) return liveMeta;
+    if (!snapshot.toolResult) return null;
+
+    const persisted = getPersistedWidgetMeta();
+    if (persisted) {
       logger.warn(
-        'widget-empty',
-        'tool-result missing expected fields (queries/tools.sdmxProxy) — widget will show an empty state',
-        snapshot.toolResult,
+        'widget-state',
+        'tool-result missing expected fields (queries/tools.sdmxProxy) — restored last known state from window.openai.widgetState',
+        { toolResult: snapshot.toolResult, restored: persisted },
       );
+      return persisted;
     }
-    return extracted;
-  }, [snapshot.toolResult]);
+
+    logger.warn(
+      'widget-empty',
+      'tool-result missing expected fields (queries/tools.sdmxProxy) — widget will show an empty state',
+      snapshot.toolResult,
+    );
+    return null;
+  }, [liveMeta, snapshot.toolResult]);
+
+  /**
+   * Mirrors full metadata into ChatGPT's widget state so a later reload that
+   * replays a stripped-down tool-result can still recover the last query.
+   */
+  useEffect(() => {
+    if (liveMeta) persistWidgetMeta(liveMeta);
+  }, [liveMeta]);
 
   const dataAvailable = isDataAvailable(meta);
 
