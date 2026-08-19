@@ -25,7 +25,6 @@ interface UseDataAttachmentsInput {
 interface UseDataAttachmentsResult {
   chartAttachment: ChartAttachment | undefined;
   crossDatasetGridAttachment: CrossDatasetGridAttachmentData | undefined;
-  externalLinksMap: Map<string, string> | undefined;
 }
 
 export function useDataAttachments({
@@ -74,15 +73,5 @@ export function useDataAttachments({
     return isFullscreen ? content : dropMetadataIconColumn(content);
   }, [crossDataset, effectiveLocale, isFullscreen, getDimensionsScheme]);
 
-  const externalLinksMap = useMemo(() => {
-    if (!crossDataset) return undefined;
-    const map = new Map<string, string>();
-    for (const query of crossDataset.dataQueries) {
-      const url = query.metadata?.datasetUrl;
-      if (url) map.set(query.urn, url);
-    }
-    return map;
-  }, [crossDataset]);
-
-  return { chartAttachment, crossDatasetGridAttachment, externalLinksMap };
+  return { chartAttachment, crossDatasetGridAttachment };
 }

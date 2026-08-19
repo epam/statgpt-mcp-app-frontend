@@ -14,7 +14,6 @@ import type { DatasetsMetadataMaps } from '../hooks/useDatasetsMetadata';
 import { Platform } from '../host/hostContext';
 import { CloseIcon } from '../icons/CloseIcon';
 import { DatasetIcon } from '../icons/DatasetIcon';
-import { ExternalLinkButton } from './ExternalLinkButton';
 import { HostIconButton } from './HostIconButton';
 
 interface Props {
@@ -61,13 +60,6 @@ export function AppProviders({
     return PanelCloseButton;
   }, [platform]);
 
-  const externalLink = useMemo(() => {
-    function DatasetExternalLink({ url }: { url: string }) {
-      return <ExternalLinkButton url={url} platform={platform} />;
-    }
-    return DatasetExternalLink;
-  }, [platform]);
-
   return (
     <ConversationViewStylesProvider>
       <OnboardingProvider>
@@ -90,7 +82,6 @@ export function AppProviders({
                         className="size-4 text-neutrals-700"
                       />
                     ),
-                    externalLink,
                   }}
                 >
                   <DatasetDimensionsMetadataMapProvider
