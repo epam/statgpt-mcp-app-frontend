@@ -304,4 +304,23 @@ describe('ChartView', () => {
     const dimensionsList = screen.getByText('Unit:').closest('div.flex-col');
     expect(dimensionsList).not.toHaveClass('w-[220px]');
   });
+
+  it('stacks the dimensions list under the chart (no fixed column) in fullscreen on mobile', () => {
+    render(
+      <ChartView
+        attachment={makeAttachment({
+          units: [
+            makeUnit({
+              dimensions: [{ id: 'unit', title: 'Unit', value: 'Euro' }],
+            }),
+          ],
+        })}
+        platform={Platform.Mobile}
+        isFullscreen
+        fillHeight
+      />,
+    );
+    const dimensionsList = screen.getByText('Unit:').closest('div.flex-col');
+    expect(dimensionsList).not.toHaveClass('w-[220px]');
+  });
 });

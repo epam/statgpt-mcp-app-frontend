@@ -62,12 +62,14 @@ interface Props {
  * competing with the plot for space or scrolling, a pager for stepping
  * between chart units when there's more than one, and the unit's dimension
  * values as horizontal label/value rows — stacked under the chart normally,
- * or beside it in a fixed 220px column in fullscreen.
+ * or beside it in a fixed 220px column in desktop fullscreen. Mobile always
+ * stacks, regardless of display mode, since a fixed-width dimensions column
+ * leaves too little room for the chart on a narrow screen.
  * @param attachment - Chart attachment data, built by `useDataAttachments`.
  * @param transformOption - Recolors the chart option per the current host theme, from `useChartTheme`.
- * @param platform - The desktop/mobile bucket derived from the host context; drives the pager's icon sizing.
+ * @param platform - The desktop/mobile bucket derived from the host context; drives the pager's icon sizing and gates the side-by-side fullscreen layout to desktop only.
  * @param fillHeight - When true, stretches to fill the parent's height (pip/fullscreen) and scrolls if content exceeds it; natural height otherwise (inline).
- * @param isFullscreen - Whether the widget is currently in fullscreen display mode; puts the chart canvas and its dimension list side-by-side (chart flexible, dimensions a fixed 220px column) instead of stacked.
+ * @param isFullscreen - Whether the widget is currently in fullscreen display mode; on desktop, puts the chart canvas and its dimension list side-by-side (chart flexible, dimensions a fixed 220px column) instead of stacked. Mobile ignores this and always stacks.
  * @param className - Additional classes for the component's root element.
  */
 export function ChartView({
@@ -133,6 +135,7 @@ export function ChartView({
 
   const { unit, groupTitle } = currentFlatUnit;
   const isMobile = platform === Platform.Mobile;
+  const isSideBySide = isFullscreen && !isMobile;
   const themedOption = transformOption
     ? transformOption(unit.config, { isMobile })
     : unit.config;
@@ -184,7 +187,7 @@ export function ChartView({
       <div
         className={classNames(
           'flex min-h-0',
-          isFullscreen ? 'flex-row gap-4' : 'flex-col gap-2',
+          isSideBySide ? 'flex-row gap-4' : 'flex-col gap-2',
           fillHeight && 'flex-1',
         )}
       >
@@ -221,7 +224,7 @@ export function ChartView({
         <DimensionsList
           dimensions={unit.dimensions}
           className={
-            isFullscreen
+            isSideBySide
               ? 'min-h-0 w-[220px] shrink-0 overflow-y-auto'
               : undefined
           }
