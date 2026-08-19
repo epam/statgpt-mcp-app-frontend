@@ -67,8 +67,8 @@ const CROSS_DATASET_GRID_TITLE = 'Cross Dataset Grid';
  * @param codeTheme - Monaco theme applied to the Code tab, following the host theme.
  * @param fillHeight - When true, the component stretches to fill its container's height for pip or fullscreen modes.
  * @param chartTransformOption - Applied to the chart's ECharts option before render; used to recolor axis/legend text to match the widget's host-driven theme.
- * @param platform - The desktop/mobile bucket derived from the host context; drives the chart pager's icon sizing.
- * @param isFullscreen - Whether the widget is currently in fullscreen display mode; puts the chart canvas and its dimension list side-by-side instead of stacked.
+ * @param platform - The desktop/mobile bucket derived from the host context; drives the chart pager's icon sizing and gates the chart's side-by-side fullscreen layout to desktop only.
+ * @param isFullscreen - Whether the widget is currently in fullscreen display mode; on desktop, puts the chart canvas and its dimension list side-by-side instead of stacked. Mobile always stacks.
  */
 export function DataView({
   chartAttachment,
