@@ -1,8 +1,11 @@
 const ROW_MAX_WIDTHS = ['40%', '75%', '50%', '85%'];
 
+const SHIMMER_CLASSES =
+  'animate-shimmer bg-[length:200%_100%] bg-gradient-to-r from-neutrals-500 via-neutrals-400 to-neutrals-500';
+
 /**
  * Skeleton placeholder shown while the Monaco Code tab bundle is loading —
- * four pulsing rows, each a bullet plus a bar of varying width, mimicking
+ * four shimmering rows, each a bullet plus a bar of varying width, mimicking
  * lines of code. Replaces the previous spinner in the tab's Suspense fallback.
  */
 export function CodePlaceholder() {
@@ -20,11 +23,11 @@ export function CodePlaceholder() {
         >
           <div
             data-testid="placeholder-bullet"
-            className="h-4 w-8 shrink-0 animate-pulse rounded-full bg-neutrals-500"
+            className={`h-4 w-8 shrink-0 rounded-full ${SHIMMER_CLASSES}`}
           />
           <div
             data-testid="placeholder-bar"
-            className="h-4 flex-1 animate-pulse rounded-md bg-neutrals-500"
+            className={`h-4 flex-1 rounded-md ${SHIMMER_CLASSES}`}
             style={{ maxWidth }}
           />
         </div>
