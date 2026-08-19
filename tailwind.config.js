@@ -76,6 +76,15 @@ export default {
       boxShadow: {
         drop: '0px 4px 4px 0px #BBBBBB40',
       },
+      keyframes: {
+        'shimmer-wave': {
+          '0%': { backgroundPosition: '100% 0' },
+          '100%': { backgroundPosition: '0% 0' },
+        },
+      },
+      animation: {
+        'shimmer-wave': 'shimmer-wave 2s linear infinite',
+      },
       zIndex: {
         tooltip: '100000',
         modal: '100001',

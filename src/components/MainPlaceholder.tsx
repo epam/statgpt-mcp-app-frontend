@@ -1,9 +1,16 @@
+import { SHIMMER_CLASSES } from '../constants/shimmer';
+
 const BLOCK_COUNT = 16;
+const COLUMNS = 4;
+const COLUMN_STAGGER_MS = 120;
 
 /**
  * Skeleton placeholder shown before data is ready — a title bar followed by a
- * 4x4 grid of pulsing pill blocks. Used both while connecting to the host and
- * while waiting for the first tool result, replacing the previous spinner.
+ * 4x4 grid of pill blocks. Every block runs the same shimmer animation,
+ * staggered by column so the highlight reads as one wave traveling
+ * left-to-right across the grid rather than each block pulsing on its own.
+ * Used both while connecting to the host and while waiting for the first
+ * tool result, replacing the previous spinner.
  */
 export function MainPlaceholder() {
   return (
@@ -14,14 +21,17 @@ export function MainPlaceholder() {
     >
       <div
         data-testid="placeholder-title"
-        className="h-4 w-2/5 animate-pulse rounded-lg bg-neutrals-500"
+        className={`h-4 w-2/5 rounded-lg ${SHIMMER_CLASSES}`}
       />
       <div className="grid grid-cols-4 gap-3">
         {Array.from({ length: BLOCK_COUNT }, (_, index) => (
           <div
             key={index}
             data-testid="placeholder-block"
-            className="h-6 animate-pulse rounded-lg bg-neutrals-500"
+            className={`h-6 rounded-lg ${SHIMMER_CLASSES}`}
+            style={{
+              animationDelay: `${(index % COLUMNS) * COLUMN_STAGGER_MS}ms`,
+            }}
           />
         ))}
       </div>
