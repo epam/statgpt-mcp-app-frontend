@@ -66,13 +66,12 @@ export function AppContent({
   platform,
 }: Props) {
   const closePanel = useConversationViewSidePanelOptional()?.closePanel;
-  const { chartAttachment, crossDatasetGridAttachment, externalLinksMap } =
-    useDataAttachments({
-      crossDataset,
-      meta,
-      effectiveLocale,
-      isFullscreen,
-    });
+  const { chartAttachment, crossDatasetGridAttachment } = useDataAttachments({
+    crossDataset,
+    meta,
+    effectiveLocale,
+    isFullscreen,
+  });
 
   useEffect(() => {
     if (!isFullscreen) closePanel?.();
@@ -137,7 +136,6 @@ export function AppContent({
           <DataView
             chartAttachment={chartAttachment}
             crossDatasetGridAttachment={crossDatasetGridAttachment}
-            externalLinksMap={externalLinksMap}
             pythonCode={pythonCode}
             codeTheme={snapshot.hostContext?.theme}
             fillHeight={isFillHeight}

@@ -28,7 +28,6 @@ type Tab = 'grid' | 'chart' | 'code';
 interface Props {
   chartAttachment: ChartAttachment | undefined;
   crossDatasetGridAttachment: CrossDatasetGridAttachmentData | undefined;
-  externalLinksMap?: Map<string, string>;
   pythonCode?: string;
   codeTheme?: 'light' | 'dark';
   fillHeight?: boolean;
@@ -62,7 +61,6 @@ const CROSS_DATASET_GRID_TITLE = 'Cross Dataset Grid';
  *
  * @param chartAttachment - Chart attachment data for the Chart tab; omit to hide that tab.
  * @param crossDatasetGridAttachment - Grid data for the Grid tab; omit to hide that tab.
- * @param externalLinksMap - Dataset-source URLs keyed by dataset URN, surfaced as the external-link control in the Grid tab's metadata popup.
  * @param pythonCode - Python source for the Code tab; omit to hide that tab.
  * @param codeTheme - Monaco theme applied to the Code tab, following the host theme.
  * @param fillHeight - When true, the component stretches to fill its container's height for pip or fullscreen modes.
@@ -73,7 +71,6 @@ const CROSS_DATASET_GRID_TITLE = 'Cross Dataset Grid';
 export function DataView({
   chartAttachment,
   crossDatasetGridAttachment,
-  externalLinksMap,
   pythonCode,
   codeTheme,
   fillHeight,
@@ -115,7 +112,6 @@ export function DataView({
                 <CrossDatasetGridAttachment
                   attachment={crossDatasetAttachment}
                   fixHeight={!fillHeight}
-                  externalLinksMap={externalLinksMap}
                 />
               ),
             },
@@ -159,7 +155,6 @@ export function DataView({
     [
       crossDatasetAttachment,
       fillHeight,
-      externalLinksMap,
       chartAttachment,
       chartTransformOption,
       platform,
