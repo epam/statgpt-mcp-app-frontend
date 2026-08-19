@@ -16,7 +16,7 @@ interface Props {
 
 const VARIANT_CLASSES: Record<Variant, string> = {
   plain: 'rounded-md',
-  bordered: 'rounded-[8px] border border-neutrals-400',
+  bordered: 'rounded-md border border-neutrals-400',
 };
 
 /**

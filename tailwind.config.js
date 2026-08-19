@@ -73,6 +73,17 @@ export default {
       ringColor: {
         primary: 'var(--ring-primary)',
       },
+      borderRadius: {
+        DEFAULT: 'var(--radius-xs)',
+        sm: 'var(--radius-sm)',
+        md: 'var(--radius-md)',
+        lg: 'var(--radius-lg)',
+        xl: 'var(--radius-xl)',
+        full: 'var(--radius-full)',
+      },
+      borderWidth: {
+        DEFAULT: 'var(--border-width)',
+      },
       boxShadow: {
         drop: '0px 4px 4px 0px #BBBBBB40',
       },

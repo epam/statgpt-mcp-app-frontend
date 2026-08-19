@@ -47,7 +47,7 @@ describe('HostIconButton', () => {
     expect(screen.getByRole('button')).toHaveClass('border');
   });
 
-  it('uses an 8px border radius for the bordered variant', () => {
+  it('uses the same rounding as the plain variant for the bordered variant', () => {
     render(
       <HostIconButton
         icon={StubIcon}
@@ -57,7 +57,7 @@ describe('HostIconButton', () => {
         variant="bordered"
       />,
     );
-    expect(screen.getByRole('button')).toHaveClass('rounded-[8px]');
+    expect(screen.getByRole('button')).toHaveClass('rounded-md');
   });
 
   it('uses the default rounding for the plain variant', () => {
