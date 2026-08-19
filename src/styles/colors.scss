@@ -65,4 +65,8 @@
   --gradients-dark: #6843e9;
   --white10: #ffffff1a;
   --neutrals-300-10: #f0f4f81a;
+
+  /* Shimmer — neutrals-500 lightened toward white, so it's always lighter
+     than the placeholder blocks regardless of theme or host */
+  --shimmer-highlight: color-mix(in srgb, var(--neutrals-500) 75%, white 25%);
 }

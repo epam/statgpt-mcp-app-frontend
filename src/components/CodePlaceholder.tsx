@@ -1,7 +1,6 @@
-const ROW_MAX_WIDTHS = ['40%', '75%', '50%', '85%'];
+import { SHIMMER_CLASSES } from '../constants/shimmer';
 
-const SHIMMER_CLASSES =
-  'animate-shimmer bg-[length:200%_100%] bg-gradient-to-r from-neutrals-500 via-neutrals-400 to-neutrals-500';
+const ROW_MAX_WIDTHS = ['40%', '75%', '50%', '85%'];
 
 /**
  * Skeleton placeholder shown while the Monaco Code tab bundle is loading —
