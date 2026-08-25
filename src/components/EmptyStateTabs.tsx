@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import classNames from 'classnames';
 import type { EmptyStateTab } from '../bridge/emptyState';
 import type { DataSetChoice, DimensionValueInfo } from '../bridge/types';
+import type { Platform } from '../host/hostContext';
 import { useActiveTab } from '../hooks/useActiveTab';
 import { DataGrid, type DataGridColumn } from './DataGrid';
 import { Tabs, type TabItem } from './Tabs';
@@ -38,6 +39,7 @@ interface Props {
   tabs: EmptyStateTab[];
   /** Expands to fill its container's height (fullscreen/pip), matching `DataView`'s `fillHeight`. */
   fillHeight?: boolean;
+  platform: Platform;
 }
 
 /**
@@ -58,8 +60,9 @@ interface Props {
  * @param tabs - Tab data built by `buildEmptyStateTabs`.
  * @param fillHeight - Threaded through to `Tabs`/`DataGrid` so the grid
  * expands to fill available height when the widget is in fullscreen/pip.
+ * @param platform - The desktop/mobile bucket derived from the host context; threaded through to `Tabs`.
  */
-export function EmptyStateTabs({ tabs, fillHeight }: Props) {
+export function EmptyStateTabs({ tabs, fillHeight, platform }: Props) {
   const items: TabItem[] = useMemo(
     () =>
       tabs.map((tab) => ({
@@ -95,6 +98,7 @@ export function EmptyStateTabs({ tabs, fillHeight }: Props) {
         activeId={activeId}
         onSelect={setActiveId}
         fillHeight={fillHeight}
+        platform={platform}
       />
     </div>
   );

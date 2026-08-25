@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import classNames from 'classnames';
+import { Platform } from '../host/hostContext';
 
 export interface TabItem<Id extends string = string> {
   id: Id;
@@ -12,6 +13,7 @@ interface Props<Id extends string> {
   activeId: Id | undefined;
   onSelect: (id: Id) => void;
   fillHeight?: boolean;
+  platform: Platform;
 }
 
 /**
@@ -28,14 +30,19 @@ interface Props<Id extends string> {
  * @param onSelect - Called with an item's id when its button is clicked.
  * @param fillHeight - When true, the tab panel and active content stretch
  * to fill the container's height instead of sizing to their content.
+ * @param platform - The desktop/mobile bucket derived from the host context;
+ * on mobile, each tab button gets extra vertical padding so its tap target
+ * reaches the 44pt minimum.
  */
 export function Tabs<Id extends string>({
   items,
   activeId,
   onSelect,
   fillHeight,
+  platform,
 }: Props<Id>) {
   const activeItem = items.find((item) => item.id === activeId);
+  const isMobile = platform === Platform.Mobile;
 
   return (
     <div
@@ -50,6 +57,7 @@ export function Tabs<Id extends string>({
             onClick={() => onSelect(item.id)}
             className={classNames(
               'px-4 py-2 text-sm font-medium -mb-px border-b-2 transition-colors',
+              isMobile && 'py-[11px]',
               'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-primary',
               activeId === item.id
                 ? 'border-semantic-info text-semantic-info'

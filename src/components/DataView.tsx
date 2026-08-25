@@ -186,6 +186,7 @@ export function DataView({
       activeId={activeTab}
       onSelect={setActiveTab}
       fillHeight={fillHeight}
+      platform={platform}
     />
   );
 }

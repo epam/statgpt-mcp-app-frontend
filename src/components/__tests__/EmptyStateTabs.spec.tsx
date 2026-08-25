@@ -1,6 +1,7 @@
 import { render, screen, fireEvent } from '@testing-library/react';
 import { vi } from 'vitest';
 import { EmptyStateTabs } from '../EmptyStateTabs';
+import { Platform } from '../../host/hostContext';
 import type { EmptyStateTab } from '../../bridge/emptyState';
 import { mockAgGridElementDimensions } from '../../test-utils/mockAgGridElementDimensions';
 
@@ -36,7 +37,9 @@ describe('EmptyStateTabs', () => {
   });
 
   it('renders nothing when tabs is empty', () => {
-    const { container } = render(<EmptyStateTabs tabs={[]} />);
+    const { container } = render(
+      <EmptyStateTabs tabs={[]} platform={Platform.Desktop} />,
+    );
     expect(container).toBeEmptyDOMElement();
   });
 
@@ -55,7 +58,7 @@ describe('EmptyStateTabs', () => {
         values: [{ id: 'USA', name: 'United States' }],
       },
     ];
-    render(<EmptyStateTabs tabs={tabs} />);
+    render(<EmptyStateTabs tabs={tabs} platform={Platform.Desktop} />);
 
     const buttons = screen.getAllByRole('button');
     expect(buttons.map((b) => b.textContent)).toEqual(['Datasets', 'Country']);
@@ -79,7 +82,7 @@ describe('EmptyStateTabs', () => {
         values: [{ id: 'USA', name: 'United States' }],
       },
     ];
-    render(<EmptyStateTabs tabs={tabs} />);
+    render(<EmptyStateTabs tabs={tabs} platform={Platform.Desktop} />);
 
     fireEvent.click(screen.getByRole('button', { name: 'Country' }));
     expect(await screen.findByText('United States')).toBeInTheDocument();
@@ -95,13 +98,15 @@ describe('EmptyStateTabs', () => {
         datasets: [{ id: 'a', name: 'Dataset A', isOfficial: true }],
       },
     ];
-    const { rerender, container } = render(<EmptyStateTabs tabs={tabs} />);
+    const { rerender, container } = render(
+      <EmptyStateTabs tabs={tabs} platform={Platform.Desktop} />,
+    );
     expect(await screen.findByText('Dataset A')).toBeInTheDocument();
 
-    rerender(<EmptyStateTabs tabs={[]} />);
+    rerender(<EmptyStateTabs tabs={[]} platform={Platform.Desktop} />);
     expect(container).toBeEmptyDOMElement();
 
-    rerender(<EmptyStateTabs tabs={tabs} />);
+    rerender(<EmptyStateTabs tabs={tabs} platform={Platform.Desktop} />);
     expect(await screen.findByText('Dataset A')).toBeInTheDocument();
   });
 
@@ -119,11 +124,13 @@ describe('EmptyStateTabs', () => {
         datasets: [{ id: 'a', name: 'Dataset A', isOfficial: true }],
       },
     ];
-    const { rerender } = render(<EmptyStateTabs tabs={tabs} />);
+    const { rerender } = render(
+      <EmptyStateTabs tabs={tabs} platform={Platform.Desktop} />,
+    );
     await screen.findByText('Dataset A');
     expect(datasetsGridRenderCount.current).toBe(1);
 
-    rerender(<EmptyStateTabs tabs={tabs} />);
+    rerender(<EmptyStateTabs tabs={tabs} platform={Platform.Desktop} />);
     expect(datasetsGridRenderCount.current).toBe(1);
   });
 });

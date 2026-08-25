@@ -125,7 +125,11 @@ export function AppContent({
           >
             <TextResponse text={emptyState.message} />
           </div>
-          <EmptyStateTabs tabs={emptyState.tabs} fillHeight={isFillHeight} />
+          <EmptyStateTabs
+            tabs={emptyState.tabs}
+            fillHeight={isFillHeight}
+            platform={platform}
+          />
         </div>
       );
     }
