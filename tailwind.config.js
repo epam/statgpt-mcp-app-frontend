@@ -24,6 +24,7 @@ export default {
         'sm-min': { min: '720px' },
         xs: { max: '428px' },
         'xs-min': { min: '429px' },
+        'chart-side-by-side': { min: '540px' },
       },
       colors: {
         primary: 'var(--primary)',
