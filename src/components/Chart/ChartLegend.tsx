@@ -1,10 +1,12 @@
 import classNames from 'classnames';
+import { Platform } from '../../host/hostContext';
 import type { LegendItem } from './chartOptionTransforms';
 
 interface Props {
   items: LegendItem[];
   selected: Record<string, boolean>;
   onToggle: (name: string) => void;
+  platform: Platform;
   className?: string;
 }
 
@@ -43,10 +45,20 @@ function LegendMarker({ color }: MarkerProps) {
  * @param items - Series name/color pairs, in render order.
  * @param selected - Per-series selection state; a name missing from this map counts as selected.
  * @param onToggle - Called with a series' name when its legend item is clicked.
+ * @param platform - The desktop/mobile bucket derived from the host context; on mobile, each
+ * item gets extra vertical padding so its tap target reaches the 44pt minimum.
  * @param className - Additional classes for the legend's root element.
  */
-export function ChartLegend({ items, selected, onToggle, className }: Props) {
+export function ChartLegend({
+  items,
+  selected,
+  onToggle,
+  platform,
+  className,
+}: Props) {
   if (items.length === 0) return null;
+
+  const isMobile = platform === Platform.Mobile;
 
   return (
     <div className={classNames('flex flex-wrap gap-x-3 gap-y-1', className)}>
@@ -60,6 +72,7 @@ export function ChartLegend({ items, selected, onToggle, className }: Props) {
             onClick={() => onToggle(item.name)}
             className={classNames(
               'caption flex items-center gap-1.5 text-neutrals-800',
+              isMobile && 'py-[14px]',
               !isSelected && 'opacity-40',
             )}
           >
