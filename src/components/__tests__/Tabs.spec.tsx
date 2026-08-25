@@ -1,5 +1,6 @@
 import { render, screen, fireEvent } from '@testing-library/react';
 import { vi } from 'vitest';
+import { Platform } from '../../host/hostContext';
 import { Tabs } from '../Tabs';
 
 describe('Tabs', () => {
@@ -9,30 +10,63 @@ describe('Tabs', () => {
   ];
 
   it('renders the content of the item matching activeId', () => {
-    render(<Tabs items={items} activeId="a" onSelect={vi.fn()} />);
+    render(
+      <Tabs
+        items={items}
+        activeId="a"
+        onSelect={vi.fn()}
+        platform={Platform.Desktop}
+      />,
+    );
     expect(screen.getByText('Content A')).toBeInTheDocument();
     expect(screen.queryByText('Content B')).not.toBeInTheDocument();
   });
 
   it('renders a different item when activeId changes', () => {
     const { rerender } = render(
-      <Tabs items={items} activeId="a" onSelect={vi.fn()} />,
+      <Tabs
+        items={items}
+        activeId="a"
+        onSelect={vi.fn()}
+        platform={Platform.Desktop}
+      />,
     );
-    rerender(<Tabs items={items} activeId="b" onSelect={vi.fn()} />);
+    rerender(
+      <Tabs
+        items={items}
+        activeId="b"
+        onSelect={vi.fn()}
+        platform={Platform.Desktop}
+      />,
+    );
     expect(screen.getByText('Content B')).toBeInTheDocument();
     expect(screen.queryByText('Content A')).not.toBeInTheDocument();
   });
 
   it('calls onSelect with the clicked item id, without switching content itself', () => {
     const onSelect = vi.fn();
-    render(<Tabs items={items} activeId="a" onSelect={onSelect} />);
+    render(
+      <Tabs
+        items={items}
+        activeId="a"
+        onSelect={onSelect}
+        platform={Platform.Desktop}
+      />,
+    );
     fireEvent.click(screen.getByRole('button', { name: 'B' }));
     expect(onSelect).toHaveBeenCalledWith('b');
     expect(screen.getByText('Content A')).toBeInTheDocument();
   });
 
   it('marks the active tab button distinctly from inactive ones', () => {
-    render(<Tabs items={items} activeId="a" onSelect={vi.fn()} />);
+    render(
+      <Tabs
+        items={items}
+        activeId="a"
+        onSelect={vi.fn()}
+        platform={Platform.Desktop}
+      />,
+    );
     const buttonA = screen.getByRole('button', { name: 'A' });
     const buttonB = screen.getByRole('button', { name: 'B' });
     expect(buttonA.className).toContain('border-semantic-info');
@@ -41,7 +75,13 @@ describe('Tabs', () => {
 
   it('stretches the panel and content slot to fill height when fillHeight is set', () => {
     const { container } = render(
-      <Tabs items={items} activeId="a" onSelect={vi.fn()} fillHeight />,
+      <Tabs
+        items={items}
+        activeId="a"
+        onSelect={vi.fn()}
+        fillHeight
+        platform={Platform.Desktop}
+      />,
     );
     const root = container.firstElementChild as HTMLElement;
     expect(root.className).toContain('h-full');
@@ -51,11 +91,42 @@ describe('Tabs', () => {
 
   it('does not add fill-height classes when fillHeight is not set', () => {
     const { container } = render(
-      <Tabs items={items} activeId="a" onSelect={vi.fn()} />,
+      <Tabs
+        items={items}
+        activeId="a"
+        onSelect={vi.fn()}
+        platform={Platform.Desktop}
+      />,
     );
     const root = container.firstElementChild as HTMLElement;
     expect(root.className).not.toContain('h-full');
     const contentSlot = screen.getByText('Content A').parentElement;
     expect(contentSlot?.className).not.toContain('flex-1');
+  });
+
+  it('adds mobile-only vertical padding to reach a 44px tap target', () => {
+    render(
+      <Tabs
+        items={items}
+        activeId="a"
+        onSelect={vi.fn()}
+        platform={Platform.Mobile}
+      />,
+    );
+    expect(screen.getByRole('button', { name: 'A' })).toHaveClass('py-[11px]');
+  });
+
+  it('does not add mobile padding on desktop', () => {
+    render(
+      <Tabs
+        items={items}
+        activeId="a"
+        onSelect={vi.fn()}
+        platform={Platform.Desktop}
+      />,
+    );
+    expect(screen.getByRole('button', { name: 'A' })).not.toHaveClass(
+      'py-[11px]',
+    );
   });
 });
