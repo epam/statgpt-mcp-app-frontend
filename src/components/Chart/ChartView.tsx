@@ -219,6 +219,7 @@ export function ChartView({
             items={legendItems}
             selected={legendSelected}
             onToggle={handleToggleLegend}
+            platform={platform}
           />
         </div>
         <DimensionsList

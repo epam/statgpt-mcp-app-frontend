@@ -1,11 +1,17 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { Platform } from '../../../host/hostContext';
 import { ChartLegend } from '../ChartLegend';
 
 describe('ChartLegend', () => {
   it('renders nothing when there are no items', () => {
     const { container } = render(
-      <ChartLegend items={[]} selected={{}} onToggle={vi.fn()} />,
+      <ChartLegend
+        items={[]}
+        selected={{}}
+        onToggle={vi.fn()}
+        platform={Platform.Desktop}
+      />,
     );
     expect(container).toBeEmptyDOMElement();
   });
@@ -19,6 +25,7 @@ describe('ChartLegend', () => {
         ]}
         selected={{}}
         onToggle={vi.fn()}
+        platform={Platform.Desktop}
       />,
     );
     const a = screen.getByRole('button', { name: 'A' });
@@ -33,6 +40,7 @@ describe('ChartLegend', () => {
         items={[{ name: 'A', color: '#111111' }]}
         selected={{ A: false }}
         onToggle={vi.fn()}
+        platform={Platform.Desktop}
       />,
     );
     expect(screen.getByRole('button', { name: 'A' })).toHaveAttribute(
@@ -48,9 +56,22 @@ describe('ChartLegend', () => {
         items={[{ name: 'A', color: '#111111' }]}
         selected={{}}
         onToggle={onToggle}
+        platform={Platform.Desktop}
       />,
     );
     await userEvent.click(screen.getByRole('button', { name: 'A' }));
     expect(onToggle).toHaveBeenCalledWith('A');
+  });
+
+  it('adds mobile-only vertical padding to reach a 44px tap target', () => {
+    render(
+      <ChartLegend
+        items={[{ name: 'A', color: '#111111' }]}
+        selected={{}}
+        onToggle={vi.fn()}
+        platform={Platform.Mobile}
+      />,
+    );
+    expect(screen.getByRole('button', { name: 'A' })).toHaveClass('py-[14px]');
   });
 });
