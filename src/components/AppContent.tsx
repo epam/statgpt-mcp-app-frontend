@@ -146,6 +146,8 @@ export function AppContent({
             chartTransformOption={chartTransformOption}
             platform={platform}
             isFullscreen={isFullscreen}
+            canRequestFullscreen={canRequestFullscreen}
+            requestFullscreen={requestFullscreen}
           />
         </div>
         {isFullscreen && (
