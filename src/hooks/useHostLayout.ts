@@ -61,6 +61,14 @@ export function useHostLayout(
   const safeAreaInsets = hostContext?.safeAreaInsets;
   const platform = usePlatform(hostContext);
   const currentDisplayMode = useDisplayMode(hostContext);
+
+  useEffect(() => {
+    document.documentElement.dataset.platform = platform;
+    return () => {
+      delete document.documentElement.dataset.platform;
+    };
+  }, [platform]);
+
   useEffect(() => {
     const host = {
       top: safeAreaInsets?.top ?? 0,

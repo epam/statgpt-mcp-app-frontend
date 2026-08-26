@@ -7,6 +7,7 @@ import {
   ConversationViewStylesProvider,
   DatasetDimensionsMetadataMapProvider,
   DatasetInfoDetailsProvider,
+  MetadataCellIconProvider,
   OnboardingProvider,
   SidePanelCustomizationProvider,
 } from '@epam/statgpt-conversation-view';
@@ -14,6 +15,7 @@ import type { DatasetsMetadataMaps } from '../hooks/useDatasetsMetadata';
 import { Platform } from '../host/hostContext';
 import { CloseIcon } from '../icons/CloseIcon';
 import { DatasetIcon } from '../icons/DatasetIcon';
+import { MetadataColumnIcon } from '../icons/MetadataColumnIcon';
 import { HostIconButton } from './HostIconButton';
 
 interface Props {
@@ -40,10 +42,11 @@ export function AppProviders({
   datasetsMetadata,
   platform,
 }: Props) {
-  const panelClassName =
-    platform === Platform.Mobile
-      ? `${SIDE_PANEL_THEME_CLASSES} absolute inset-0 z-10 w-full`
-      : SIDE_PANEL_THEME_CLASSES;
+  const isMobile = platform === Platform.Mobile;
+
+  const panelClassName = isMobile
+    ? `${SIDE_PANEL_THEME_CLASSES} absolute inset-0 z-10 w-full`
+    : SIDE_PANEL_THEME_CLASSES;
 
   const closeControl = useMemo(() => {
     function PanelCloseButton({ onClose }: { onClose: () => void }) {
@@ -84,12 +87,23 @@ export function AppProviders({
                     ),
                   }}
                 >
-                  <DatasetDimensionsMetadataMapProvider
-                    map={datasetsMetadata.dimensionsMap}
-                    lastUpdatedMap={datasetsMetadata.lastUpdatedMap}
+                  <MetadataCellIconProvider
+                    value={{
+                      icon: (
+                        <MetadataColumnIcon
+                          platform={platform}
+                          className={isMobile ? 'size-6' : 'size-5'}
+                        />
+                      ),
+                    }}
                   >
-                    {children}
-                  </DatasetDimensionsMetadataMapProvider>
+                    <DatasetDimensionsMetadataMapProvider
+                      map={datasetsMetadata.dimensionsMap}
+                      lastUpdatedMap={datasetsMetadata.lastUpdatedMap}
+                    >
+                      {children}
+                    </DatasetDimensionsMetadataMapProvider>
+                  </MetadataCellIconProvider>
                 </DatasetInfoDetailsProvider>
               </SidePanelCustomizationProvider>
             </ConversationViewSidePanelProvider>

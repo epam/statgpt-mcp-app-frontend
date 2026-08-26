@@ -4,7 +4,7 @@ import {
   useConversationViewSidePanelOptional,
 } from '@epam/statgpt-conversation-view';
 import type { EChartsOption } from 'echarts-for-react/src/types';
-import type { Platform } from '../host/hostContext';
+import { Platform } from '../host/hostContext';
 import { ATTACHMENT_TYPE } from '../constants/attachmentTypes';
 import { useActiveTab } from '../hooks/useActiveTab';
 import { CodePlaceholder } from './CodePlaceholder';
@@ -40,6 +40,7 @@ interface Props {
 }
 
 const CROSS_DATASET_GRID_TITLE = 'Cross Dataset Grid';
+const MOBILE_GRID_CELL_HEIGHT = 44;
 
 /**
  * DataView renders a tabbed SDMX data panel with Grid, Chart, and Code tabs,
@@ -79,6 +80,7 @@ export function DataView({
   isFullscreen,
 }: Props) {
   const closePanel = useConversationViewSidePanelOptional()?.closePanel;
+  const isMobile = platform === Platform.Mobile;
 
   const crossDatasetAttachment = useMemo(
     () =>
@@ -112,6 +114,13 @@ export function DataView({
                 <CrossDatasetGridAttachment
                   attachment={crossDatasetAttachment}
                   fixHeight={!fillHeight}
+                  {...(isMobile
+                    ? {
+                        rowHeight: MOBILE_GRID_CELL_HEIGHT,
+                        headerHeight: MOBILE_GRID_CELL_HEIGHT,
+                        metadataColumnWidth: MOBILE_GRID_CELL_HEIGHT,
+                      }
+                    : {})}
                 />
               ),
             },
@@ -155,6 +164,7 @@ export function DataView({
     [
       crossDatasetAttachment,
       fillHeight,
+      isMobile,
       chartAttachment,
       chartTransformOption,
       platform,

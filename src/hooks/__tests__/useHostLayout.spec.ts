@@ -33,6 +33,7 @@ const CSS_PROPS = [
 
 afterEach(() => {
   delete document.documentElement.dataset.displayMode;
+  delete document.documentElement.dataset.platform;
   CSS_PROPS.forEach((prop) =>
     document.documentElement.style.removeProperty(prop),
   );
@@ -62,6 +63,32 @@ describe('useHostLayout', () => {
 
       rerender({ ctx: makeHostContext() });
       expect(document.documentElement.dataset.displayMode).toBeUndefined();
+    });
+  });
+
+  describe('platform → dataset.platform', () => {
+    it('sets document.documentElement.dataset.platform to "desktop" by default', () => {
+      renderHook(() => useHostLayout(makeHostContext()));
+
+      expect(document.documentElement.dataset.platform).toBe('desktop');
+    });
+
+    it('sets document.documentElement.dataset.platform to "mobile" when hostContext.platform is "mobile"', () => {
+      renderHook(() => useHostLayout(makeHostContext({ platform: 'mobile' })));
+
+      expect(document.documentElement.dataset.platform).toBe('mobile');
+    });
+
+    it('updates dataset.platform on rerender with a new hostContext', () => {
+      const { rerender } = renderHook(
+        ({ ctx }: { ctx: McpUiHostContext | undefined }) => useHostLayout(ctx),
+        { initialProps: { ctx: makeHostContext({ platform: 'mobile' }) } },
+      );
+
+      expect(document.documentElement.dataset.platform).toBe('mobile');
+
+      rerender({ ctx: makeHostContext({ platform: 'web' }) });
+      expect(document.documentElement.dataset.platform).toBe('desktop');
     });
   });
 
