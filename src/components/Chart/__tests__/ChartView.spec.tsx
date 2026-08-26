@@ -268,7 +268,7 @@ describe('ChartView', () => {
     expect(screen.getByTestId('mock-chart')).toHaveTextContent('b1');
   });
 
-  it('gives the dimensions list a fixed 220px column in fullscreen', () => {
+  it('gives the dimensions list a fixed 220px column once the widget is wide enough, in fullscreen', () => {
     render(
       <ChartView
         attachment={makeAttachment({
@@ -284,7 +284,7 @@ describe('ChartView', () => {
       />,
     );
     const dimensionsList = screen.getByText('Unit:').closest('div.flex-col');
-    expect(dimensionsList).toHaveClass('w-[220px]');
+    expect(dimensionsList).toHaveClass('chart-side-by-side:w-[220px]');
   });
 
   it('stacks the dimensions list under the chart (no fixed column) outside fullscreen', () => {
@@ -302,25 +302,6 @@ describe('ChartView', () => {
       />,
     );
     const dimensionsList = screen.getByText('Unit:').closest('div.flex-col');
-    expect(dimensionsList).not.toHaveClass('w-[220px]');
-  });
-
-  it('stacks the dimensions list under the chart (no fixed column) in fullscreen on mobile', () => {
-    render(
-      <ChartView
-        attachment={makeAttachment({
-          units: [
-            makeUnit({
-              dimensions: [{ id: 'unit', title: 'Unit', value: 'Euro' }],
-            }),
-          ],
-        })}
-        platform={Platform.Mobile}
-        isFullscreen
-        fillHeight
-      />,
-    );
-    const dimensionsList = screen.getByText('Unit:').closest('div.flex-col');
-    expect(dimensionsList).not.toHaveClass('w-[220px]');
+    expect(dimensionsList).not.toHaveClass('chart-side-by-side:w-[220px]');
   });
 });
