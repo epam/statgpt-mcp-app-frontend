@@ -71,4 +71,77 @@ describe('HostIconButton', () => {
     );
     expect(screen.getByRole('button')).toHaveClass('rounded-md');
   });
+
+  it('renders no visible text when label is omitted', () => {
+    render(
+      <HostIconButton
+        icon={StubIcon}
+        platform={Platform.Desktop}
+        onClick={vi.fn()}
+        ariaLabel="Do thing"
+      />,
+    );
+    expect(screen.getByRole('button')).toHaveTextContent('');
+  });
+
+  it('renders the label text after the icon when provided', () => {
+    render(
+      <HostIconButton
+        icon={StubIcon}
+        platform={Platform.Desktop}
+        onClick={vi.fn()}
+        ariaLabel="Do thing"
+        label="Open full view"
+      />,
+    );
+    expect(screen.getByRole('button')).toHaveTextContent('Open full view');
+  });
+
+  it('renders the label at 12px, colored as primary/black text', () => {
+    render(
+      <HostIconButton
+        icon={StubIcon}
+        platform={Platform.Desktop}
+        onClick={vi.fn()}
+        ariaLabel="Do thing"
+        label="Open full view"
+      />,
+    );
+    const button = screen.getByRole('button');
+    expect(button).toHaveClass('text-xs');
+    expect(button).toHaveClass('text-neutrals-1000');
+  });
+
+  it('uses 6px left padding, 8px right padding, and 6px vertical padding for a labeled button', () => {
+    render(
+      <HostIconButton
+        icon={StubIcon}
+        platform={Platform.Desktop}
+        onClick={vi.fn()}
+        ariaLabel="Do thing"
+        label="Open full view"
+      />,
+    );
+    const button = screen.getByRole('button');
+    expect(button).toHaveClass('pl-1.5');
+    expect(button).toHaveClass('pr-2');
+    expect(button).toHaveClass('py-1.5');
+    expect(button).not.toHaveClass('px-3');
+    expect(button).not.toHaveClass('px-1.5');
+  });
+
+  it('still applies the mobile hit-slop when a label is provided', () => {
+    render(
+      <HostIconButton
+        icon={StubIcon}
+        platform={Platform.Mobile}
+        onClick={vi.fn()}
+        ariaLabel="Do thing"
+        label="Open full view"
+      />,
+    );
+    const button = screen.getByRole('button');
+    expect(button).toHaveClass('before:absolute');
+    expect(button).toHaveClass('before:inset-[-4px]');
+  });
 });

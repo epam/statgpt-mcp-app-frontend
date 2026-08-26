@@ -12,6 +12,7 @@ interface Props {
   ariaLabel: string;
   variant?: Variant;
   className?: string;
+  label?: string;
 }
 
 const VARIANT_CLASSES: Record<Variant, string> = {
@@ -35,6 +36,7 @@ const VARIANT_CLASSES: Record<Variant, string> = {
  * @param ariaLabel - Accessible label for the button.
  * @param variant - `'plain'` (default) for a borderless icon button, or `'bordered'` for a bordered chip — e.g. a pager's prev/next buttons.
  * @param className - Additional classes; must include a non-`static` `position` utility.
+ * @param label - Optional visible text rendered after the icon, for a labeled button instead of an icon-only one. The mobile hit-slop still applies, keyed off the icon's footprint.
  */
 export function HostIconButton({
   icon: Icon,
@@ -43,6 +45,7 @@ export function HostIconButton({
   ariaLabel,
   variant = 'plain',
   className,
+  label,
 }: Props) {
   const size = ICON_SIZE[platform];
   const isMobile = platform === Platform.Mobile;
@@ -52,13 +55,17 @@ export function HostIconButton({
       onClick={onClick}
       aria-label={ariaLabel}
       className={classNames(
-        'z-10 p-1.5 text-neutrals-700 hover:bg-neutrals-200 hover:text-neutrals-1000 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-1',
+        'z-10 flex items-center hover:bg-neutrals-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-1',
+        label
+          ? 'gap-1.5 py-1.5 pl-1.5 pr-2 text-xs font-medium text-neutrals-1000'
+          : 'p-1.5 text-neutrals-700 hover:text-neutrals-1000',
         isMobile && "before:absolute before:inset-[-4px] before:content-['']",
         VARIANT_CLASSES[variant],
         className,
       )}
     >
       <Icon platform={platform} width={size} height={size} />
+      {label}
     </button>
   );
 }

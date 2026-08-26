@@ -1,3 +1,8 @@
+// Targets another package's internal, non-contractual class name to replace its fixed inline-mode height cap with DataView.tsx's row-count-based one.
+.ag-theme-quartz.max-h-\[400px\] {
+  max-height: var(--mcp-grid-max-height) !important;
+}
+
 .ag-theme-quartz {
   .ag-root-wrapper {
     @apply border-neutrals-300 rounded;
