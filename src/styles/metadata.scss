@@ -5,6 +5,10 @@
   @apply cursor-pointer;
 }
 
+:root[data-platform='mobile'] .ag-cell .metadata-indicator {
+  @apply border-r-[16px] border-b-[16px];
+}
+
 :root:not([data-display-mode='fullscreen']) .metadata-indicator {
   display: none;
 }

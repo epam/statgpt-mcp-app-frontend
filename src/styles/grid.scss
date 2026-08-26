@@ -30,6 +30,10 @@
 
           .base-icon-button {
             @apply h-[32px] w-[32px];
+
+            :root[data-platform='mobile'] & {
+              @apply h-[44px] w-[44px];
+            }
           }
         }
       }

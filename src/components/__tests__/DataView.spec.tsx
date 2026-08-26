@@ -14,12 +14,20 @@ const { mockClosePanel, gridRenderCount } = vi.hoisted(() => ({
 }));
 
 vi.mock('@epam/statgpt-conversation-view', () => ({
-  CrossDatasetGridAttachment: (props: { fixHeight?: boolean }) => {
+  CrossDatasetGridAttachment: (props: {
+    fixHeight?: boolean;
+    rowHeight?: number;
+    headerHeight?: number;
+    metadataColumnWidth?: number;
+  }) => {
     gridRenderCount.current += 1;
     return (
       <div
         data-testid="grid-attachment"
         data-fix-height={String(props.fixHeight)}
+        data-row-height={String(props.rowHeight)}
+        data-header-height={String(props.headerHeight)}
+        data-metadata-column-width={String(props.metadataColumnWidth)}
       />
     );
   },
@@ -148,6 +156,52 @@ describe('DataView', () => {
     expect(screen.getByTestId('grid-attachment')).toHaveAttribute(
       'data-fix-height',
       'false',
+    );
+  });
+
+  it('does not set rowHeight/headerHeight/metadataColumnWidth on the grid attachment on desktop', () => {
+    render(
+      <DataView
+        chartAttachment={undefined}
+        crossDatasetGridAttachment={gridAttachment()}
+        platform={Platform.Desktop}
+        isFullscreen={false}
+      />,
+    );
+    expect(screen.getByTestId('grid-attachment')).toHaveAttribute(
+      'data-row-height',
+      'undefined',
+    );
+    expect(screen.getByTestId('grid-attachment')).toHaveAttribute(
+      'data-header-height',
+      'undefined',
+    );
+    expect(screen.getByTestId('grid-attachment')).toHaveAttribute(
+      'data-metadata-column-width',
+      'undefined',
+    );
+  });
+
+  it('sets rowHeight/headerHeight/metadataColumnWidth to 44 on the grid attachment on mobile', () => {
+    render(
+      <DataView
+        chartAttachment={undefined}
+        crossDatasetGridAttachment={gridAttachment()}
+        platform={Platform.Mobile}
+        isFullscreen={false}
+      />,
+    );
+    expect(screen.getByTestId('grid-attachment')).toHaveAttribute(
+      'data-row-height',
+      '44',
+    );
+    expect(screen.getByTestId('grid-attachment')).toHaveAttribute(
+      'data-header-height',
+      '44',
+    );
+    expect(screen.getByTestId('grid-attachment')).toHaveAttribute(
+      'data-metadata-column-width',
+      '44',
     );
   });
 
