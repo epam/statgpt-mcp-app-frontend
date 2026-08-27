@@ -1,5 +1,5 @@
 import type { BridgePhase } from '../bridge/types';
-import { MainPlaceholder } from './MainPlaceholder';
+import { GridPlaceholder } from './GridPlaceholder';
 import { TextResponse } from './TextResponse';
 
 /**
@@ -27,7 +27,7 @@ export function ConnectionStatus({
   lastError?: string;
 }) {
   if (phase === 'connecting') {
-    return <MainPlaceholder />;
+    return <GridPlaceholder />;
   }
   if (phase === 'error') {
     return (

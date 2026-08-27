@@ -9,10 +9,10 @@ const COLUMN_STAGGER_MS = 120;
  * 4x4 grid of pill blocks. Every block runs the same shimmer animation,
  * staggered by column so the highlight reads as one wave traveling
  * left-to-right across the grid rather than each block pulsing on its own.
- * Used both while connecting to the host and while waiting for the first
- * tool result, replacing the previous spinner.
+ * Used while connecting to the host (display mode not yet known), and as the
+ * pip/fullscreen loading state once it is (`ChartPlaceholder` covers inline).
  */
-export function MainPlaceholder() {
+export function GridPlaceholder() {
   return (
     <div
       role="status"

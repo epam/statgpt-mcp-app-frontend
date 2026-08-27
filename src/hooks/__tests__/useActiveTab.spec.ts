@@ -32,6 +32,18 @@ describe('useActiveTab', () => {
     expect(result.current[0]).toBe('b');
   });
 
+  it('defaults to preferredInitialId when given and present in items', () => {
+    const items: Item[] = [{ id: 'a' }, { id: 'b' }];
+    const { result } = renderHook(() => useActiveTab(items, 'b'));
+    expect(result.current[0]).toBe('b');
+  });
+
+  it('falls back to the first item when preferredInitialId is not present in items', () => {
+    const items: Item[] = [{ id: 'a' }, { id: 'b' }];
+    const { result } = renderHook(() => useActiveTab(items, 'c'));
+    expect(result.current[0]).toBe('a');
+  });
+
   it('falls back to the first item when the active id is no longer present', () => {
     const initial: Item[] = [{ id: 'a' }, { id: 'b' }];
     const { result, rerender } = renderHook(

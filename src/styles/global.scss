@@ -71,7 +71,7 @@ body {
 
 :root:not([data-display-mode='pip']):not(
     [data-display-mode='fullscreen']
-  )[data-active-tab='grid']
+  )[data-active-tab='no-chart']
   #root {
   min-height: unset;
 }

@@ -4,12 +4,17 @@ import { useDataAttachments } from '../useDataAttachments';
 import type { CrossDatasetInputs } from '../../types/sdmx';
 import type { WidgetMeta } from '../../bridge/types';
 
+const { isChartingDataPlottable } = vi.hoisted(() => ({
+  isChartingDataPlottable: vi.fn().mockReturnValue(true),
+}));
+
 vi.mock('@epam/statgpt-conversation-view', () => ({
-  buildCrossDatasetChartingData: vi.fn(),
+  buildCrossDatasetChartingData: vi.fn().mockReturnValue({ units: [] }),
   buildCrossDatasetGridContent: vi.fn().mockReturnValue({
     data: [],
     columns: [],
   }),
+  isChartingDataPlottable,
   useDatasetDimensionsMetadataMapOptional: vi.fn().mockReturnValue(undefined),
 }));
 
@@ -36,6 +41,31 @@ const BASE_INPUT = {
 };
 
 describe('useDataAttachments', () => {
+  beforeEach(() => {
+    isChartingDataPlottable.mockReturnValue(true);
+  });
+
+  it('returns a chartAttachment when the built charting data is plottable', () => {
+    const crossDataset = makeCrossDataset([makeDataQuery({ urn: 'urn:a' })]);
+
+    const { result } = renderHook(() =>
+      useDataAttachments({ ...BASE_INPUT, crossDataset }),
+    );
+
+    expect(result.current.chartAttachment).toBeDefined();
+  });
+
+  it('returns an undefined chartAttachment when the built charting data has no plottable units', () => {
+    isChartingDataPlottable.mockReturnValue(false);
+    const crossDataset = makeCrossDataset([makeDataQuery({ urn: 'urn:a' })]);
+
+    const { result } = renderHook(() =>
+      useDataAttachments({ ...BASE_INPUT, crossDataset }),
+    );
+
+    expect(result.current.chartAttachment).toBeUndefined();
+  });
+
   it('returns an undefined crossDatasetGridAttachment when there is no cross-dataset input', () => {
     const { result } = renderHook(() =>
       useDataAttachments({ ...BASE_INPUT, crossDataset: null }),

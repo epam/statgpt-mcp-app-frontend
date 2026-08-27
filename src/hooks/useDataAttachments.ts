@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import {
   buildCrossDatasetGridContent,
   buildCrossDatasetChartingData,
+  isChartingDataPlottable,
   useDatasetDimensionsMetadataMapOptional,
 } from '@epam/statgpt-conversation-view';
 import type { WidgetMeta } from '../bridge/types';
@@ -35,17 +36,19 @@ export function useDataAttachments({
 }: UseDataAttachmentsInput): UseDataAttachmentsResult {
   const chartAttachment = useMemo((): ChartAttachment | undefined => {
     if (!crossDataset) return undefined;
+    const chartingData = buildCrossDatasetChartingData(
+      crossDataset.structuresMap,
+      crossDataset.dataMessagesMap,
+      crossDataset.dataQueries,
+      effectiveLocale,
+      { colors: CHART_SERIES_COLORS },
+      formatNumbers,
+    );
+    if (!isChartingDataPlottable(chartingData)) return undefined;
     return {
       type: ATTACHMENT_TYPE.CUSTOM_CHART,
       title: meta?.title ?? 'Chart',
-      charting_data: buildCrossDatasetChartingData(
-        crossDataset.structuresMap,
-        crossDataset.dataMessagesMap,
-        crossDataset.dataQueries,
-        effectiveLocale,
-        { colors: CHART_SERIES_COLORS },
-        formatNumbers,
-      ),
+      charting_data: chartingData,
     };
   }, [crossDataset, meta, effectiveLocale]);
 
