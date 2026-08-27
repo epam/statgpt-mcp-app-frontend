@@ -243,3 +243,111 @@ describe('AppContent — empty state tabs', () => {
     expect(messageGutter?.className).not.toContain('pr-11');
   });
 });
+
+describe('AppContent — floating fullscreen button vs DataView inline content', () => {
+  beforeAll(() => {
+    mockAgGridElementDimensions();
+  });
+
+  it("hides the floating FullscreenButton for DataView's plain inline content (no empty state)", () => {
+    render(
+      <AppContent
+        snapshot={baseSnapshot()}
+        loading={false}
+        error={null}
+        emptyState={null}
+        isFillHeight={false}
+        isFullscreen={false}
+        canRequestFullscreen={true}
+        requestFullscreen={noopRequestFullscreen}
+        crossDataset={null}
+        meta={null}
+        effectiveLocale="en"
+        pythonCode={undefined}
+        platform="desktop"
+      />,
+    );
+
+    expect(
+      screen.queryByRole('button', { name: 'Expand to fullscreen' }),
+    ).not.toBeInTheDocument();
+  });
+
+  it('still shows the floating FullscreenButton in pip mode for the same (non-empty-state) content', () => {
+    render(
+      <AppContent
+        snapshot={baseSnapshot()}
+        loading={false}
+        error={null}
+        emptyState={null}
+        isFillHeight={true}
+        isFullscreen={false}
+        canRequestFullscreen={true}
+        requestFullscreen={noopRequestFullscreen}
+        crossDataset={null}
+        meta={null}
+        effectiveLocale="en"
+        pythonCode={undefined}
+        platform="desktop"
+      />,
+    );
+
+    expect(
+      screen.getByRole('button', { name: 'Expand to fullscreen' }),
+    ).toBeInTheDocument();
+  });
+});
+
+describe('AppContent — loading placeholder by display mode', () => {
+  beforeAll(() => {
+    mockAgGridElementDimensions();
+  });
+
+  it('renders ChartPlaceholder while loading in inline mode', () => {
+    const { container } = render(
+      <AppContent
+        snapshot={baseSnapshot()}
+        loading={true}
+        error={null}
+        emptyState={null}
+        isFillHeight={false}
+        isFullscreen={false}
+        canRequestFullscreen={false}
+        requestFullscreen={noopRequestFullscreen}
+        crossDataset={null}
+        meta={null}
+        effectiveLocale="en"
+        pythonCode={undefined}
+        platform="desktop"
+      />,
+    );
+
+    expect(
+      container.querySelector('[data-testid="placeholder-chart-canvas"]'),
+    ).toBeInTheDocument();
+  });
+
+  it('renders GridPlaceholder while loading in pip/fullscreen mode', () => {
+    const { container } = render(
+      <AppContent
+        snapshot={baseSnapshot()}
+        loading={true}
+        error={null}
+        emptyState={null}
+        isFillHeight={true}
+        isFullscreen={false}
+        canRequestFullscreen={false}
+        requestFullscreen={noopRequestFullscreen}
+        crossDataset={null}
+        meta={null}
+        effectiveLocale="en"
+        pythonCode={undefined}
+        platform="desktop"
+      />,
+    );
+
+    expect(
+      container.querySelector('[data-testid="placeholder-block"]'),
+    ).toBeInTheDocument();
+  });
+});

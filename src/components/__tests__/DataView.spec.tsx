@@ -71,321 +71,327 @@ describe('DataView', () => {
     expect(container).toBeEmptyDOMElement();
   });
 
-  it('shows only the tabs for which attachment data is provided', () => {
-    render(
-      <DataView
-        chartAttachment={chartAttachment()}
-        crossDatasetGridAttachment={undefined}
-        platform={Platform.Desktop}
-        isFullscreen={false}
-      />,
-    );
-    expect(screen.getByRole('button', { name: 'Chart' })).toBeInTheDocument();
-    expect(
-      screen.queryByRole('button', { name: 'Grid' }),
-    ).not.toBeInTheDocument();
-    expect(
-      screen.queryByRole('button', { name: 'Code' }),
-    ).not.toBeInTheDocument();
-  });
+  describe('inline mode (fillHeight not set)', () => {
+    it('renders only the chart, no tab bar, when chart data is available', () => {
+      render(
+        <DataView
+          chartAttachment={chartAttachment()}
+          crossDatasetGridAttachment={gridAttachment(10)}
+          pythonCode="print(1)"
+          platform={Platform.Desktop}
+          isFullscreen={false}
+        />,
+      );
+      expect(screen.getByTestId('chart-view')).toBeInTheDocument();
+      expect(screen.queryByTestId('grid-attachment')).not.toBeInTheDocument();
+      expect(screen.queryByTestId('code-attachment')).not.toBeInTheDocument();
+      expect(
+        screen.queryByRole('button', { name: 'Grid' }),
+      ).not.toBeInTheDocument();
+      expect(
+        screen.queryByRole('button', { name: 'Chart' }),
+      ).not.toBeInTheDocument();
+      expect(
+        screen.queryByRole('button', { name: 'Code' }),
+      ).not.toBeInTheDocument();
+    });
 
-  it('defaults to the Grid tab when available and switches content when a tab is clicked', () => {
-    render(
-      <DataView
-        chartAttachment={chartAttachment()}
-        crossDatasetGridAttachment={gridAttachment()}
-        platform={Platform.Desktop}
-        isFullscreen={false}
-      />,
-    );
-    expect(screen.getByTestId('grid-attachment')).toBeInTheDocument();
-    expect(screen.queryByTestId('chart-view')).not.toBeInTheDocument();
+    it('shows the chart-available caption and an "Explore the data" button that requests fullscreen', () => {
+      const requestFullscreen = vi.fn();
+      render(
+        <DataView
+          chartAttachment={chartAttachment()}
+          crossDatasetGridAttachment={undefined}
+          platform={Platform.Desktop}
+          isFullscreen={false}
+          canRequestFullscreen
+          requestFullscreen={requestFullscreen}
+        />,
+      );
+      expect(
+        screen.getByText(
+          'You\'re looking at a chart summary of the result. The generated data table is available in the chat response. You can see a more detailed table in the advanced view by going into "Explore the data".',
+        ),
+      ).toBeInTheDocument();
+      fireEvent.click(screen.getByRole('button', { name: 'Explore the data' }));
+      expect(requestFullscreen).toHaveBeenCalledTimes(1);
+    });
 
-    fireEvent.click(screen.getByRole('button', { name: 'Chart' }));
-    expect(screen.getByTestId('chart-view')).toBeInTheDocument();
-    expect(screen.queryByTestId('grid-attachment')).not.toBeInTheDocument();
-  });
+    it('renders no chart/grid and shows the no-chart caption when chart data is unavailable', () => {
+      const requestFullscreen = vi.fn();
+      render(
+        <DataView
+          chartAttachment={undefined}
+          crossDatasetGridAttachment={gridAttachment(10)}
+          platform={Platform.Desktop}
+          isFullscreen={false}
+          canRequestFullscreen
+          requestFullscreen={requestFullscreen}
+        />,
+      );
+      expect(
+        screen.getByText(
+          "This result doesn't have a chart to show. The full data table and the code that produced it are available in the detailed view.",
+        ),
+      ).toBeInTheDocument();
+      expect(screen.queryByTestId('chart-view')).not.toBeInTheDocument();
+      expect(screen.queryByTestId('grid-attachment')).not.toBeInTheDocument();
+      fireEvent.click(screen.getByRole('button', { name: 'Explore the data' }));
+      expect(requestFullscreen).toHaveBeenCalledTimes(1);
+    });
 
-  it('closes the side panel when switching away from the Grid tab, and not when switching to it', () => {
-    render(
-      <DataView
-        chartAttachment={chartAttachment()}
-        crossDatasetGridAttachment={gridAttachment()}
-        platform={Platform.Desktop}
-        isFullscreen={false}
-      />,
-    );
-    expect(mockClosePanel).not.toHaveBeenCalled();
+    it("sets document.documentElement.dataset.activeTab to 'chart' when chart data is available, and clears it on unmount", () => {
+      const { unmount } = render(
+        <DataView
+          chartAttachment={chartAttachment()}
+          crossDatasetGridAttachment={undefined}
+          platform={Platform.Desktop}
+          isFullscreen={false}
+        />,
+      );
+      expect(document.documentElement.dataset.activeTab).toBe('chart');
+      unmount();
+      expect(document.documentElement.dataset.activeTab).toBeUndefined();
+    });
 
-    fireEvent.click(screen.getByRole('button', { name: 'Chart' }));
-    expect(mockClosePanel).toHaveBeenCalledTimes(1);
+    it("sets document.documentElement.dataset.activeTab to 'no-chart' when chart data is unavailable", () => {
+      render(
+        <DataView
+          chartAttachment={undefined}
+          crossDatasetGridAttachment={gridAttachment(10)}
+          platform={Platform.Desktop}
+          isFullscreen={false}
+        />,
+      );
+      expect(document.documentElement.dataset.activeTab).toBe('no-chart');
+    });
 
-    mockClosePanel.mockClear();
-    fireEvent.click(screen.getByRole('button', { name: 'Grid' }));
-    expect(mockClosePanel).not.toHaveBeenCalled();
-  });
-
-  it('writes the active tab to document.documentElement.dataset.activeTab and clears it on unmount', () => {
-    const { unmount } = render(
-      <DataView
-        chartAttachment={chartAttachment()}
-        crossDatasetGridAttachment={gridAttachment()}
-        platform={Platform.Desktop}
-        isFullscreen={false}
-      />,
-    );
-    expect(document.documentElement.dataset.activeTab).toBe('grid');
-
-    fireEvent.click(screen.getByRole('button', { name: 'Chart' }));
-    expect(document.documentElement.dataset.activeTab).toBe('chart');
-
-    unmount();
-    expect(document.documentElement.dataset.activeTab).toBeUndefined();
-  });
-
-  it('passes fixHeight={!fillHeight} through to the grid attachment', () => {
-    render(
-      <DataView
-        chartAttachment={undefined}
-        crossDatasetGridAttachment={gridAttachment()}
-        platform={Platform.Desktop}
-        isFullscreen={false}
-        fillHeight
-      />,
-    );
-    expect(screen.getByTestId('grid-attachment')).toHaveAttribute(
-      'data-fix-height',
-      'false',
-    );
-  });
-
-  it('sets rowHeight/headerHeight to 32 on desktop, without a metadataColumnWidth', () => {
-    render(
-      <DataView
-        chartAttachment={undefined}
-        crossDatasetGridAttachment={gridAttachment()}
-        platform={Platform.Desktop}
-        isFullscreen={false}
-      />,
-    );
-    expect(screen.getByTestId('grid-attachment')).toHaveAttribute(
-      'data-row-height',
-      '32',
-    );
-    expect(screen.getByTestId('grid-attachment')).toHaveAttribute(
-      'data-header-height',
-      '32',
-    );
-    expect(screen.getByTestId('grid-attachment')).toHaveAttribute(
-      'data-metadata-column-width',
-      'undefined',
-    );
-  });
-
-  it('sets rowHeight/headerHeight/metadataColumnWidth to 44 on the grid attachment on mobile', () => {
-    render(
-      <DataView
-        chartAttachment={undefined}
-        crossDatasetGridAttachment={gridAttachment()}
-        platform={Platform.Mobile}
-        isFullscreen={false}
-      />,
-    );
-    expect(screen.getByTestId('grid-attachment')).toHaveAttribute(
-      'data-row-height',
-      '44',
-    );
-    expect(screen.getByTestId('grid-attachment')).toHaveAttribute(
-      'data-header-height',
-      '44',
-    );
-    expect(screen.getByTestId('grid-attachment')).toHaveAttribute(
-      'data-metadata-column-width',
-      '44',
-    );
-  });
-
-  it('makes the grid wrapper fill its container height in fullscreen/pip (fillHeight), so the grid inside can still stretch via its own h-full', () => {
-    render(
-      <DataView
-        chartAttachment={undefined}
-        crossDatasetGridAttachment={gridAttachment(10)}
-        platform={Platform.Desktop}
-        isFullscreen
-        fillHeight
-      />,
-    );
-    const wrapper = screen.getByTestId('grid-row-cap-wrapper');
-    expect(wrapper).toHaveClass('h-full');
-    expect(wrapper).toHaveClass('min-h-0');
-  });
-
-  it('does not stretch the grid wrapper to fill height in inline mode', () => {
-    render(
-      <DataView
-        chartAttachment={undefined}
-        crossDatasetGridAttachment={gridAttachment(10)}
-        platform={Platform.Desktop}
-        isFullscreen={false}
-      />,
-    );
-    expect(screen.getByTestId('grid-row-cap-wrapper')).not.toHaveClass(
-      'h-full',
-    );
-  });
-
-  it("sets the grid wrapper's --mcp-grid-max-height to header + 6 rows on desktop when there are more than 6 rows", () => {
-    render(
-      <DataView
-        chartAttachment={undefined}
-        crossDatasetGridAttachment={gridAttachment(10)}
-        platform={Platform.Desktop}
-        isFullscreen={false}
-      />,
-    );
-    expect(screen.getByTestId('grid-row-cap-wrapper')).toHaveStyle({
-      '--mcp-grid-max-height': `${32 + 6 * 32}px`,
+    it('hides the inline header (caption + button) entirely when fullscreen cannot be requested', () => {
+      render(
+        <DataView
+          chartAttachment={chartAttachment()}
+          crossDatasetGridAttachment={undefined}
+          platform={Platform.Desktop}
+          isFullscreen={false}
+          canRequestFullscreen={false}
+        />,
+      );
+      expect(
+        screen.queryByRole('button', { name: 'Explore the data' }),
+      ).not.toBeInTheDocument();
+      expect(
+        screen.queryByText(
+          'You\'re looking at a chart summary of the result. The generated data table is available in the chat response. You can see a more detailed table in the advanced view by going into "Explore the data".',
+        ),
+      ).not.toBeInTheDocument();
+      expect(screen.getByTestId('chart-view')).toBeInTheDocument();
     });
   });
 
-  it("sets the grid wrapper's --mcp-grid-max-height to header + 3 rows on mobile when there are more than 3 rows", () => {
-    render(
-      <DataView
-        chartAttachment={undefined}
-        crossDatasetGridAttachment={gridAttachment(10)}
-        platform={Platform.Mobile}
-        isFullscreen={false}
-      />,
-    );
-    expect(screen.getByTestId('grid-row-cap-wrapper')).toHaveStyle({
-      '--mcp-grid-max-height': `${44 + 3 * 44}px`,
+  describe('pip/fullscreen mode (fillHeight set)', () => {
+    it('shows only the tabs for which attachment data is provided', () => {
+      render(
+        <DataView
+          chartAttachment={chartAttachment()}
+          crossDatasetGridAttachment={undefined}
+          platform={Platform.Desktop}
+          isFullscreen
+          fillHeight
+        />,
+      );
+      expect(screen.getByRole('button', { name: 'Chart' })).toBeInTheDocument();
+      expect(
+        screen.queryByRole('button', { name: 'Grid' }),
+      ).not.toBeInTheDocument();
+      expect(
+        screen.queryByRole('button', { name: 'Code' }),
+      ).not.toBeInTheDocument();
     });
-  });
 
-  it("sizes the grid wrapper's --mcp-grid-max-height to the actual row count when it's below the cap", () => {
-    render(
-      <DataView
-        chartAttachment={undefined}
-        crossDatasetGridAttachment={gridAttachment(1)}
-        platform={Platform.Mobile}
-        isFullscreen={false}
-      />,
-    );
-    expect(screen.getByTestId('grid-row-cap-wrapper')).toHaveStyle({
-      '--mcp-grid-max-height': `${44 + 1 * 44}px`,
+    it('defaults to the Grid tab when available, and switches content when a tab is clicked', () => {
+      render(
+        <DataView
+          chartAttachment={chartAttachment()}
+          crossDatasetGridAttachment={gridAttachment()}
+          platform={Platform.Desktop}
+          isFullscreen
+          fillHeight
+        />,
+      );
+      expect(screen.getByTestId('grid-attachment')).toBeInTheDocument();
+      expect(screen.queryByTestId('chart-view')).not.toBeInTheDocument();
+
+      fireEvent.click(screen.getByRole('button', { name: 'Chart' }));
+      expect(screen.getByTestId('chart-view')).toBeInTheDocument();
+      expect(screen.queryByTestId('grid-attachment')).not.toBeInTheDocument();
     });
-  });
 
-  it('shows the "Showing N of total results" footer with an Open full view button on mobile inline when rows exceed the cap', () => {
-    const requestFullscreen = vi.fn();
-    render(
-      <DataView
-        chartAttachment={undefined}
-        crossDatasetGridAttachment={gridAttachment(12)}
-        platform={Platform.Mobile}
-        isFullscreen={false}
-        canRequestFullscreen
-        requestFullscreen={requestFullscreen}
-      />,
-    );
-    expect(screen.getByText('Showing 3 of 12 results')).toBeInTheDocument();
+    it('defaults to the Chart tab when no grid is available', () => {
+      render(
+        <DataView
+          chartAttachment={chartAttachment()}
+          crossDatasetGridAttachment={undefined}
+          pythonCode="print(1)"
+          platform={Platform.Desktop}
+          isFullscreen
+          fillHeight
+        />,
+      );
+      expect(screen.getByTestId('chart-view')).toBeInTheDocument();
+      expect(screen.queryByTestId('code-attachment')).not.toBeInTheDocument();
+    });
 
-    fireEvent.click(screen.getByRole('button', { name: 'Open full view' }));
-    expect(requestFullscreen).toHaveBeenCalledTimes(1);
-  });
+    it('closes the side panel when switching away from the Grid tab, and not when switching to it', () => {
+      render(
+        <DataView
+          chartAttachment={chartAttachment()}
+          crossDatasetGridAttachment={gridAttachment()}
+          platform={Platform.Desktop}
+          isFullscreen
+          fillHeight
+        />,
+      );
+      expect(mockClosePanel).not.toHaveBeenCalled();
 
-  it('hides the footer on mobile inline when total rows are at or below the cap', () => {
-    render(
-      <DataView
-        chartAttachment={undefined}
-        crossDatasetGridAttachment={gridAttachment(3)}
-        platform={Platform.Mobile}
-        isFullscreen={false}
-        canRequestFullscreen
-        requestFullscreen={vi.fn()}
-      />,
-    );
-    expect(
-      screen.queryByRole('button', { name: 'Open full view' }),
-    ).not.toBeInTheDocument();
-  });
+      fireEvent.click(screen.getByRole('button', { name: 'Chart' }));
+      expect(mockClosePanel).toHaveBeenCalledTimes(1);
 
-  it('hides the footer on desktop even when rows exceed the cap', () => {
-    render(
-      <DataView
-        chartAttachment={undefined}
-        crossDatasetGridAttachment={gridAttachment(12)}
-        platform={Platform.Desktop}
-        isFullscreen={false}
-        canRequestFullscreen
-        requestFullscreen={vi.fn()}
-      />,
-    );
-    expect(
-      screen.queryByRole('button', { name: 'Open full view' }),
-    ).not.toBeInTheDocument();
-  });
+      mockClosePanel.mockClear();
+      fireEvent.click(screen.getByRole('button', { name: 'Grid' }));
+      expect(mockClosePanel).not.toHaveBeenCalled();
+    });
 
-  it('hides the footer in fillHeight (pip/fullscreen) mode even on mobile with rows exceeding the cap', () => {
-    render(
-      <DataView
-        chartAttachment={undefined}
-        crossDatasetGridAttachment={gridAttachment(12)}
-        platform={Platform.Mobile}
-        isFullscreen
-        fillHeight
-        canRequestFullscreen
-        requestFullscreen={vi.fn()}
-      />,
-    );
-    expect(
-      screen.queryByRole('button', { name: 'Open full view' }),
-    ).not.toBeInTheDocument();
-  });
+    it('writes the active tab to document.documentElement.dataset.activeTab and clears it on unmount', () => {
+      const { unmount } = render(
+        <DataView
+          chartAttachment={chartAttachment()}
+          crossDatasetGridAttachment={gridAttachment()}
+          platform={Platform.Desktop}
+          isFullscreen
+          fillHeight
+        />,
+      );
+      expect(document.documentElement.dataset.activeTab).toBe('grid');
 
-  it('hides the footer when fullscreen is not available, even if rows exceed the cap on mobile inline', () => {
-    render(
-      <DataView
-        chartAttachment={undefined}
-        crossDatasetGridAttachment={gridAttachment(12)}
-        platform={Platform.Mobile}
-        isFullscreen={false}
-        canRequestFullscreen={false}
-        requestFullscreen={vi.fn()}
-      />,
-    );
-    expect(
-      screen.queryByRole('button', { name: 'Open full view' }),
-    ).not.toBeInTheDocument();
-  });
+      fireEvent.click(screen.getByRole('button', { name: 'Chart' }));
+      expect(document.documentElement.dataset.activeTab).toBe('chart');
 
-  /**
-   * `chart`/`grid` keep the same object references across both renders,
-   * matching what the memoized `useDataAttachments`/`useChartTheme` hooks
-   * already provide in production — simulating a parent re-render for an
-   * unrelated reason.
-   */
-  it('does not re-render the grid attachment when re-rendered with unchanged attachment props', () => {
-    const grid = gridAttachment();
-    const chart = chartAttachment();
-    const { rerender } = render(
-      <DataView
-        chartAttachment={chart}
-        crossDatasetGridAttachment={grid}
-        platform={Platform.Desktop}
-        isFullscreen={false}
-      />,
-    );
-    expect(gridRenderCount.current).toBe(1);
+      unmount();
+      expect(document.documentElement.dataset.activeTab).toBeUndefined();
+    });
 
-    rerender(
-      <DataView
-        chartAttachment={chart}
-        crossDatasetGridAttachment={grid}
-        platform={Platform.Desktop}
-        isFullscreen={false}
-      />,
-    );
-    expect(gridRenderCount.current).toBe(1);
+    it('renders the grid attachment directly with fixHeight false, no row-cap wrapper', () => {
+      render(
+        <DataView
+          chartAttachment={undefined}
+          crossDatasetGridAttachment={gridAttachment(10)}
+          platform={Platform.Desktop}
+          isFullscreen
+          fillHeight
+        />,
+      );
+      expect(screen.getByTestId('grid-attachment')).toHaveAttribute(
+        'data-fix-height',
+        'false',
+      );
+      expect(
+        screen.queryByTestId('grid-row-cap-wrapper'),
+      ).not.toBeInTheDocument();
+    });
+
+    it('sets rowHeight/headerHeight to 32 on desktop, without a metadataColumnWidth', () => {
+      render(
+        <DataView
+          chartAttachment={undefined}
+          crossDatasetGridAttachment={gridAttachment()}
+          platform={Platform.Desktop}
+          isFullscreen
+          fillHeight
+        />,
+      );
+      expect(screen.getByTestId('grid-attachment')).toHaveAttribute(
+        'data-row-height',
+        '32',
+      );
+      expect(screen.getByTestId('grid-attachment')).toHaveAttribute(
+        'data-header-height',
+        '32',
+      );
+      expect(screen.getByTestId('grid-attachment')).toHaveAttribute(
+        'data-metadata-column-width',
+        'undefined',
+      );
+    });
+
+    it('sets rowHeight/headerHeight/metadataColumnWidth to 44 on the grid attachment on mobile', () => {
+      render(
+        <DataView
+          chartAttachment={undefined}
+          crossDatasetGridAttachment={gridAttachment()}
+          platform={Platform.Mobile}
+          isFullscreen
+          fillHeight
+        />,
+      );
+      expect(screen.getByTestId('grid-attachment')).toHaveAttribute(
+        'data-row-height',
+        '44',
+      );
+      expect(screen.getByTestId('grid-attachment')).toHaveAttribute(
+        'data-header-height',
+        '44',
+      );
+      expect(screen.getByTestId('grid-attachment')).toHaveAttribute(
+        'data-metadata-column-width',
+        '44',
+      );
+    });
+
+    it('never shows the inline "Explore the data" button', () => {
+      render(
+        <DataView
+          chartAttachment={chartAttachment()}
+          crossDatasetGridAttachment={gridAttachment()}
+          pythonCode="print(1)"
+          platform={Platform.Desktop}
+          isFullscreen
+          fillHeight
+        />,
+      );
+      expect(
+        screen.queryByRole('button', { name: 'Explore the data' }),
+      ).not.toBeInTheDocument();
+    });
+
+    /**
+     * `chart`/`grid` keep the same object references across both renders,
+     * matching what the memoized `useDataAttachments`/`useChartTheme` hooks
+     * already provide in production — simulating a parent re-render for an
+     * unrelated reason.
+     */
+    it('does not re-render the grid attachment when re-rendered with unchanged attachment props', () => {
+      const grid = gridAttachment();
+      const { rerender } = render(
+        <DataView
+          chartAttachment={undefined}
+          crossDatasetGridAttachment={grid}
+          platform={Platform.Desktop}
+          isFullscreen
+          fillHeight
+        />,
+      );
+      expect(gridRenderCount.current).toBe(1);
+
+      rerender(
+        <DataView
+          chartAttachment={undefined}
+          crossDatasetGridAttachment={grid}
+          platform={Platform.Desktop}
+          isFullscreen
+          fillHeight
+        />,
+      );
+      expect(gridRenderCount.current).toBe(1);
+    });
   });
 });

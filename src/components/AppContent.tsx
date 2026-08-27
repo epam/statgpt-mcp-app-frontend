@@ -10,12 +10,13 @@ import { EmptyStateKind, type EmptyStateContent } from '../bridge/emptyState';
 import { Platform } from '../host/hostContext';
 import { useDataAttachments } from '../hooks/useDataAttachments';
 import type { CrossDatasetInputs } from '../types/sdmx';
+import { ChartPlaceholder } from './ChartPlaceholder';
 import { ConnectionStatus } from './ConnectionStatus';
 import { DataView } from './DataView';
 import { EmptyStateTabs } from './EmptyStateTabs';
 import { ErrorBanner } from './ErrorBanner';
 import { FullscreenButton } from './FullscreenButton';
-import { MainPlaceholder } from './MainPlaceholder';
+import { GridPlaceholder } from './GridPlaceholder';
 import { TextResponse } from './TextResponse';
 
 /**
@@ -81,11 +82,18 @@ export function AppContent({
   const showLoader = loading && !hasData;
   const showFallback = !showLoader && !hasData && !error && !!emptyState;
   const hasEmptyStateGrid = !!emptyState && emptyState.tabs.length > 0;
+  /**
+   * The last clause excludes only genuine inline mode's plain `DataView`
+   * content (no `emptyState`, `isFillHeight` false) — `DataView`'s own
+   * inline header now carries an equivalent button there. Pip and the
+   * empty-state-tabs fallback are unaffected either way.
+   */
   const showFullscreenButton =
     canRequestFullscreen &&
     !isFullscreen &&
     !showLoader &&
-    (!showFallback || hasEmptyStateGrid);
+    (!showFallback || hasEmptyStateGrid) &&
+    (isFillHeight || !!emptyState);
 
   useEffect(() => {
     if (showFallback) {
@@ -106,7 +114,12 @@ export function AppContent({
 
   function renderContent() {
     if (showLoader) {
-      return <MainPlaceholder />;
+      /**
+       * Inline always ends up chart-shaped once data arrives (see
+       * `DataView`), so its loading state previews that shape instead of
+       * the generic grid skeleton pip/fullscreen still use.
+       */
+      return isFillHeight ? <GridPlaceholder /> : <ChartPlaceholder />;
     }
 
     if (emptyState) {

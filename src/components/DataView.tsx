@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useMemo, type CSSProperties } from 'react';
+import { lazy, Suspense, useEffect, useMemo } from 'react';
 import {
   CrossDatasetGridAttachment,
   useConversationViewSidePanelOptional,
@@ -9,8 +9,8 @@ import { ATTACHMENT_TYPE } from '../constants/attachmentTypes';
 import { useActiveTab } from '../hooks/useActiveTab';
 import { CodePlaceholder } from './CodePlaceholder';
 import { ChartView } from './Chart/ChartView';
+import { InlineDataHeader } from './InlineDataHeader';
 import { Tabs, type TabItem } from './Tabs';
-import { GridRowLimitFooter } from './GridRowLimitFooter';
 import type {
   ChartAttachment,
   CrossDatasetGridAttachmentData,
@@ -45,40 +45,46 @@ interface Props {
 const CROSS_DATASET_GRID_TITLE = 'Cross Dataset Grid';
 const MOBILE_GRID_CELL_HEIGHT = 44;
 const DESKTOP_GRID_CELL_HEIGHT = 32;
-const GRID_VISIBLE_ROW_CAP: Record<Platform, number> = {
-  [Platform.Desktop]: 6,
-  [Platform.Mobile]: 3,
-};
 const NOOP = () => {};
 
 /**
- * DataView renders a tabbed SDMX data panel with Grid, Chart, and Code tabs,
- * showing only the tabs for which attachment data is provided.
+ * Tab selected by default in pip/fullscreen when available, falling back to
+ * the first item in `items` otherwise (see `useActiveTab`). A single named
+ * constant so the default can be revisited later without reordering the
+ * visible tab bar, which is controlled separately by `items`' own order.
+ */
+const PREFERRED_FULLSCREEN_TAB: Tab = 'grid';
+
+const INLINE_CHART_TEXT =
+  'You\'re looking at a chart summary of the result. The generated data table is available in the chat response. You can see a more detailed table in the advanced view by going into "Explore the data".';
+const INLINE_NO_CHART_TEXT =
+  "This result doesn't have a chart to show. The full data table and the code that produced it are available in the detailed view.";
+
+/**
+ * DataView renders the widget's SDMX data content.
  *
- * The Grid tab is backed by `CrossDatasetGridAttachment`. Each tab is
- * conditionally included based on whether its corresponding attachment prop is
- * defined — if none are provided, the component returns null. When
- * `fillHeight` is set, the component expands to fill available vertical space,
- * enabling correct layout in pip and fullscreen display modes.
+ * In inline display mode (`fillHeight` false) it shows a single view — the
+ * chart alone when chart data is available, or a short explanatory message
+ * otherwise — never a tab switcher or a grid, matching both host platforms'
+ * inline-card guidance against nested scrolling and multiple views.
  *
- * @example
- * ```tsx
- * <DataView
- *   crossDatasetGridAttachment={{ data, columns }}
- *   chartAttachment={undefined}
- * />
- * ```
+ * In pip/fullscreen (`fillHeight` true) it renders the Grid/Chart/Code tab
+ * switcher, showing only the tabs for which attachment data is provided —
+ * tabs are unrestricted once the widget leaves inline mode. `PREFERRED_FULLSCREEN_TAB`
+ * decides which tab starts selected (falling back to the first available
+ * one when it's absent), independently of the tab bar's own left-to-right
+ * order.
  *
- * @param chartAttachment - Chart attachment data for the Chart tab; omit to hide that tab.
- * @param crossDatasetGridAttachment - Grid data for the Grid tab; omit to hide that tab.
- * @param pythonCode - Python source for the Code tab; omit to hide that tab.
+ * @param chartAttachment - Chart attachment data; omit to hide the Chart tab/inline chart.
+ * @param crossDatasetGridAttachment - Grid data for the Grid tab (pip/fullscreen only).
+ * @param pythonCode - Python source for the Code tab (pip/fullscreen only).
  * @param codeTheme - Monaco theme applied to the Code tab, following the host theme.
- * @param fillHeight - When true, the component stretches to fill its container's height for pip or fullscreen modes.
+ * @param fillHeight - When true, renders the pip/fullscreen tabbed layout and stretches to fill the container's height; when false (inline), renders the chart-only view.
  * @param chartTransformOption - Applied to the chart's ECharts option before render; used to recolor axis/legend text to match the widget's host-driven theme.
- * @param platform - The desktop/mobile bucket derived from the host context; drives the chart pager's icon sizing and gates the chart's side-by-side fullscreen layout to desktop only.
+ * @param platform - The desktop/mobile bucket derived from the host context; drives the chart pager's icon sizing, the fullscreen chart layout, and the inline header button's tap target.
  * @param isFullscreen - Whether the widget is currently in fullscreen display mode; on desktop, puts the chart canvas and its dimension list side-by-side instead of stacked. Mobile always stacks.
- * @param canRequestFullscreen - Whether the host supports switching to fullscreen; gates the Grid tab's mobile-inline "Open full view" footer the same way `FullscreenButton` gates on it.
- * @param requestFullscreen - Called by the Grid tab's mobile-inline footer button to ask the host to switch to fullscreen, once the visible-row cap is hiding some of the dataset.
+ * @param canRequestFullscreen - Whether the host supports switching to fullscreen; gates the inline header's "Explore the data" button.
+ * @param requestFullscreen - Called by the inline header's button to ask the host to switch to fullscreen.
  */
 export function DataView({
   chartAttachment,
@@ -97,15 +103,6 @@ export function DataView({
   const gridCellHeight = isMobile
     ? MOBILE_GRID_CELL_HEIGHT
     : DESKTOP_GRID_CELL_HEIGHT;
-  const gridRowCap = GRID_VISIBLE_ROW_CAP[platform];
-  const gridTotalRows = crossDatasetGridAttachment?.data.length ?? 0;
-  const gridVisibleRows = Math.min(gridRowCap, gridTotalRows);
-  const gridMaxHeightPx = gridCellHeight + gridVisibleRows * gridCellHeight;
-  const showGridRowLimitFooter =
-    isMobile &&
-    !fillHeight &&
-    gridTotalRows > gridRowCap &&
-    canRequestFullscreen;
 
   const crossDatasetAttachment = useMemo(
     () =>
@@ -127,6 +124,10 @@ export function DataView({
    * same React element it did before — React then bails out of
    * re-rendering `CrossDatasetGridAttachment`/`ChartView`/`CodeAttachment`
    * for that tab entirely, without needing `React.memo` on any of them.
+   *
+   * Only used for the pip/fullscreen tab switcher — inline mode never
+   * renders `Tabs`, so building this when `fillHeight` is false is wasted
+   * work, but harmless (it's gated by attachment presence either way).
    */
   const items: TabItem<Tab>[] = useMemo(
     () => [
@@ -136,35 +137,15 @@ export function DataView({
               id: 'grid' as Tab,
               label: 'Grid',
               content: (
-                <>
-                  <div
-                    data-testid="grid-row-cap-wrapper"
-                    className={fillHeight ? 'h-full min-h-0' : undefined}
-                    style={
-                      {
-                        '--mcp-grid-max-height': `${gridMaxHeightPx}px`,
-                      } as CSSProperties
-                    }
-                  >
-                    <CrossDatasetGridAttachment
-                      attachment={crossDatasetAttachment}
-                      fixHeight={!fillHeight}
-                      rowHeight={gridCellHeight}
-                      headerHeight={gridCellHeight}
-                      {...(isMobile
-                        ? { metadataColumnWidth: MOBILE_GRID_CELL_HEIGHT }
-                        : {})}
-                    />
-                  </div>
-                  {showGridRowLimitFooter && (
-                    <GridRowLimitFooter
-                      total={gridTotalRows}
-                      visible={gridRowCap}
-                      platform={platform}
-                      onOpenFullView={requestFullscreen}
-                    />
-                  )}
-                </>
+                <CrossDatasetGridAttachment
+                  attachment={crossDatasetAttachment}
+                  fixHeight={false}
+                  rowHeight={gridCellHeight}
+                  headerHeight={gridCellHeight}
+                  {...(isMobile
+                    ? { metadataColumnWidth: MOBILE_GRID_CELL_HEIGHT }
+                    : {})}
+                />
               ),
             },
           ]
@@ -206,38 +187,79 @@ export function DataView({
     ],
     [
       crossDatasetAttachment,
-      fillHeight,
       isMobile,
       gridCellHeight,
-      gridMaxHeightPx,
-      showGridRowLimitFooter,
-      gridTotalRows,
-      gridRowCap,
-      requestFullscreen,
       chartAttachment,
       chartTransformOption,
       platform,
+      fillHeight,
       isFullscreen,
       pythonCode,
       codeTheme,
     ],
   );
 
-  const [activeTab, setActiveTab] = useActiveTab(items);
+  const [activeTab, setActiveTab] = useActiveTab(
+    items,
+    PREFERRED_FULLSCREEN_TAB,
+  );
 
   useEffect(() => {
     if (activeTab !== 'grid') closePanel?.();
   }, [activeTab, closePanel]);
 
   useEffect(() => {
+    if (!fillHeight) return;
     document.documentElement.dataset.activeTab = activeTab;
     return () => {
       delete document.documentElement.dataset.activeTab;
     };
-  }, [activeTab]);
+  }, [fillHeight, activeTab]);
 
-  if (!chartAttachment && !crossDatasetGridAttachment && !pythonCode)
-    return null;
+  const hasAnyData =
+    !!chartAttachment || !!crossDatasetGridAttachment || !!pythonCode;
+
+  /**
+   * Inline mode's own active-content marker, kept separate from the
+   * pip/fullscreen tab switcher's `activeTab` state above. `global.scss`
+   * unsets `#root`'s min-height floor when this is `'no-chart'`, mirroring
+   * the shrink-to-content treatment inline mode used to apply when its
+   * (now-removed) Grid tab was active by default.
+   */
+  useEffect(() => {
+    if (fillHeight || !hasAnyData) return;
+    document.documentElement.dataset.activeTab = chartAttachment
+      ? 'chart'
+      : 'no-chart';
+    return () => {
+      delete document.documentElement.dataset.activeTab;
+    };
+  }, [fillHeight, hasAnyData, chartAttachment]);
+
+  if (!hasAnyData) return null;
+
+  if (!fillHeight) {
+    return (
+      <div>
+        {canRequestFullscreen && (
+          <InlineDataHeader
+            text={chartAttachment ? INLINE_CHART_TEXT : INLINE_NO_CHART_TEXT}
+            platform={platform}
+            onExploreData={requestFullscreen}
+          />
+        )}
+        {chartAttachment && (
+          <ChartView
+            attachment={chartAttachment}
+            transformOption={chartTransformOption}
+            platform={platform}
+            fillHeight={false}
+            isFullscreen={false}
+          />
+        )}
+      </div>
+    );
+  }
 
   return (
     <Tabs
