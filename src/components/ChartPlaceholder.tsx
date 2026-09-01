@@ -13,13 +13,14 @@ const DIMENSION_ROWS_START_DELAY = 12 * STAGGER_MS;
 const SHIMMER_DURATION_MS = '2.5s';
 
 /**
- * Skeleton placeholder shown for inline mode's loading state — mirrors the
- * eventual chart-only layout (`InlineDataHeader` + `ChartView`) instead of
- * the generic `GridPlaceholder`, so the shape on screen doesn't jump once
- * the first tool result arrives. Every shape shares `GridPlaceholder`'s
- * shimmer colors and gradient (`SHIMMER_CLASSES`), just at a slightly slower
- * pace (`SHIMMER_DURATION_MS`), staggered top-to-bottom so the highlight
- * reads as one wave traveling down the layout.
+ * Skeleton placeholder mirroring inline mode's former chart-only layout
+ * (`InlineDataHeader` + `ChartView`). No longer wired into `AppContent`
+ * (inline mode now shows a grid, not a chart, and uses `GridPlaceholder`
+ * instead) — kept in the codebase intentionally rather than deleted. Every
+ * shape shares `GridPlaceholder`'s shimmer colors and gradient
+ * (`SHIMMER_CLASSES`), just at a slightly slower pace (`SHIMMER_DURATION_MS`),
+ * staggered top-to-bottom so the highlight reads as one wave traveling down
+ * the layout.
  */
 export function ChartPlaceholder() {
   return (

@@ -145,3 +145,21 @@ describe('HostIconButton', () => {
     expect(button).toHaveClass('before:inset-[-4px]');
   });
 });
+
+describe('HostIconButton floating variant', () => {
+  it('applies rounded-full, a background, and the drop shadow', () => {
+    render(
+      <HostIconButton
+        icon={StubIcon}
+        platform={Platform.Desktop}
+        onClick={() => {}}
+        ariaLabel="Next slide"
+        variant="floating"
+        className="absolute"
+      />,
+    );
+    const button = screen.getByRole('button', { name: 'Next slide' });
+    expect(button.className).toContain('rounded-full');
+    expect(button.className).toContain('shadow-drop');
+  });
+});

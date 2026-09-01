@@ -11,3 +11,7 @@ CVE-2026-12151 exp:2026-07-20
 # nginx-unprivileged:stable-alpine vulnerabilities — curl, libcurl
 CVE-2026-5773 exp:2026-08-15
 CVE-2026-6276 exp:2026-08-15
+
+# nginx-unprivileged:stable-alpine vulnerabilities — expat
+CVE-2026-66046 exp:2026-10-01
+CVE-2026-76641 exp:2026-10-01
