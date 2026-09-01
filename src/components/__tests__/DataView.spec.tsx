@@ -8,6 +8,15 @@ import type {
   CrossDatasetGridAttachmentData,
 } from '../../types/attachments';
 
+class NoopResizeObserver {
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+}
+(
+  window as unknown as { ResizeObserver: typeof ResizeObserver }
+).ResizeObserver = NoopResizeObserver as unknown as typeof ResizeObserver;
+
 const { mockClosePanel, gridRenderCount } = vi.hoisted(() => ({
   mockClosePanel: vi.fn(),
   gridRenderCount: { current: 0 },
@@ -19,6 +28,7 @@ vi.mock('@epam/statgpt-conversation-view', () => ({
     rowHeight?: number;
     headerHeight?: number;
     metadataColumnWidth?: number;
+    attachment?: { gridContent?: { data?: unknown[] } };
   }) => {
     gridRenderCount.current += 1;
     return (
@@ -28,6 +38,9 @@ vi.mock('@epam/statgpt-conversation-view', () => ({
         data-row-height={String(props.rowHeight)}
         data-header-height={String(props.headerHeight)}
         data-metadata-column-width={String(props.metadataColumnWidth)}
+        data-row-count={String(
+          props.attachment?.gridContent?.data?.length ?? 0,
+        )}
       />
     );
   },
@@ -46,6 +59,14 @@ vi.mock('../CodeAttachment', () => ({
 
 function gridAttachment(rowCount = 0): CrossDatasetGridAttachmentData {
   return { data: Array.from({ length: rowCount }, () => ({})), columns: [] };
+}
+
+function columnsFixture() {
+  return [
+    { colId: 'agency', field: 'agency', flex: 1, minWidth: 200 },
+    { colId: '2010', field: '2010', width: 200 },
+    { colId: '2011', field: '2011', width: 200 },
+  ];
 }
 
 function chartAttachment(): ChartAttachment {
@@ -72,119 +93,30 @@ describe('DataView', () => {
   });
 
   describe('inline mode (fillHeight not set)', () => {
-    it('renders only the chart, no tab bar, when chart data is available', () => {
-      render(
-        <DataView
-          chartAttachment={chartAttachment()}
-          crossDatasetGridAttachment={gridAttachment(10)}
-          pythonCode="print(1)"
-          platform={Platform.Desktop}
-          isFullscreen={false}
-        />,
-      );
-      expect(screen.getByTestId('chart-view')).toBeInTheDocument();
-      expect(screen.queryByTestId('grid-attachment')).not.toBeInTheDocument();
-      expect(screen.queryByTestId('code-attachment')).not.toBeInTheDocument();
-      expect(
-        screen.queryByRole('button', { name: 'Grid' }),
-      ).not.toBeInTheDocument();
-      expect(
-        screen.queryByRole('button', { name: 'Chart' }),
-      ).not.toBeInTheDocument();
-      expect(
-        screen.queryByRole('button', { name: 'Code' }),
-      ).not.toBeInTheDocument();
-    });
-
-    it('shows the chart-available caption and an "Explore the data" button that requests fullscreen', () => {
-      const requestFullscreen = vi.fn();
-      render(
-        <DataView
-          chartAttachment={chartAttachment()}
-          crossDatasetGridAttachment={undefined}
-          platform={Platform.Desktop}
-          isFullscreen={false}
-          canRequestFullscreen
-          requestFullscreen={requestFullscreen}
-        />,
-      );
-      expect(
-        screen.getByText(
-          'You\'re looking at a chart summary of the result. The generated data table is available in the chat response. You can see a more detailed table in the advanced view by going into "Explore the data".',
-        ),
-      ).toBeInTheDocument();
-      fireEvent.click(screen.getByRole('button', { name: 'Explore the data' }));
-      expect(requestFullscreen).toHaveBeenCalledTimes(1);
-    });
-
-    it('renders no chart/grid and shows the no-chart caption when chart data is unavailable', () => {
-      const requestFullscreen = vi.fn();
-      render(
+    it("sets document.documentElement.dataset.activeTab to 'grid' when grid data is available inline, and clears it on unmount", () => {
+      const { unmount } = render(
         <DataView
           chartAttachment={undefined}
           crossDatasetGridAttachment={gridAttachment(10)}
           platform={Platform.Desktop}
           isFullscreen={false}
-          canRequestFullscreen
-          requestFullscreen={requestFullscreen}
         />,
       );
-      expect(
-        screen.getByText(
-          "This result doesn't have a chart to show. The full data table and the code that produced it are available in the detailed view.",
-        ),
-      ).toBeInTheDocument();
-      expect(screen.queryByTestId('chart-view')).not.toBeInTheDocument();
-      expect(screen.queryByTestId('grid-attachment')).not.toBeInTheDocument();
-      fireEvent.click(screen.getByRole('button', { name: 'Explore the data' }));
-      expect(requestFullscreen).toHaveBeenCalledTimes(1);
-    });
-
-    it("sets document.documentElement.dataset.activeTab to 'chart' when chart data is available, and clears it on unmount", () => {
-      const { unmount } = render(
-        <DataView
-          chartAttachment={chartAttachment()}
-          crossDatasetGridAttachment={undefined}
-          platform={Platform.Desktop}
-          isFullscreen={false}
-        />,
-      );
-      expect(document.documentElement.dataset.activeTab).toBe('chart');
+      expect(document.documentElement.dataset.activeTab).toBe('grid');
       unmount();
       expect(document.documentElement.dataset.activeTab).toBeUndefined();
     });
 
-    it("sets document.documentElement.dataset.activeTab to 'no-chart' when chart data is unavailable", () => {
-      render(
-        <DataView
-          chartAttachment={undefined}
-          crossDatasetGridAttachment={gridAttachment(10)}
-          platform={Platform.Desktop}
-          isFullscreen={false}
-        />,
-      );
-      expect(document.documentElement.dataset.activeTab).toBe('no-chart');
-    });
-
-    it('hides the inline header (caption + button) entirely when fullscreen cannot be requested', () => {
+    it("sets document.documentElement.dataset.activeTab to 'no-grid' when no grid data is available inline", () => {
       render(
         <DataView
           chartAttachment={chartAttachment()}
           crossDatasetGridAttachment={undefined}
           platform={Platform.Desktop}
           isFullscreen={false}
-          canRequestFullscreen={false}
         />,
       );
-      expect(
-        screen.queryByRole('button', { name: 'Explore the data' }),
-      ).not.toBeInTheDocument();
-      expect(
-        screen.queryByText(
-          'You\'re looking at a chart summary of the result. The generated data table is available in the chat response. You can see a more detailed table in the advanced view by going into "Explore the data".',
-        ),
-      ).not.toBeInTheDocument();
-      expect(screen.getByTestId('chart-view')).toBeInTheDocument();
+      expect(document.documentElement.dataset.activeTab).toBe('no-grid');
     });
   });
 
@@ -392,6 +324,100 @@ describe('DataView', () => {
         />,
       );
       expect(gridRenderCount.current).toBe(1);
+    });
+  });
+
+  describe('DataView inline grid', () => {
+    it('renders the grid inline, sliced to the desktop row cap, instead of the chart', () => {
+      render(
+        <DataView
+          chartAttachment={undefined}
+          crossDatasetGridAttachment={{
+            data: Array.from({ length: 10 }, (_, i) => ({ id: i })),
+            columns: columnsFixture(),
+          }}
+          platform={Platform.Desktop}
+          isFullscreen={false}
+          fillHeight={false}
+        />,
+      );
+      const grid = screen.getByTestId('grid-attachment');
+      expect(grid).toBeInTheDocument();
+      expect(screen.queryByTestId('chart-view')).not.toBeInTheDocument();
+    });
+
+    it('shows the row-limit footer when total rows exceed the cap and fullscreen can be requested', () => {
+      render(
+        <DataView
+          chartAttachment={undefined}
+          crossDatasetGridAttachment={{
+            data: Array.from({ length: 10 }, (_, i) => ({ id: i })),
+            columns: columnsFixture(),
+          }}
+          platform={Platform.Desktop}
+          isFullscreen={false}
+          fillHeight={false}
+          canRequestFullscreen
+          requestFullscreen={() => {}}
+        />,
+      );
+      expect(screen.getByText('Showing 6 of 10 results')).toBeInTheDocument();
+    });
+
+    it('still shows the row-limit footer when total rows are within the cap, with the actual displayed count', () => {
+      render(
+        <DataView
+          chartAttachment={undefined}
+          crossDatasetGridAttachment={{
+            data: Array.from({ length: 3 }, (_, i) => ({ id: i })),
+            columns: columnsFixture(),
+          }}
+          platform={Platform.Desktop}
+          isFullscreen={false}
+          fillHeight={false}
+          canRequestFullscreen
+          requestFullscreen={() => {}}
+        />,
+      );
+      expect(screen.getByText('Showing 3 of 3 results')).toBeInTheDocument();
+    });
+
+    it('leaves pip/fullscreen (fillHeight) rendering the full, unsliced grid via Tabs', () => {
+      render(
+        <DataView
+          chartAttachment={undefined}
+          crossDatasetGridAttachment={{
+            data: Array.from({ length: 10 }, (_, i) => ({ id: i })),
+            columns: columnsFixture(),
+          }}
+          platform={Platform.Desktop}
+          isFullscreen
+          fillHeight
+        />,
+      );
+      expect(screen.getByTestId('grid-attachment')).toHaveAttribute(
+        'data-row-count',
+        '10',
+      );
+    });
+
+    it('slices to the row cap in genuine inline mode, not the full row count', () => {
+      render(
+        <DataView
+          chartAttachment={undefined}
+          crossDatasetGridAttachment={{
+            data: Array.from({ length: 10 }, (_, i) => ({ id: i })),
+            columns: columnsFixture(),
+          }}
+          platform={Platform.Desktop}
+          isFullscreen={false}
+          fillHeight={false}
+        />,
+      );
+      expect(screen.getByTestId('grid-attachment')).toHaveAttribute(
+        'data-row-count',
+        '6',
+      );
     });
   });
 });

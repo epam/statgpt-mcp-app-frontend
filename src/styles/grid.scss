@@ -54,3 +54,53 @@
     }
   }
 }
+
+.mcp-grid-carousel {
+  position: relative;
+  overflow: hidden;
+
+  // Peek columns are a fade preview, not scrollable content — AG Grid's own
+  // horizontal scroll must stay off here, or the peeked (and any
+  // MAX_INLINE_SLIDES-overflow) column becomes reachable by scrolling past
+  // the mask instead of only through the carousel's own slide navigation.
+  // `.ag-center-cols-viewport` (not `.ag-body-viewport`, which merely wraps
+  // it) is AG Grid's actual native-scroll element; its own custom scrollbar
+  // (`.ag-body-horizontal-scroll`) is a separate absolutely-positioned bar
+  // that drives that same scroll programmatically, so it's removed outright
+  // rather than just visually hidden.
+  .ag-body-viewport,
+  .ag-center-cols-viewport {
+    overflow-x: hidden !important;
+    overscroll-behavior-x: none;
+    touch-action: pan-y;
+  }
+
+  .ag-body-horizontal-scroll {
+    display: none !important;
+  }
+
+  &.mcp-grid-carousel--has-next:not(.mcp-grid-carousel--has-prev) {
+    mask-image: linear-gradient(to right, black calc(100% - 80px), transparent 100%);
+  }
+
+  &.mcp-grid-carousel--has-prev:not(.mcp-grid-carousel--has-next) {
+    mask-image: linear-gradient(to left, black calc(100% - 80px), transparent 100%);
+  }
+
+  &.mcp-grid-carousel--has-next.mcp-grid-carousel--has-prev {
+    mask-image: linear-gradient(
+      to right,
+      transparent 0,
+      black 80px,
+      black calc(100% - 80px),
+      transparent 100%
+    );
+  }
+}
+
+// `mcp-peek-column` (assigned by gridColumnSlides.ts, checked by its tests)
+// intentionally has no rule here anymore — peek columns are no longer
+// dimmed across their whole width. The container's own 80px edge mask
+// (above) already fades exactly the fixed width nearest the arrow/nudge, so
+// most of a peek column (identity columns especially, at 220px) reads at
+// normal opacity, with only that edge strip shadowed.

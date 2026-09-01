@@ -10,7 +10,6 @@ import { EmptyStateKind, type EmptyStateContent } from '../bridge/emptyState';
 import { Platform } from '../host/hostContext';
 import { useDataAttachments } from '../hooks/useDataAttachments';
 import type { CrossDatasetInputs } from '../types/sdmx';
-import { ChartPlaceholder } from './ChartPlaceholder';
 import { ConnectionStatus } from './ConnectionStatus';
 import { DataView } from './DataView';
 import { EmptyStateTabs } from './EmptyStateTabs';
@@ -84,9 +83,10 @@ export function AppContent({
   const hasEmptyStateGrid = !!emptyState && emptyState.tabs.length > 0;
   /**
    * The last clause excludes only genuine inline mode's plain `DataView`
-   * content (no `emptyState`, `isFillHeight` false) — `DataView`'s own
-   * inline header now carries an equivalent button there. Pip and the
-   * empty-state-tabs fallback are unaffected either way.
+   * content (no `emptyState`, `isFillHeight` false) — `GridRowLimitFooter`
+   * now always renders there (even when nothing is truncated), carrying its
+   * own "Open full view" button, so the floating one would be redundant.
+   * Pip and the empty-state-tabs fallback are unaffected either way.
    */
   const showFullscreenButton =
     canRequestFullscreen &&
@@ -114,12 +114,7 @@ export function AppContent({
 
   function renderContent() {
     if (showLoader) {
-      /**
-       * Inline always ends up chart-shaped once data arrives (see
-       * `DataView`), so its loading state previews that shape instead of
-       * the generic grid skeleton pip/fullscreen still use.
-       */
-      return isFillHeight ? <GridPlaceholder /> : <ChartPlaceholder />;
+      return <GridPlaceholder />;
     }
 
     if (emptyState) {

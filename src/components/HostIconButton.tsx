@@ -3,7 +3,7 @@ import classNames from 'classnames';
 import { ICON_SIZE } from '../icons/iconSize';
 import { Platform } from '../host/hostContext';
 
-type Variant = 'plain' | 'bordered';
+type Variant = 'plain' | 'bordered' | 'floating';
 
 interface Props {
   icon: ComponentType<{ platform: Platform } & SVGProps<SVGSVGElement>>;
@@ -18,6 +18,8 @@ interface Props {
 const VARIANT_CLASSES: Record<Variant, string> = {
   plain: 'rounded-md',
   bordered: 'rounded-md border border-neutrals-400',
+  floating:
+    'rounded-full bg-[var(--color-background-primary,#fff)] shadow-drop',
 };
 
 /**
@@ -34,7 +36,7 @@ const VARIANT_CLASSES: Record<Variant, string> = {
  * @param platform - The desktop/mobile bucket derived from the host context; drives icon size and the mobile hit-slop.
  * @param onClick - Called when the button is clicked.
  * @param ariaLabel - Accessible label for the button.
- * @param variant - `'plain'` (default) for a borderless icon button, or `'bordered'` for a bordered chip — e.g. a pager's prev/next buttons.
+ * @param variant - `'plain'` (default) for a borderless icon button, `'bordered'` for a bordered chip — e.g. a pager's prev/next buttons — or `'floating'` for a circular button meant to sit absolutely positioned over content, e.g. the inline grid carousel's arrows.
  * @param className - Additional classes; must include a non-`static` `position` utility.
  * @param label - Optional visible text rendered after the icon, for a labeled button instead of an icon-only one. The mobile hit-slop still applies, keyed off the icon's footprint.
  */

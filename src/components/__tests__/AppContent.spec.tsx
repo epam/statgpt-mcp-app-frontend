@@ -303,7 +303,7 @@ describe('AppContent — loading placeholder by display mode', () => {
     mockAgGridElementDimensions();
   });
 
-  it('renders ChartPlaceholder while loading in inline mode', () => {
+  it('renders GridPlaceholder while loading in inline mode', () => {
     const { container } = render(
       <AppContent
         snapshot={baseSnapshot()}
@@ -323,7 +323,7 @@ describe('AppContent — loading placeholder by display mode', () => {
     );
 
     expect(
-      container.querySelector('[data-testid="placeholder-chart-canvas"]'),
+      container.querySelector('[data-testid="placeholder-block"]'),
     ).toBeInTheDocument();
   });
 
