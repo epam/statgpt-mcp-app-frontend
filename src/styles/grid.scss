@@ -6,6 +6,20 @@
       @apply border-0;
     }
 
+    .ag-header-cell,
+    .ag-header-group-cell {
+      &::before {
+        content: '';
+        @apply absolute left-0 z-[1] block w-[1px] bg-neutrals-600;
+        top: 20%;
+        height: 60%;
+      }
+
+      &.ag-column-first::before {
+        @apply hidden;
+      }
+    }
+
     .ag-row {
       @apply border-neutrals-300;
 
