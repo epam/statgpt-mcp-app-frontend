@@ -1,4 +1,4 @@
-import { render, screen, fireEvent } from '@testing-library/react';
+import { act, render, screen, fireEvent } from '@testing-library/react';
 import { vi } from 'vitest';
 import { DataView } from '../DataView';
 import { Platform } from '../../host/hostContext';
@@ -8,14 +8,32 @@ import type {
   CrossDatasetGridAttachmentData,
 } from '../../types/attachments';
 
-class NoopResizeObserver {
+/**
+ * Triggerable, but a no-op unless a test explicitly calls `.trigger(width)`
+ * — every test that doesn't care about the measured width behaves exactly
+ * as if this were a plain no-op stub.
+ */
+class TriggerableResizeObserver {
+  static instances: TriggerableResizeObserver[] = [];
+  callback: ResizeObserverCallback;
+  constructor(callback: ResizeObserverCallback) {
+    this.callback = callback;
+    TriggerableResizeObserver.instances.push(this);
+  }
   observe() {}
   unobserve() {}
   disconnect() {}
+  trigger(width: number) {
+    this.callback(
+      [{ contentRect: { width } } as ResizeObserverEntry],
+      this as unknown as ResizeObserver,
+    );
+  }
 }
 (
   window as unknown as { ResizeObserver: typeof ResizeObserver }
-).ResizeObserver = NoopResizeObserver as unknown as typeof ResizeObserver;
+).ResizeObserver =
+  TriggerableResizeObserver as unknown as typeof ResizeObserver;
 
 const { mockClosePanel, gridRenderCount } = vi.hoisted(() => ({
   mockClosePanel: vi.fn(),
@@ -41,7 +59,11 @@ vi.mock('@epam/statgpt-conversation-view', () => ({
         data-row-count={String(
           props.attachment?.gridContent?.data?.length ?? 0,
         )}
-      />
+      >
+        {/* Stands in for AG Grid's real scrollable viewport — DataView
+            navigates by setting this element's `scrollLeft` directly. */}
+        <div className="ag-center-cols-viewport" />
+      </div>
     );
   },
   useConversationViewSidePanelOptional: () => ({
@@ -418,6 +440,46 @@ describe('DataView', () => {
         'data-row-count',
         '6',
       );
+    });
+  });
+
+  describe('scroll-based column carousel navigation', () => {
+    // agency (220, identity) + 2010 (130) + 2011 (130) = 480px total. At a
+    // measured 300px viewport, 'agency' alone fits page 1 (adding '2010'
+    // would be 350 > 300); page 2's raw boundary is 220, but desktop
+    // rewinds every page after the first by min(40, previous column
+    // width) = min(40, 220) = 40, landing at 220 - 40 = 180.
+    beforeEach(() => {
+      TriggerableResizeObserver.instances = [];
+    });
+
+    it("scrolls the grid's real viewport to the next page's offset when the next-slide arrow is clicked", () => {
+      render(
+        <DataView
+          chartAttachment={undefined}
+          crossDatasetGridAttachment={{
+            data: [{ id: 1 }],
+            columns: columnsFixture(),
+          }}
+          platform={Platform.Desktop}
+          isFullscreen={false}
+          fillHeight={false}
+        />,
+      );
+      act(() => {
+        TriggerableResizeObserver.instances[0].trigger(300);
+      });
+
+      const scrollEl = document.querySelector(
+        '.ag-center-cols-viewport',
+      ) as HTMLElement;
+      expect(scrollEl.scrollLeft).toBe(0);
+
+      fireEvent.click(screen.getByRole('button', { name: 'Next slide' }));
+      expect(scrollEl.scrollLeft).toBe(180);
+
+      fireEvent.click(screen.getByRole('button', { name: 'Previous slide' }));
+      expect(scrollEl.scrollLeft).toBe(0);
     });
   });
 });

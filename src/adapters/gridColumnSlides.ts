@@ -6,8 +6,6 @@ import {
   MAX_INLINE_SLIDES,
 } from '../constants/inlineGrid';
 
-const PEEK_COLUMN_CLASS = 'mcp-peek-column';
-
 /**
  * Mirrors the shared grid component's own un-exported `MOBILE_GRID_COLUMN_WIDTH`
  * (`applyMobileColumnWidth` in `constants/grid.ts` there) — that component
@@ -16,9 +14,19 @@ const PEEK_COLUMN_CLASS = 'mcp-peek-column';
  * host. When the two disagree (host says desktop, but the actual viewport is
  * narrow), its clamp still fires and silently shrinks every column to this
  * width — this constant lets `columnWidth` predict that outcome instead of
- * budgeting slides against a width that won't actually render.
+ * budgeting pages against a width that won't actually render.
  */
 const SHARED_GRID_MOBILE_CLAMP_WIDTH = 100;
+
+/**
+ * Desktop-only: how far each page after the first rewinds its `scrollLeft`
+ * target before the natural column boundary — matches the container's own
+ * edge-mask fade width (`grid.scss`), so the peeked sliver of the previous
+ * page's last column sits entirely under the shadow, never more. Mobile
+ * gets no rewind at all: its pages start flush on the first column, no
+ * shadow, no peek.
+ */
+const LEFT_PEEK_REWIND_PX = 30;
 
 /**
  * The shared grid component this widget renders through always produces
@@ -49,102 +57,66 @@ function columnWidth(
     : width;
 }
 
-function mergeCellClass(
-  existing: ColDef['cellClass'],
-  addition: string,
-): ColDef['cellClass'] {
-  if (Array.isArray(existing)) return [...existing, addition];
-  if (typeof existing === 'string') return [existing, addition];
-  if (existing === undefined) return [addition];
-  return existing;
-}
-
-function mergeHeaderClass(
-  existing: ColDef['headerClass'],
-  addition: string,
-): ColDef['headerClass'] {
-  if (Array.isArray(existing)) return [...existing, addition];
-  if (typeof existing === 'string') return [existing, addition];
-  if (existing === undefined) return [addition];
-  return existing;
-}
-
-export interface ColumnSlides {
+export interface ColumnScrollPlan {
+  /**
+   * Every column, at its natural width — `hide: true` only for the chart
+   * column, columns that arrived already hidden, and genuine overflow
+   * beyond `MAX_INLINE_SLIDES` pages' worth of content. Nothing else is
+   * ever hidden: every reachable column renders exactly once, at all
+   * times, regardless of which page is currently in view.
+   */
   columns: ColDef[];
-  slideCount: number;
+  /**
+   * `scrollLeft` target for each page, `pageOffsets[0] === 0`. Length
+   * equals `pageCount`. On mobile, every page starts flush on a column
+   * boundary — never mid-column. On desktop, every page after the first is
+   * rewound `LEFT_PEEK_REWIND_PX` earlier than that natural boundary, so a
+   * sliver of the previous page's last column stays visible (and, via the
+   * container's edge mask, shadowed) on the left — mirroring the
+   * incidental crop that already happens on the right when a column
+   * doesn't evenly fit the viewport.
+   */
+  pageOffsets: number[];
+  /** Number of reachable pages, at most `MAX_INLINE_SLIDES`. */
+  pageCount: number;
+  /**
+   * Whether any pageable column exists beyond the `MAX_INLINE_SLIDES`-page
+   * cutoff — those columns are hidden entirely, reachable only via
+   * fullscreen.
+   */
   hasMoreBeyondSlides: boolean;
-  hasPeekLeft: boolean;
-  hasPeekRight: boolean;
-  activeSlide: number;
 }
 
 /**
- * Bins `columns` into up to `MAX_INLINE_SLIDES` fixed-width buckets that fit
- * `availableWidthPx`, in original column order. Three columns never
- * participate in paging: the chart column (always excluded, always hidden),
- * and any column that arrives with `hide: true` already set (excluded from
- * both bucketing and the width budget, left untouched, permanently hidden).
+ * Computes where each page of a column carousel starts (`pageOffsets`), for
+ * a caller that navigates by setting the grid's real `scrollLeft` to one of
+ * those values — not by toggling which columns are hidden. Every column
+ * within the reachable range keeps its natural width and is never hidden;
+ * whatever the browser crops at the current scroll position IS the visual
+ * boundary between pages, with no separate "peek"/backfill bookkeeping
+ * needed to fake that effect.
  *
- * The last bucket "backfills" from the end of the previous bucket when its
- * own natural content doesn't fill `availableWidthPx` — columns are pulled
- * backward, one at a time, until the width budget is met or exhausted.
- * Those columns are shown on BOTH the previous slide and the last slide (an
- * overlap, not a boundary shift) — the standard "last page anchors to the
- * end of content" pagination pattern. Every other slide boundary is exactly
- * what the forward pass computes, unaffected by backfill.
+ * A single forward pass walks columns in order, accumulating width; when
+ * the next column would overflow `viewportWidthPx` for the current page,
+ * that column's cumulative offset becomes the next page's start. Capped at
+ * `MAX_INLINE_SLIDES` pages — columns beyond that are hidden entirely
+ * (`hasMoreBeyondSlides`), the same "fullscreen only beyond this" cutoff as
+ * before, just measured continuously instead of in fixed buckets.
  *
- * A right-side overflow column (the first column after the range's end) is
- * shown — on BOTH platforms — whenever one exists, filling the leftover
- * space at the end of a bucket instead of leaving it blank: it's genuinely
- * new content (the start of the next slide), just truncated here. Only
- * DESKTOP fades it (`mcp-peek-column`) and gets the container's edge mask
- * class (`hasPeekRight`, see `DataView.tsx`) — mobile shows it at full
- * opacity, un-masked, no button.
- *
- * A left-side overflow column (the last column before the range's start)
- * is DESKTOP ONLY, unlike the right side — it's the previous slide's own
- * already-fully-opaque last column, so on desktop it reads as "you already
- * saw this, here's the boundary" thanks to the same fade; without a fade,
- * mobile would just show an unexplained duplicate of something already
- * fully seen, so mobile skips it (and its width reservation in the forward
- * pass/backfill loop below) entirely, giving that width back to the
- * bucket's own new content instead. This is unaffected by backfill either
- * way: a slide's own overflow column is always about the column adjacent
- * to ITS OWN range, never about what an adjacent slide additionally
- * borrows.
- *
- * On the true last slide, the right-side overflow column works differently
- * when there's more data than `MAX_INLINE_SLIDES` allows
- * (`hasMoreBeyondSlides`) — on both platforms: rather than adding an extra
- * column beyond the width budget (which would overflow the container), the
- * LAST column already inside the budget is re-purposed as the overflow
- * column instead — excluded from the opaque range. On desktop this pairs
- * with `GridSlideNav`'s "view more" nudge text and the fade; on mobile
- * it's just a plain, un-faded truncated column, with no nudge. Either way
- * it keeps the whole slide's rendered width exactly what was already
- * computed to fit, so nothing is ever clipped or reachable only by
- * scrolling.
- *
- * `activeSlide` is clamped into `[0, slideCount - 1]` internally and
- * returned as the effective value actually used, so a caller whose own
- * state drifted out of range (e.g. after a resize shrinks `slideCount`)
- * self-corrects instead of rendering zero visible columns. When
- * `availableWidthPx` is not yet a positive number (e.g. before the first
- * `ResizeObserver` measurement), bucketing is skipped and every pageable
- * column is shown on a single slide.
+ * When `viewportWidthPx` is not yet a positive number (e.g. before the
+ * first `ResizeObserver` measurement), every pageable column is shown on a
+ * single page (`pageCount: 1`, `pageOffsets: [0]`).
  * @param columns - Raw column list, as received from `CrossDatasetGridAttachmentData`.
- * @param availableWidthPx - The inline grid's actual measured width; non-positive values are treated as "not yet measured."
- * @param activeSlide - Zero-based index of the currently visible slide; clamped into range internally.
- * @param platform - Desktop/mobile bucket; drives per-type column width, whether the right overflow column is faded/masked (desktop) or plain (mobile) — both platforms show it — and whether a left overflow column exists at all (desktop only). Does not by itself decide whether the *rendered* column will be narrower — see `viewportIsMobile`.
+ * @param viewportWidthPx - The inline grid's actual measured width; non-positive values are treated as "not yet measured."
+ * @param platform - Desktop/mobile bucket; drives per-type column width (currently the same value on both platforms — see `inlineGrid.ts`). Does not by itself decide whether the *rendered* column will be narrower — see `viewportIsMobile`.
  * @param viewportIsMobile - Whether the shared grid component's own viewport-width check (`window.innerWidth` against its breakpoint, independent of `platform`) will clamp every column's rendered width — see `SHARED_GRID_MOBILE_CLAMP_WIDTH`.
  */
-export function buildColumnSlides(
+export function buildColumnScrollPlan(
   columns: ColDef[],
-  availableWidthPx: number,
-  activeSlide: number,
+  viewportWidthPx: number,
   platform: Platform,
   viewportIsMobile: boolean,
-): ColumnSlides {
+): ColumnScrollPlan {
   const chartColumns = columns.filter(isChartColumn);
   const permanentlyHidden = columns.filter(
     (col) => !isChartColumn(col) && col.hide === true,
@@ -153,164 +125,78 @@ export function buildColumnSlides(
     (col) => !isChartColumn(col) && col.hide !== true,
   );
 
-  // Each bucket is a contiguous run of indices into `pageable`.
-  const buckets: number[][] = [[]];
-  const overflowIndices: number[] = [];
+  const widths = pageable.map((col) =>
+    columnWidth(col, platform, viewportIsMobile),
+  );
 
-  if (availableWidthPx > 0) {
-    let bucketWidth = 0;
-    // Every bucket after the first renders with a left peek immediately
-    // before it ON DESKTOP ONLY — a real, non-hidden column that shifts
-    // this bucket's own content rightward by its width (AG Grid lays out
-    // non-hidden columns left to right with no way to start one at a
-    // negative offset, and horizontal scroll is disabled entirely). Mobile
-    // skips this reservation: it doesn't fade its left-side overflow
-    // column (see below), so re-showing a column that was ALREADY fully
-    // opaque on the previous slide would just look like a plain, unexplained
-    // repeat — better to give that width back to this bucket's own (new)
-    // content instead. A right peek doesn't need this on either platform:
-    // it renders AFTER this bucket's content and is expected to overflow
-    // past the end, clipped there by design.
-    let leftPeekReserve = 0;
-    for (let i = 0; i < pageable.length; i++) {
-      const width = columnWidth(pageable[i], platform, viewportIsMobile);
-      const bucket = buckets[buckets.length - 1];
-      const budget =
-        platform === Platform.Mobile
-          ? availableWidthPx
-          : availableWidthPx - leftPeekReserve;
-      const wouldOverflow = bucket.length > 0 && bucketWidth + width > budget;
+  const pageOffsets: number[] = [0];
+  let hasMoreBeyondSlides = false;
+  // How many of `pageable`, in order, actually got placed onto some page —
+  // everything after this index overflowed past `MAX_INLINE_SLIDES` pages
+  // and is hidden entirely.
+  let reachableCount = 0;
+  // Width of the column that ended each preceding page — indexed the same
+  // as `pageOffsets` minus one (i.e. `lastColumnWidthBeforePage[k - 1]` is
+  // the width of the column immediately before `pageOffsets[k]`'s natural,
+  // un-rewound boundary). Only used for the desktop-only rewind below.
+  const lastColumnWidthBeforePage: number[] = [];
+
+  if (viewportWidthPx > 0) {
+    let pageWidth = 0;
+    let columnsOnPage = 0;
+    let lastWidthOnPage = 0;
+    for (let i = 0; i < widths.length; i++) {
+      const width = widths[i];
+      const wouldOverflow =
+        columnsOnPage > 0 && pageWidth + width > viewportWidthPx;
 
       if (wouldOverflow) {
-        if (buckets.length < MAX_INLINE_SLIDES) {
-          const lastOfBucket = bucket[bucket.length - 1];
-          leftPeekReserve =
-            platform === Platform.Mobile
-              ? 0
-              : columnWidth(pageable[lastOfBucket], platform, viewportIsMobile);
-          buckets.push([]);
-          bucketWidth = 0;
+        if (pageOffsets.length < MAX_INLINE_SLIDES) {
+          const cumulativeOffset =
+            pageOffsets[pageOffsets.length - 1] + pageWidth;
+          lastColumnWidthBeforePage.push(lastWidthOnPage);
+          pageOffsets.push(cumulativeOffset);
+          pageWidth = 0;
+          columnsOnPage = 0;
         } else {
-          overflowIndices.push(i);
+          hasMoreBeyondSlides = true;
           continue;
         }
       }
 
-      buckets[buckets.length - 1].push(i);
-      bucketWidth += width;
+      pageWidth += width;
+      columnsOnPage += 1;
+      lastWidthOnPage = width;
+      reachableCount += 1;
     }
   } else {
-    for (let i = 0; i < pageable.length; i++) buckets[0].push(i);
+    reachableCount = widths.length;
   }
 
-  const hasMoreBeyondSlides = overflowIndices.length > 0;
-  const effectiveActiveSlide = Math.min(
-    Math.max(activeSlide, 0),
-    buckets.length - 1,
-  );
-
-  const lastBucketIdx = buckets.length - 1;
-  const lastBucket = buckets[lastBucketIdx];
-  let lastBucketStart = lastBucket[0] ?? 0;
-  const lastBucketEnd = lastBucket[lastBucket.length - 1] ?? -1;
-
-  if (availableWidthPx > 0 && buckets.length >= 2 && lastBucketEnd >= 0) {
-    let width = 0;
-    for (let i = lastBucketStart; i <= lastBucketEnd; i++) {
-      width += columnWidth(pageable[i], platform, viewportIsMobile);
-    }
-    let borrowIdx = lastBucketStart - 1;
-    while (borrowIdx >= 0) {
-      const candidateWidth = columnWidth(
-        pageable[borrowIdx],
-        platform,
-        viewportIsMobile,
+  if (platform !== Platform.Mobile) {
+    for (let k = 1; k < pageOffsets.length; k++) {
+      // Capped at the previous page's own last column width so the rewind
+      // can never reach past it into an even earlier page — currently
+      // unreachable in practice (every real column width is >= 100px, via
+      // `SHARED_GRID_MOBILE_CLAMP_WIDTH`, always wider than the 80px
+      // rewind), kept as a defensive bound in case that ever changes.
+      const rewind = Math.min(
+        LEFT_PEEK_REWIND_PX,
+        lastColumnWidthBeforePage[k - 1] ?? 0,
       );
-      // Pulling this column in moves the left peek one column further back
-      // (to `borrowIdx - 1`) — reserve its width too, or the new opaque
-      // range plus its own left peek could still overflow the container.
-      // Desktop only — see the forward pass above for why mobile skips
-      // this reservation entirely.
-      const newLeftPeekIdx = borrowIdx - 1;
-      const newLeftPeekWidth =
-        platform !== Platform.Mobile && newLeftPeekIdx >= 0
-          ? columnWidth(pageable[newLeftPeekIdx], platform, viewportIsMobile)
-          : 0;
-      if (width + candidateWidth + newLeftPeekWidth > availableWidthPx) break;
-      width += candidateWidth;
-      lastBucketStart = borrowIdx;
-      borrowIdx -= 1;
+      pageOffsets[k] = Math.max(pageOffsets[k - 1], pageOffsets[k] - rewind);
     }
   }
-
-  function rangeOf(bucketIdx: number): { start: number; end: number } {
-    if (bucketIdx === lastBucketIdx) {
-      return { start: lastBucketStart, end: lastBucketEnd };
-    }
-    const bucket = buckets[bucketIdx];
-    return { start: bucket[0], end: bucket[bucket.length - 1] };
-  }
-
-  const { start: displayStart, end: displayEnd } =
-    rangeOf(effectiveActiveSlide);
-
-  // On the last slide, when there's more data than `MAX_INLINE_SLIDES`
-  // allows, the peek is NOT an extra column beyond the width budget (that
-  // would overflow the container — the earlier approach here, which relied
-  // on CSS clipping/scroll-locking to hide the overflow). Instead, the last
-  // column already inside the budget is re-purposed as the peek: it's
-  // excluded from the opaque/visible range and shown faded instead,
-  // shrinking the real content by exactly one column so the peek + its
-  // `GridSlideNav` "view more" nudge fit within the same total width that
-  // was already computed to fit the container.
-  const isLastSlideWithOverflow =
-    effectiveActiveSlide === lastBucketIdx && hasMoreBeyondSlides;
-  const rightOverflowIndex = isLastSlideWithOverflow
-    ? displayEnd
-    : displayEnd + 1;
-  const visibleEnd = isLastSlideWithOverflow ? displayEnd - 1 : displayEnd;
-  const leftOverflowIndex = displayStart - 1;
-  // Right side: platform-agnostic. Does the next column exist? This alone
-  // decides whether it's VISIBLE (`hide`, below) — mobile shows it too
-  // (truncated, no fade), filling the leftover space at the end of a
-  // bucket instead of leaving it blank. It's genuinely new content (the
-  // start of the next slide), not yet fully shown, so repeating a sliver
-  // of it here isn't a real repeat.
-  const hasRightOverflow = rightOverflowIndex < pageable.length;
-  // Left side: desktop only. Unlike the right side, this column was
-  // already fully opaque on the PREVIOUS slide (see the forward-pass
-  // comment above) — on desktop that's fine because it's faded, reading as
-  // "you already saw this, here's the boundary." Mobile has no fade, so
-  // showing it again would just look like an unexplained duplicate; mobile
-  // skips it (and its width reservation) entirely instead.
-  const hasPeekLeft = platform !== Platform.Mobile && leftOverflowIndex >= 0;
-  // Desktop-only: whether to fade the right overflow cell
-  // (`mcp-peek-column`) and whether the caller (`DataView`) should apply
-  // the container's edge mask — mobile's equivalent column shows at full
-  // opacity, un-masked.
-  const hasPeekRight = platform !== Platform.Mobile && hasRightOverflow;
 
   const pagedColDefs = pageable.map((col, i) => {
-    const width = columnWidth(col, platform, viewportIsMobile);
-    const isRightOverflowCol = hasRightOverflow && i === rightOverflowIndex;
-    const isLeftOverflowCol = hasPeekLeft && i === leftOverflowIndex;
-    const isOverflowCol = isRightOverflowCol || isLeftOverflowCol;
-    const isPeekStyled =
-      (hasPeekRight && isRightOverflowCol) || isLeftOverflowCol;
-    const visible = i >= displayStart && i <= visibleEnd;
+    const width = widths[i];
     return {
       ...col,
       flex: undefined,
       width,
       minWidth: width,
       maxWidth: width,
-      hide: !visible && !isOverflowCol,
-      ...(isPeekStyled
-        ? {
-            cellClass: mergeCellClass(col.cellClass, PEEK_COLUMN_CLASS),
-            headerClass: mergeHeaderClass(col.headerClass, PEEK_COLUMN_CLASS),
-          }
-        : {}),
+      hide: i >= reachableCount,
     };
   });
 
@@ -320,11 +206,9 @@ export function buildColumnSlides(
       ...chartColumns.map((col) => ({ ...col, hide: true })),
       ...permanentlyHidden,
     ],
-    slideCount: buckets.length,
+    pageOffsets,
+    pageCount: pageOffsets.length,
     hasMoreBeyondSlides,
-    hasPeekLeft,
-    hasPeekRight,
-    activeSlide: effectiveActiveSlide,
   };
 }
 

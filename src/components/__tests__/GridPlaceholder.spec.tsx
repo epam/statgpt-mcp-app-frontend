@@ -7,13 +7,16 @@ describe('GridPlaceholder', () => {
     expect(screen.getByRole('status')).toBeInTheDocument();
   });
 
-  it('renders a title bar and a 4x4 grid of pill blocks', () => {
+  it('renders a 4x4 grid of pill blocks followed by a footer row', () => {
     const { container } = render(<GridPlaceholder />);
-    expect(
-      container.querySelectorAll('[data-testid="placeholder-title"]'),
-    ).toHaveLength(1);
     expect(
       container.querySelectorAll('[data-testid="placeholder-block"]'),
     ).toHaveLength(16);
+    expect(
+      container.querySelectorAll('[data-testid="placeholder-footer-label"]'),
+    ).toHaveLength(1);
+    expect(
+      container.querySelectorAll('[data-testid="placeholder-footer-button"]'),
+    ).toHaveLength(1);
   });
 });

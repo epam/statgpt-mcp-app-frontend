@@ -59,15 +59,18 @@
   position: relative;
   overflow: hidden;
 
-  // Peek columns are a fade preview, not scrollable content — AG Grid's own
-  // horizontal scroll must stay off here, or the peeked (and any
-  // MAX_INLINE_SLIDES-overflow) column becomes reachable by scrolling past
-  // the mask instead of only through the carousel's own slide navigation.
-  // `.ag-center-cols-viewport` (not `.ag-body-viewport`, which merely wraps
-  // it) is AG Grid's actual native-scroll element; its own custom scrollbar
-  // (`.ag-body-horizontal-scroll`) is a separate absolutely-positioned bar
-  // that drives that same scroll programmatically, so it's removed outright
-  // rather than just visually hidden.
+  // This carousel navigates by setting `.ag-center-cols-viewport`'s own
+  // `scrollLeft` directly (see `DataView.tsx`) — `overflow-x: hidden` here
+  // does NOT block that programmatic assignment, only the user-facing
+  // scroll affordances (wheel, trackpad, touch-drag, the native
+  // scrollbar), which must stay off entirely: navigation is buttons/swipe
+  // only, and any column beyond the `MAX_INLINE_SLIDES`-page cutoff must
+  // never become reachable by scrolling past it. `.ag-center-cols-viewport`
+  // (not `.ag-body-viewport`, which merely wraps it) is AG Grid's actual
+  // scrollable element; its own custom scrollbar (`.ag-body-horizontal-scroll`)
+  // is a separate absolutely-positioned bar that drives that same scroll
+  // programmatically, so it's removed outright rather than just visually
+  // hidden.
   .ag-body-viewport,
   .ag-center-cols-viewport {
     overflow-x: hidden !important;
@@ -79,8 +82,12 @@
     display: none !important;
   }
 
+  // The right edge is where the "view more" hint sits (GridSlideNav), so its
+  // fade reaches full transparency 24px before the edge — matching the
+  // hint's rendered width — instead of exactly at the edge, so the hint
+  // never overlaps partially-visible content.
   &.mcp-grid-carousel--has-next:not(.mcp-grid-carousel--has-prev) {
-    mask-image: linear-gradient(to right, black calc(100% - 80px), transparent 100%);
+    mask-image: linear-gradient(to right, black calc(100% - 80px), transparent calc(100% - 24px));
   }
 
   &.mcp-grid-carousel--has-prev:not(.mcp-grid-carousel--has-next) {
@@ -93,14 +100,8 @@
       transparent 0,
       black 80px,
       black calc(100% - 80px),
-      transparent 100%
+      transparent calc(100% - 24px)
     );
   }
 }
 
-// `mcp-peek-column` (assigned by gridColumnSlides.ts, checked by its tests)
-// intentionally has no rule here anymore — peek columns are no longer
-// dimmed across their whole width. The container's own 80px edge mask
-// (above) already fades exactly the fixed width nearest the arrow/nudge, so
-// most of a peek column (identity columns especially, at 220px) reads at
-// normal opacity, with only that edge strip shadowed.

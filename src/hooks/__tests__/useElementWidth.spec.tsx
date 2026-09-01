@@ -22,9 +22,16 @@ class MockResizeObserver {
   }
 }
 
-function TestComponent({ onWidth }: { onWidth: (w: number) => void }) {
-  const [ref, width] = useElementWidth<HTMLDivElement>();
+function TestComponent({
+  onWidth,
+  onNodeRef,
+}: {
+  onWidth: (w: number) => void;
+  onNodeRef?: (nodeRef: { current: HTMLDivElement | null }) => void;
+}) {
+  const [ref, width, nodeRef] = useElementWidth<HTMLDivElement>();
   onWidth(width);
+  onNodeRef?.(nodeRef);
   return <div ref={ref} data-testid="measured" />;
 }
 
@@ -49,5 +56,19 @@ describe('useElementWidth', () => {
       MockResizeObserver.instances[0].trigger(742);
     });
     expect(widths[widths.length - 1]).toBe(742);
+  });
+
+  it('exposes the measured element itself via the returned node ref', () => {
+    let capturedRef: { current: HTMLDivElement | null } | undefined;
+    render(
+      <TestComponent
+        onWidth={() => {}}
+        onNodeRef={(nodeRef) => {
+          capturedRef = nodeRef;
+        }}
+      />,
+    );
+    expect(capturedRef?.current).not.toBeNull();
+    expect(capturedRef?.current?.getAttribute('data-testid')).toBe('measured');
   });
 });

@@ -8,6 +8,7 @@ interface Props {
   activeSlide: number;
   slideCount: number;
   hasMoreBeyondSlides: boolean;
+  hasMoreRows: boolean;
   showArrows: boolean;
   platform: Platform;
   onPrev: () => void;
@@ -17,12 +18,17 @@ interface Props {
 /**
  * Column-slide navigation for the inline grid carousel. On desktop
  * (`showArrows`), renders floating prev/next arrows absolutely positioned
- * over the grid's row area, vertically centered. On the last reachable
- * slide, if the dataset needs more slides than the 3-slide budget allows,
- * the next arrow's position is replaced by a vertical "view more" hint
- * overlaid on the grid's trailing edge, plus a plain duplicate line of the
- * same text below the grid; both platforms render the nudge text
- * identically, only the arrows are desktop-only.
+ * over the grid's row area, vertically centered.
+ *
+ * Two independent hints, both shown only on the last reachable slide, but
+ * each gated by its own kind of truncation — they're unrelated: a dataset
+ * can have more columns than fit, more rows than fit, both, or neither.
+ * The vertical hint (overlaid on the grid's trailing edge, replacing the
+ * next arrow's position) shows when the dataset needs more slides than the
+ * budget allows (`hasMoreBeyondSlides`) — more COLUMNS exist. The plain
+ * duplicate line below the grid shows when there are more ROWS than the
+ * row cap displays (`hasMoreRows`) — independent of whether columns are
+ * also truncated.
  *
  * The overlay piece (arrows + vertical hint) is wrapped in a `[grid-area:1/1]`
  * div so it shares the CSS grid cell the caller (`DataView`) places the
@@ -43,7 +49,8 @@ interface Props {
  * `pointer-events-auto` on itself so it stays clickable.
  * @param activeSlide - Zero-based index of the currently visible slide.
  * @param slideCount - Total number of slides the current dataset was binned into (capped at `MAX_INLINE_SLIDES`).
- * @param hasMoreBeyondSlides - Whether the dataset has columns that didn't fit within the slide budget at all.
+ * @param hasMoreBeyondSlides - Whether the dataset has columns that didn't fit within the slide budget at all — gates the vertical hint.
+ * @param hasMoreRows - Whether the dataset has more rows than the row cap displays — gates the plain duplicate line below the grid, independent of `hasMoreBeyondSlides`.
  * @param showArrows - Whether to render the floating arrow buttons — `true` on desktop, `false` on mobile (swipe-only there).
  * @param platform - The desktop/mobile bucket derived from the host context; sizes the arrow icons and their mobile hit-slop.
  * @param onPrev - Called to go to the previous slide.
@@ -53,6 +60,7 @@ export function GridSlideNav({
   activeSlide,
   slideCount,
   hasMoreBeyondSlides,
+  hasMoreRows,
   showArrows,
   platform,
   onPrev,
@@ -60,8 +68,9 @@ export function GridSlideNav({
 }: Props) {
   const isLastSlide = activeSlide === slideCount - 1;
   const showNudge = isLastSlide && hasMoreBeyondSlides;
+  const showRowsLine = isLastSlide && hasMoreRows;
 
-  if (slideCount <= 1 && !showNudge) return null;
+  if (slideCount <= 1 && !showNudge && !showRowsLine) return null;
 
   return (
     <>
@@ -73,7 +82,7 @@ export function GridSlideNav({
             onClick={onPrev}
             ariaLabel="Previous slide"
             variant="floating"
-            className="pointer-events-auto absolute left-2 top-1/2 -translate-y-1/2"
+            className="pointer-events-auto absolute left-0 top-1/2 -translate-y-1/2"
           />
         )}
         {showArrows && !isLastSlide && (
@@ -83,7 +92,7 @@ export function GridSlideNav({
             onClick={onNext}
             ariaLabel="Next slide"
             variant="floating"
-            className="pointer-events-auto absolute right-2 top-1/2 -translate-y-1/2"
+            className="pointer-events-auto absolute right-0 top-1/2 -translate-y-1/2"
           />
         )}
         {showNudge && (
@@ -98,7 +107,7 @@ export function GridSlideNav({
               {NUDGE_TEXT}
             </span>
             <span
-              className="absolute right-2 top-1/2 -translate-y-1/2 whitespace-nowrap text-xs text-neutrals-700"
+              className="absolute right-0 top-1/2 -translate-y-1/2 whitespace-nowrap text-xs text-neutrals-700"
               style={{ writingMode: 'vertical-rl' }}
             >
               {NUDGE_TEXT}
@@ -106,7 +115,7 @@ export function GridSlideNav({
           </>
         )}
       </div>
-      {showNudge && (
+      {showRowsLine && (
         <p className="mt-2 text-center text-xs text-neutrals-700">
           {NUDGE_TEXT}
         </p>
