@@ -103,6 +103,41 @@ describe('buildColumnScrollPlan', () => {
     );
   });
 
+  it('keeps overflow exclusion a contiguous prefix — a narrow column after an excluded wide one must not become reachable', () => {
+    // Builds MAX_INLINE_SLIDES pages, each holding exactly one column, so
+    // that the last page's sole occupant is narrow (130), leaving 170px of
+    // its 300px budget free. The next column ('wide', 220) legitimately
+    // overflows that remaining budget and must be excluded once the page
+    // cap is hit — but naively skipping just that one column, without
+    // freezing the page's width/column-count, would leave the stale
+    // (pre-exclusion) width in place. A still-later narrow column
+    // ('afterWide', 130) would then fit into that same 170px and get
+    // wrongly included, even though it comes after an excluded column.
+    // `reachableCount` must stay a contiguous prefix of `pageable`, so both
+    // 'wide' and 'afterWide' stay excluded regardless of 'afterWide's width.
+    const prefix = Array.from({ length: MAX_INLINE_SLIDES - 1 }, (_, i) =>
+      identityCol(`filler${i}`),
+    );
+    const cols = [
+      ...prefix,
+      valueCol('lastPageOccupant'),
+      identityCol('wide'),
+      valueCol('afterWide'),
+    ];
+    const result = buildColumnScrollPlan(cols, 300, Platform.Desktop, false);
+    expect(result.pageCount).toBe(MAX_INLINE_SLIDES);
+    expect(result.hasMoreBeyondSlides).toBe(true);
+    const visible = result.columns.filter((c) => !c.hide).map((c) => c.colId);
+    expect(visible).toEqual([
+      ...prefix.map((c) => c.colId),
+      'lastPageOccupant',
+    ]);
+    expect(result.columns.find((c) => c.colId === 'wide')?.hide).toBe(true);
+    expect(result.columns.find((c) => c.colId === 'afterWide')?.hide).toBe(
+      true,
+    );
+  });
+
   describe('desktop-only left-peek rewind', () => {
     // These two specifically need at least 2 pages, so use a fixed 2-column
     // fixture regardless of MAX_INLINE_SLIDES's current value — the rewind
@@ -110,10 +145,10 @@ describe('buildColumnScrollPlan', () => {
     // there being a "page after the first" to rewind at all.
     it('rewinds each page after the first by the fixed rewind width, capped at the previous column width', () => {
       // 2 value columns (130 each), 150px viewport: raw boundaries are
-      // [0, 130]. Desktop rewinds page 1 by min(40, 130) = 40 → 90.
+      // [0, 130]. Desktop rewinds page 1 by min(30, 130) = 30 → 100.
       const cols = [valueCol('2000'), valueCol('2001')];
       const result = buildColumnScrollPlan(cols, 150, Platform.Desktop, false);
-      expect(result.pageOffsets).toEqual([0, 90]);
+      expect(result.pageOffsets).toEqual([0, 100]);
     });
 
     it('never rewinds on mobile, even at the same width/viewport', () => {

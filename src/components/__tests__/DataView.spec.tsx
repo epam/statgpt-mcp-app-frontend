@@ -447,8 +447,8 @@ describe('DataView', () => {
     // agency (220, identity) + 2010 (130) + 2011 (130) = 480px total. At a
     // measured 300px viewport, 'agency' alone fits page 1 (adding '2010'
     // would be 350 > 300); page 2's raw boundary is 220, but desktop
-    // rewinds every page after the first by min(40, previous column
-    // width) = min(40, 220) = 40, landing at 220 - 40 = 180.
+    // rewinds every page after the first by min(30, previous column
+    // width) = min(30, 220) = 30, landing at 220 - 30 = 190.
     beforeEach(() => {
       TriggerableResizeObserver.instances = [];
     });
@@ -476,7 +476,7 @@ describe('DataView', () => {
       expect(scrollEl.scrollLeft).toBe(0);
 
       fireEvent.click(screen.getByRole('button', { name: 'Next slide' }));
-      expect(scrollEl.scrollLeft).toBe(180);
+      expect(scrollEl.scrollLeft).toBe(190);
 
       fireEvent.click(screen.getByRole('button', { name: 'Previous slide' }));
       expect(scrollEl.scrollLeft).toBe(0);

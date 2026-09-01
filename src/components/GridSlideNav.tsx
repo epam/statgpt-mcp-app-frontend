@@ -1,8 +1,8 @@
 import { ChevronLeftIcon, ChevronRightIcon } from '../icons/ChevronIcon';
 import { Platform } from '../host/hostContext';
+import { INLINE_GRID_NUDGE_TEXT } from '../constants/inlineGrid';
 import { HostIconButton } from './HostIconButton';
-
-const NUDGE_TEXT = 'To view more, open full view';
+import { RowsTruncatedHint } from './RowsTruncatedHint';
 
 interface Props {
   activeSlide: number;
@@ -104,22 +104,18 @@ export function GridSlideNav({
               className="invisible inline-block whitespace-nowrap p-2 text-xs"
               style={{ writingMode: 'vertical-rl' }}
             >
-              {NUDGE_TEXT}
+              {INLINE_GRID_NUDGE_TEXT}
             </span>
             <span
               className="absolute right-0 top-1/2 -translate-y-1/2 whitespace-nowrap text-xs text-neutrals-700"
               style={{ writingMode: 'vertical-rl' }}
             >
-              {NUDGE_TEXT}
+              {INLINE_GRID_NUDGE_TEXT}
             </span>
           </>
         )}
       </div>
-      {showRowsLine && (
-        <p className="mt-2 text-center text-xs text-neutrals-700">
-          {NUDGE_TEXT}
-        </p>
-      )}
+      {showRowsLine && <RowsTruncatedHint />}
     </>
   );
 }

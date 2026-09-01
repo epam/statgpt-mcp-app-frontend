@@ -20,11 +20,11 @@ const SHARED_GRID_MOBILE_CLAMP_WIDTH = 100;
 
 /**
  * Desktop-only: how far each page after the first rewinds its `scrollLeft`
- * target before the natural column boundary — matches the container's own
- * edge-mask fade width (`grid.scss`), so the peeked sliver of the previous
- * page's last column sits entirely under the shadow, never more. Mobile
- * gets no rewind at all: its pages start flush on the first column, no
- * shadow, no peek.
+ * target before the natural column boundary, so a sliver of the previous
+ * page's last column peeks out from under the container's edge-mask fade
+ * (`grid.scss`) — kept well within that fade's own width so the peek stays
+ * hidden under the shadow, never more. Mobile gets no rewind at all: its
+ * pages start flush on the first column, no shadow, no peek.
  */
 const LEFT_PEEK_REWIND_PX = 30;
 
@@ -44,14 +44,10 @@ function isIdentityColumn(col: ColDef): boolean {
   return typeof col.flex === 'number';
 }
 
-function columnWidth(
-  col: ColDef,
-  platform: Platform,
-  viewportIsMobile: boolean,
-): number {
+function columnWidth(col: ColDef, viewportIsMobile: boolean): number {
   const width = isIdentityColumn(col)
-    ? INLINE_IDENTITY_COLUMN_WIDTH[platform]
-    : INLINE_VALUE_COLUMN_WIDTH[platform];
+    ? INLINE_IDENTITY_COLUMN_WIDTH
+    : INLINE_VALUE_COLUMN_WIDTH;
   return viewportIsMobile
     ? Math.min(width, SHARED_GRID_MOBILE_CLAMP_WIDTH)
     : width;
@@ -77,7 +73,7 @@ export interface ColumnScrollPlan {
    * doesn't evenly fit the viewport.
    */
   pageOffsets: number[];
-  /** Number of reachable pages, at most `MAX_INLINE_SLIDES`. */
+  /** At most `MAX_INLINE_SLIDES`. */
   pageCount: number;
   /**
    * Whether any pageable column exists beyond the `MAX_INLINE_SLIDES`-page
@@ -125,9 +121,7 @@ export function buildColumnScrollPlan(
     (col) => !isChartColumn(col) && col.hide !== true,
   );
 
-  const widths = pageable.map((col) =>
-    columnWidth(col, platform, viewportIsMobile),
-  );
+  const widths = pageable.map((col) => columnWidth(col, viewportIsMobile));
 
   const pageOffsets: number[] = [0];
   let hasMoreBeyondSlides = false;
@@ -145,8 +139,19 @@ export function buildColumnScrollPlan(
     let pageWidth = 0;
     let columnsOnPage = 0;
     let lastWidthOnPage = 0;
+    // Once a column overflows past the last allowed page, every column after
+    // it must stay hidden too — even a narrower one that would otherwise fit
+    // in the stale `pageWidth` — so `reachableCount` stays a contiguous
+    // prefix of `pageable` and `hide: i >= reachableCount` holds.
+    let pastCapacity = false;
     for (let i = 0; i < widths.length; i++) {
       const width = widths[i];
+
+      if (pastCapacity) {
+        hasMoreBeyondSlides = true;
+        continue;
+      }
+
       const wouldOverflow =
         columnsOnPage > 0 && pageWidth + width > viewportWidthPx;
 
@@ -160,6 +165,7 @@ export function buildColumnScrollPlan(
           columnsOnPage = 0;
         } else {
           hasMoreBeyondSlides = true;
+          pastCapacity = true;
           continue;
         }
       }
@@ -178,8 +184,9 @@ export function buildColumnScrollPlan(
       // Capped at the previous page's own last column width so the rewind
       // can never reach past it into an even earlier page — currently
       // unreachable in practice (every real column width is >= 100px, via
-      // `SHARED_GRID_MOBILE_CLAMP_WIDTH`, always wider than the 80px
-      // rewind), kept as a defensive bound in case that ever changes.
+      // `SHARED_GRID_MOBILE_CLAMP_WIDTH`, always wider than
+      // `LEFT_PEEK_REWIND_PX`), kept as a defensive bound in case that ever
+      // changes.
       const rewind = Math.min(
         LEFT_PEEK_REWIND_PX,
         lastColumnWidthBeforePage[k - 1] ?? 0,
@@ -212,7 +219,7 @@ export function buildColumnScrollPlan(
   };
 }
 
-/** Slices `data` to `min(cap, data.length)` rows — no residual rows for AG Grid to scroll. */
+/** No residual rows left for AG Grid to scroll. */
 export function sliceInlineRows<T>(data: T[], cap: number): T[] {
   return data.slice(0, Math.min(cap, data.length));
 }

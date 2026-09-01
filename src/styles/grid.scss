@@ -87,11 +87,19 @@
   // hint's rendered width — instead of exactly at the edge, so the hint
   // never overlaps partially-visible content.
   &.mcp-grid-carousel--has-next:not(.mcp-grid-carousel--has-prev) {
-    mask-image: linear-gradient(to right, black calc(100% - 80px), transparent calc(100% - 24px));
+    mask-image: linear-gradient(
+      to right,
+      black calc(100% - 80px),
+      transparent calc(100% - 24px)
+    );
   }
 
   &.mcp-grid-carousel--has-prev:not(.mcp-grid-carousel--has-next) {
-    mask-image: linear-gradient(to left, black calc(100% - 80px), transparent 100%);
+    mask-image: linear-gradient(
+      to left,
+      black calc(100% - 80px),
+      transparent 100%
+    );
   }
 
   &.mcp-grid-carousel--has-next.mcp-grid-carousel--has-prev {
@@ -104,4 +112,3 @@
     );
   }
 }
-

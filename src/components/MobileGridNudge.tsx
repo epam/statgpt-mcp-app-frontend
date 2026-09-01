@@ -1,4 +1,4 @@
-const NUDGE_TEXT = 'To view more, open full view';
+import { INLINE_GRID_NUDGE_TEXT } from '../constants/inlineGrid';
 
 interface Props {
   activeSlide: number;
@@ -40,10 +40,8 @@ export function MobileGridNudge({
         className="whitespace-nowrap text-xs text-neutrals-700"
         style={{ writingMode: 'vertical-rl' }}
       >
-        {NUDGE_TEXT}
+        {INLINE_GRID_NUDGE_TEXT}
       </span>
     </div>
   );
 }
-
-export { NUDGE_TEXT as MOBILE_GRID_NUDGE_TEXT };

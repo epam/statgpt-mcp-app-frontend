@@ -19,7 +19,8 @@ import { CodePlaceholder } from './CodePlaceholder';
 import { ChartView } from './Chart/ChartView';
 import { GridRowLimitFooter } from './GridRowLimitFooter';
 import { GridSlideNav } from './GridSlideNav';
-import { MobileGridNudge, MOBILE_GRID_NUDGE_TEXT } from './MobileGridNudge';
+import { MobileGridNudge } from './MobileGridNudge';
+import { RowsTruncatedHint } from './RowsTruncatedHint';
 import { Tabs, type TabItem } from './Tabs';
 import type {
   ChartAttachment,
@@ -252,16 +253,24 @@ export function DataView({
    * Unlike the old bucketing approach, this doesn't depend on `activeSlide`
    * at all — every reachable column is always rendered, at its natural
    * width; navigation only ever moves `scrollLeft` (see the effect below),
-   * it never recomputes which columns are hidden.
+   * it never recomputes which columns are hidden. Memoized so it (and the
+   * `columns` array it builds) keeps its identity across re-renders that
+   * don't change any of its own inputs — otherwise `inlineAttachment` below
+   * and the `scrollLeft`-assignment effect would both re-run on every
+   * unrelated re-render.
    */
-  const scrollPlan = crossDatasetGridAttachment
-    ? buildColumnScrollPlan(
-        crossDatasetGridAttachment.columns,
-        gridWidth,
-        platform,
-        viewportIsMobile,
-      )
-    : undefined;
+  const scrollPlan = useMemo(
+    () =>
+      crossDatasetGridAttachment
+        ? buildColumnScrollPlan(
+            crossDatasetGridAttachment.columns,
+            gridWidth,
+            platform,
+            viewportIsMobile,
+          )
+        : undefined,
+    [crossDatasetGridAttachment, gridWidth, platform, viewportIsMobile],
+  );
 
   const clampedActiveSlide = scrollPlan
     ? Math.min(Math.max(activeSlide, 0), scrollPlan.pageCount - 1)
@@ -454,11 +463,7 @@ export function DataView({
             )}
           </div>
         )}
-        {showMobileNudge && (
-          <p className="mt-2 text-center text-xs text-neutrals-700">
-            {MOBILE_GRID_NUDGE_TEXT}
-          </p>
-        )}
+        {showMobileNudge && <RowsTruncatedHint />}
         {canRequestFullscreen && (
           <GridRowLimitFooter
             total={totalRows}
