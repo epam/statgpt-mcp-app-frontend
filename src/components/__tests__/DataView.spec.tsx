@@ -482,4 +482,54 @@ describe('DataView', () => {
       expect(scrollEl.scrollLeft).toBe(0);
     });
   });
+
+  describe('mobile page layout stability', () => {
+    beforeEach(() => {
+      TriggerableResizeObserver.instances = [];
+    });
+
+    it("reserves the nudge column's width out of the measured grid width unconditionally, so the page layout doesn't depend on which slide is active", () => {
+      // 3 equal 130px value columns, measured at 285px: the nudge column's
+      // 32px must always come out of that budget (not just when it happens
+      // to be mounted), or this would land on 2 pages ([0, 260]: 'a'+'b'
+      // fit together in a raw 285px budget) instead of the correct 3
+      // ([0, 130, 260]: only 'a' fits once 32px is reserved, same as if the
+      // nudge column were actually taking up space).
+      const cols = [
+        { colId: 'a', field: 'a', width: 130 },
+        { colId: 'b', field: 'b', width: 130 },
+        { colId: 'c', field: 'c', width: 130 },
+      ];
+      render(
+        <DataView
+          chartAttachment={undefined}
+          crossDatasetGridAttachment={{ data: [{ id: 1 }], columns: cols }}
+          platform={Platform.Mobile}
+          isFullscreen={false}
+          fillHeight={false}
+        />,
+      );
+      act(() => {
+        TriggerableResizeObserver.instances[0].trigger(285);
+      });
+
+      const grid = document.querySelector('.mcp-grid-carousel') as HTMLElement;
+      const scrollEl = document.querySelector(
+        '.ag-center-cols-viewport',
+      ) as HTMLElement;
+      expect(scrollEl.scrollLeft).toBe(0);
+
+      const swipeNext = () => {
+        fireEvent.pointerDown(grid, { clientX: 300, clientY: 100 });
+        fireEvent.pointerMove(grid, { clientX: 200, clientY: 100 });
+        fireEvent.pointerUp(grid, { clientX: 200, clientY: 100 });
+      };
+
+      swipeNext();
+      expect(scrollEl.scrollLeft).toBe(130);
+
+      swipeNext();
+      expect(scrollEl.scrollLeft).toBe(260);
+    });
+  });
 });

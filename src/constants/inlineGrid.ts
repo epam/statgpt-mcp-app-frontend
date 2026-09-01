@@ -33,3 +33,15 @@ export const SWIPE_THRESHOLD_PX = 40;
  * render this exact copy, so it lives in one place instead of three.
  */
 export const INLINE_GRID_NUDGE_TEXT = 'To view more, open full view';
+
+/**
+ * Mobile's reserved "view more" column (`MobileGridNudge`) width, in px.
+ * `DataView` measures the grid's width on a container that's stable across
+ * slides (not the grid div itself, which shrinks when this column mounts
+ * beside it on the last slide) and always subtracts this constant before
+ * budgeting pages — even on slides where the column isn't currently shown —
+ * so the page layout never depends on whether this column happens to be
+ * mounted right now. `MobileGridNudge` sizes itself to this same constant,
+ * so the two can never drift apart.
+ */
+export const MOBILE_GRID_NUDGE_COLUMN_WIDTH = 32;

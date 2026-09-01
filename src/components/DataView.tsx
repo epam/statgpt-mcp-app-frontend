@@ -7,7 +7,10 @@ import { MOBILE_BREAKPOINT, useIsMobile } from '@epam/statgpt-ui-components';
 import type { EChartsOption } from 'echarts-for-react/src/types';
 import { Platform } from '../host/hostContext';
 import { ATTACHMENT_TYPE } from '../constants/attachmentTypes';
-import { INLINE_GRID_ROW_CAP } from '../constants/inlineGrid';
+import {
+  INLINE_GRID_ROW_CAP,
+  MOBILE_GRID_NUDGE_COLUMN_WIDTH,
+} from '../constants/inlineGrid';
 import {
   buildColumnScrollPlan,
   sliceInlineRows,
@@ -250,6 +253,21 @@ export function DataView({
   );
 
   /**
+   * On mobile, `gridWidthRef` measures the row's own stable outer wrapper,
+   * not the grid div itself — the grid div is a flex sibling of
+   * `MobileGridNudge`'s reserved column, which only mounts on the last
+   * slide, so measuring the grid div directly would make `gridWidth`
+   * (and therefore the page layout below) shift the moment navigation
+   * lands on that slide. Subtracting this constant unconditionally, even
+   * on slides where the nudge column isn't currently mounted, keeps the
+   * effective width — and so `pageCount`/`pageOffsets` — the same across
+   * every slide.
+   */
+  const effectiveGridWidth = isMobile
+    ? Math.max(0, gridWidth - MOBILE_GRID_NUDGE_COLUMN_WIDTH)
+    : gridWidth;
+
+  /**
    * Unlike the old bucketing approach, this doesn't depend on `activeSlide`
    * at all — every reachable column is always rendered, at its natural
    * width; navigation only ever moves `scrollLeft` (see the effect below),
@@ -264,12 +282,17 @@ export function DataView({
       crossDatasetGridAttachment
         ? buildColumnScrollPlan(
             crossDatasetGridAttachment.columns,
-            gridWidth,
+            effectiveGridWidth,
             platform,
             viewportIsMobile,
           )
         : undefined,
-    [crossDatasetGridAttachment, gridWidth, platform, viewportIsMobile],
+    [
+      crossDatasetGridAttachment,
+      effectiveGridWidth,
+      platform,
+      viewportIsMobile,
+    ],
   );
 
   const clampedActiveSlide = scrollPlan
@@ -383,9 +406,12 @@ export function DataView({
           // flex siblings — nothing overlays anything else, so no
           // `[grid-area:1/1]`/invisible-clone height trick is needed here;
           // flex already sizes the row to the taller of the two on its own.
-          <div className="flex">
+          // `gridWidthRef` measures this outer wrapper, not the grid div
+          // itself — this div's own width doesn't depend on whether the
+          // nudge column is currently mounted beside it, unlike the grid
+          // div's (see `effectiveGridWidth` above).
+          <div className="flex" ref={gridWidthRef}>
             <div
-              ref={gridWidthRef}
               className="mcp-grid-carousel min-w-0 flex-1"
               onPointerDown={swipeHandlers.onPointerDown}
               onPointerMove={swipeHandlers.onPointerMove}
