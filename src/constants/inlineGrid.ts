@@ -7,7 +7,7 @@ export const INLINE_GRID_ROW_CAP: Record<Platform, number> = {
 };
 
 /** Hard cap on inline-reachable column slides — always exactly this many at most, both platforms. */
-export const MAX_INLINE_SLIDES = 2;
+export const MAX_INLINE_SLIDES = 3;
 
 /**
  * Fixed inline-mode column widths, one first-pass value per column type —

@@ -372,8 +372,7 @@ describe('AppContent — outer wrapper margin', () => {
       />,
     );
     const wrapper = container.firstChild as HTMLElement;
-    expect(wrapper).toHaveClass('my-4');
-    expect(wrapper).toHaveClass('mx-4');
+    expect(wrapper).toHaveClass('m-4');
   });
 
   it('drops both vertical and horizontal margin in genuine inline mode', () => {
@@ -395,8 +394,6 @@ describe('AppContent — outer wrapper margin', () => {
       />,
     );
     const wrapper = container.firstChild as HTMLElement;
-    expect(wrapper).not.toHaveClass('my-4');
-    expect(wrapper).not.toHaveClass('mx-4');
     expect(wrapper).not.toHaveClass('m-4');
   });
 
@@ -419,8 +416,7 @@ describe('AppContent — outer wrapper margin', () => {
       />,
     );
     const wrapper = container.firstChild as HTMLElement;
-    expect(wrapper).toHaveClass('my-4');
-    expect(wrapper).toHaveClass('mx-4');
+    expect(wrapper).toHaveClass('m-4');
   });
 
   it('keeps neither vertical nor horizontal margin in fullscreen mode', () => {
@@ -442,8 +438,6 @@ describe('AppContent — outer wrapper margin', () => {
       />,
     );
     const wrapper = container.firstChild as HTMLElement;
-    expect(wrapper).not.toHaveClass('my-4');
-    expect(wrapper).not.toHaveClass('mx-4');
     expect(wrapper).not.toHaveClass('m-4');
   });
 });
