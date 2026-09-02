@@ -1,5 +1,4 @@
 import type { ColDef } from 'ag-grid-community';
-import { Platform } from '../host/hostContext';
 import {
   INLINE_IDENTITY_COLUMN_WIDTH,
   INLINE_VALUE_COLUMN_WIDTH,
@@ -19,12 +18,11 @@ import {
 const SHARED_GRID_MOBILE_CLAMP_WIDTH = 100;
 
 /**
- * Desktop-only: how far each page after the first rewinds its `scrollLeft`
- * target before the natural column boundary, so a sliver of the previous
- * page's last column peeks out from under the container's edge-mask fade
- * (`grid.scss`) — kept well within that fade's own width so the peek stays
- * hidden under the shadow, never more. Mobile gets no rewind at all: its
- * pages start flush on the first column, no shadow, no peek.
+ * How far each page after the first rewinds its `scrollLeft` target
+ * before the natural column boundary, so a sliver of the previous
+ * page's last column peeks out from under the container's edge-mask
+ * fade (`grid.scss`) — kept well within that fade's own width so the
+ * peek stays hidden under the shadow, never more.
  */
 const LEFT_PEEK_REWIND_PX = 30;
 
@@ -64,13 +62,12 @@ export interface ColumnScrollPlan {
   columns: ColDef[];
   /**
    * `scrollLeft` target for each page, `pageOffsets[0] === 0`. Length
-   * equals `pageCount`. On mobile, every page starts flush on a column
-   * boundary — never mid-column. On desktop, every page after the first is
-   * rewound `LEFT_PEEK_REWIND_PX` earlier than that natural boundary, so a
-   * sliver of the previous page's last column stays visible (and, via the
-   * container's edge mask, shadowed) on the left — mirroring the
+   * equals `pageCount`. Every page after the first is rewound
+   * `LEFT_PEEK_REWIND_PX` earlier than its natural column boundary, so a
+   * sliver of the previous page's last column stays visible (and, via
+   * the container's edge mask, shadowed) on the left — mirroring the
    * incidental crop that already happens on the right when a column
-   * doesn't evenly fit the viewport.
+   * doesn't evenly fit the viewport. Same on both platforms.
    */
   pageOffsets: number[];
   /** At most `MAX_INLINE_SLIDES`. */
@@ -104,13 +101,11 @@ export interface ColumnScrollPlan {
  * single page (`pageCount: 1`, `pageOffsets: [0]`).
  * @param columns - Raw column list, as received from `CrossDatasetGridAttachmentData`.
  * @param viewportWidthPx - The inline grid's actual measured width; non-positive values are treated as "not yet measured."
- * @param platform - Desktop/mobile bucket; drives per-type column width (currently the same value on both platforms — see `inlineGrid.ts`). Does not by itself decide whether the *rendered* column will be narrower — see `viewportIsMobile`.
- * @param viewportIsMobile - Whether the shared grid component's own viewport-width check (`window.innerWidth` against its breakpoint, independent of `platform`) will clamp every column's rendered width — see `SHARED_GRID_MOBILE_CLAMP_WIDTH`.
+ * @param viewportIsMobile - Whether the shared grid component's own viewport-width check (`window.innerWidth` against its breakpoint, independent of platform) will clamp every column's rendered width — see `SHARED_GRID_MOBILE_CLAMP_WIDTH`.
  */
 export function buildColumnScrollPlan(
   columns: ColDef[],
   viewportWidthPx: number,
-  platform: Platform,
   viewportIsMobile: boolean,
 ): ColumnScrollPlan {
   const chartColumns = columns.filter(isChartColumn);
@@ -131,8 +126,8 @@ export function buildColumnScrollPlan(
   let reachableCount = 0;
   // Width of the column that ended each preceding page — indexed the same
   // as `pageOffsets` minus one (i.e. `lastColumnWidthBeforePage[k - 1]` is
-  // the width of the column immediately before `pageOffsets[k]`'s natural,
-  // un-rewound boundary). Only used for the desktop-only rewind below.
+  // the width of the column immediately before `pageOffsets[k]`'s
+  // natural, un-rewound boundary).
   const lastColumnWidthBeforePage: number[] = [];
 
   if (viewportWidthPx > 0) {
@@ -179,20 +174,18 @@ export function buildColumnScrollPlan(
     reachableCount = widths.length;
   }
 
-  if (platform !== Platform.Mobile) {
-    for (let k = 1; k < pageOffsets.length; k++) {
-      // Capped at the previous page's own last column width so the rewind
-      // can never reach past it into an even earlier page — currently
-      // unreachable in practice (every real column width is >= 100px, via
-      // `SHARED_GRID_MOBILE_CLAMP_WIDTH`, always wider than
-      // `LEFT_PEEK_REWIND_PX`), kept as a defensive bound in case that ever
-      // changes.
-      const rewind = Math.min(
-        LEFT_PEEK_REWIND_PX,
-        lastColumnWidthBeforePage[k - 1] ?? 0,
-      );
-      pageOffsets[k] = Math.max(pageOffsets[k - 1], pageOffsets[k] - rewind);
-    }
+  for (let k = 1; k < pageOffsets.length; k++) {
+    // Capped at the previous page's own last column width so the rewind
+    // can never reach past it into an even earlier page — currently
+    // unreachable in practice (every real column width is >= 100px, via
+    // `SHARED_GRID_MOBILE_CLAMP_WIDTH`, always wider than
+    // `LEFT_PEEK_REWIND_PX`), kept as a defensive bound in case that ever
+    // changes.
+    const rewind = Math.min(
+      LEFT_PEEK_REWIND_PX,
+      lastColumnWidthBeforePage[k - 1] ?? 0,
+    );
+    pageOffsets[k] = Math.max(pageOffsets[k - 1], pageOffsets[k] - rewind);
   }
 
   const pagedColDefs = pageable.map((col, i) => {

@@ -7,8 +7,14 @@ describe('GridPlaceholder', () => {
     expect(screen.getByRole('status')).toBeInTheDocument();
   });
 
-  it('renders a 4x4 grid of pill blocks followed by a footer row', () => {
+  it('renders a header row, a 4x4 grid of pill blocks, and a footer row', () => {
     const { container } = render(<GridPlaceholder />);
+    expect(
+      container.querySelectorAll('[data-testid="placeholder-header-label"]'),
+    ).toHaveLength(1);
+    expect(
+      container.querySelectorAll('[data-testid="placeholder-header-button"]'),
+    ).toHaveLength(2);
     expect(
       container.querySelectorAll('[data-testid="placeholder-block"]'),
     ).toHaveLength(16);

@@ -7,23 +7,19 @@ import { MOBILE_BREAKPOINT, useIsMobile } from '@epam/statgpt-ui-components';
 import type { EChartsOption } from 'echarts-for-react/src/types';
 import { Platform } from '../host/hostContext';
 import { ATTACHMENT_TYPE } from '../constants/attachmentTypes';
-import {
-  INLINE_GRID_ROW_CAP,
-  MOBILE_GRID_NUDGE_COLUMN_WIDTH,
-} from '../constants/inlineGrid';
+import { INLINE_GRID_ROW_CAP } from '../constants/inlineGrid';
 import {
   buildColumnScrollPlan,
   sliceInlineRows,
 } from '../adapters/gridColumnSlides';
 import { useActiveTab } from '../hooks/useActiveTab';
 import { useElementWidth } from '../hooks/useElementWidth';
-import { useSwipeNavigation } from '../hooks/useSwipeNavigation';
+import { ChevronLeftIcon, ChevronRightIcon } from '../icons/ChevronIcon';
 import { CodePlaceholder } from './CodePlaceholder';
 import { ChartView } from './Chart/ChartView';
 import { GridRowLimitFooter } from './GridRowLimitFooter';
 import { GridSlideNav } from './GridSlideNav';
-import { MobileGridNudge } from './MobileGridNudge';
-import { RowsTruncatedHint } from './RowsTruncatedHint';
+import { HostIconButton } from './HostIconButton';
 import { Tabs, type TabItem } from './Tabs';
 import type {
   ChartAttachment,
@@ -73,11 +69,10 @@ const PREFERRED_FULLSCREEN_TAB: Tab = 'grid';
  * DataView renders the widget's SDMX data content.
  *
  * In inline display mode (`fillHeight` false) it renders a row-capped,
- * horizontally-paged grid (see `buildColumnScrollPlan`/`sliceInlineRows`) —
- * arrow-button navigation on desktop, swipe gesture on mobile — with a
- * `GridRowLimitFooter` whenever rows are truncated. Never a tab switcher,
- * never an unbounded scroll region, matching both platforms' inline-card
- * guidance.
+ * horizontally-paged grid (see `buildColumnScrollPlan`/`sliceInlineRows`),
+ * navigated by arrow buttons on both platforms, with a `GridRowLimitFooter`
+ * whenever rows are truncated. Never a tab switcher, never an unbounded
+ * scroll region, matching both platforms' inline-card guidance.
  *
  * In pip/fullscreen (`fillHeight` true) it renders the unchanged Grid/Chart/Code
  * tab switcher with the full, unsliced dataset.
@@ -88,7 +83,7 @@ const PREFERRED_FULLSCREEN_TAB: Tab = 'grid';
  * @param codeTheme - Monaco theme applied to the Code tab, following the host theme.
  * @param fillHeight - When true, renders the pip/fullscreen tabbed layout and stretches to fill the container's height; when false (inline), renders the row/column-capped grid carousel.
  * @param chartTransformOption - Applied to the chart's ECharts option before render; used to recolor axis/legend text to match the widget's host-driven theme.
- * @param platform - The desktop/mobile bucket derived from the host context; drives grid cell sizing, column widths, and whether swipe or arrow-button navigation is used.
+ * @param platform - The desktop/mobile bucket derived from the host context; drives grid cell sizing and arrow-icon sizing/hit-slop.
  * @param isFullscreen - Whether the widget is currently in fullscreen display mode; on desktop, puts the chart canvas and its dimension list side-by-side instead of stacked. Mobile always stacks.
  * @param canRequestFullscreen - Whether the host supports switching to fullscreen; gates the inline row-limit footer's "open full view" action.
  * @param requestFullscreen - Called by the inline row-limit footer to ask the host to switch to fullscreen.
@@ -253,21 +248,6 @@ export function DataView({
   );
 
   /**
-   * On mobile, `gridWidthRef` measures the row's own stable outer wrapper,
-   * not the grid div itself — the grid div is a flex sibling of
-   * `MobileGridNudge`'s reserved column, which only mounts on the last
-   * slide, so measuring the grid div directly would make `gridWidth`
-   * (and therefore the page layout below) shift the moment navigation
-   * lands on that slide. Subtracting this constant unconditionally, even
-   * on slides where the nudge column isn't currently mounted, keeps the
-   * effective width — and so `pageCount`/`pageOffsets` — the same across
-   * every slide.
-   */
-  const effectiveGridWidth = isMobile
-    ? Math.max(0, gridWidth - MOBILE_GRID_NUDGE_COLUMN_WIDTH)
-    : gridWidth;
-
-  /**
    * Unlike the old bucketing approach, this doesn't depend on `activeSlide`
    * at all — every reachable column is always rendered, at its natural
    * width; navigation only ever moves `scrollLeft` (see the effect below),
@@ -282,17 +262,11 @@ export function DataView({
       crossDatasetGridAttachment
         ? buildColumnScrollPlan(
             crossDatasetGridAttachment.columns,
-            effectiveGridWidth,
-            platform,
+            gridWidth,
             viewportIsMobile,
           )
         : undefined,
-    [
-      crossDatasetGridAttachment,
-      effectiveGridWidth,
-      platform,
-      viewportIsMobile,
-    ],
+    [crossDatasetGridAttachment, gridWidth, viewportIsMobile],
   );
 
   const clampedActiveSlide = scrollPlan
@@ -345,43 +319,14 @@ export function DataView({
     [crossDatasetGridAttachment, scrollPlan, inlineRows],
   );
 
-  // Desktop only — mobile shows no edge shadow at all, same as before this
-  // rewrite (there's no per-column fade in this model either way, but the
-  // container-level mask must stay off on mobile regardless).
-  const hasPeekLeft = !isMobile && !!scrollPlan && clampedActiveSlide > 0;
+  const hasPeekLeft = !!scrollPlan && clampedActiveSlide > 0;
   const hasPeekRight =
-    !isMobile &&
     !!scrollPlan &&
     (clampedActiveSlide < scrollPlan.pageCount - 1 ||
       scrollPlan.hasMoreBeyondSlides);
 
   /** Independent of column overflow — gates the plain "more rows" line, not the vertical "more columns" hint. */
   const hasMoreRows = totalRows > rowCap;
-
-  /**
-   * Mobile's version of `GridSlideNav`'s own internal "show the rows line"
-   * check (same condition: on the true last page, when there are more rows
-   * than the cap displays) — duplicated here (not shared) only because the
-   * duplicate plain-text line has to render OUTSIDE the flex row
-   * `MobileGridNudge`'s column sits in, as a sibling below it, not returned
-   * alongside the column from that component itself. Independent of
-   * `scrollPlan.hasMoreBeyondSlides`, which only gates the vertical column
-   * hint (rendered by `MobileGridNudge`) — a dataset can have more columns,
-   * more rows, both, or neither.
-   */
-  const showMobileNudge =
-    isMobile &&
-    !!scrollPlan &&
-    clampedActiveSlide === scrollPlan.pageCount - 1 &&
-    hasMoreRows;
-
-  const swipeHandlers = useSwipeNavigation(
-    () => setActiveSlide((s) => Math.max(0, s - 1)),
-    () =>
-      setActiveSlide((s) =>
-        scrollPlan ? Math.min(scrollPlan.pageCount - 1, s + 1) : s,
-      ),
-  );
 
   useEffect(() => {
     if (fillHeight) return;
@@ -401,102 +346,82 @@ export function DataView({
   if (!fillHeight) {
     return (
       <div>
-        {isMobile ? (
-          // Mobile: the grid div and the nudge column are plain, separate
-          // flex siblings — nothing overlays anything else, so no
-          // `[grid-area:1/1]`/invisible-clone height trick is needed here;
-          // flex already sizes the row to the taller of the two on its own.
-          // `gridWidthRef` measures this outer wrapper, not the grid div
-          // itself — this div's own width doesn't depend on whether the
-          // nudge column is currently mounted beside it, unlike the grid
-          // div's (see `effectiveGridWidth` above).
-          <div className="flex" ref={gridWidthRef}>
-            <div
-              className="mcp-grid-carousel min-w-0 flex-1"
-              onPointerDown={swipeHandlers.onPointerDown}
-              onPointerMove={swipeHandlers.onPointerMove}
-              onPointerUp={swipeHandlers.onPointerUp}
-              style={{ touchAction: 'pan-y' }}
-            >
-              {inlineAttachment && (
-                <CrossDatasetGridAttachment
-                  attachment={inlineAttachment}
-                  fixHeight={false}
-                  rowHeight={gridCellHeight}
-                  headerHeight={gridCellHeight}
-                  metadataColumnWidth={MOBILE_GRID_CELL_HEIGHT}
-                />
-              )}
-            </div>
-            {scrollPlan && (
-              <MobileGridNudge
-                activeSlide={clampedActiveSlide}
-                slideCount={scrollPlan.pageCount}
-                hasMoreBeyondSlides={scrollPlan.hasMoreBeyondSlides}
-              />
-            )}
-          </div>
-        ) : (
-          // Desktop: `grid` + `[grid-area:1/1]` on both this row's children
-          // makes them share one cell, so the row's height is the taller of
-          // the two — the masked grid div (its own fixed row-count height)
-          // and GridSlideNav's wrapper (whose invisible sizing clone, when
-          // the "view more" nudge shows, reports the nudge text's full
-          // un-clamped height). A plain `relative` wrapper couldn't do this:
-          // an absolutely-positioned child never contributes to its
-          // ancestor's height, so a short (e.g. two-row) grid would let the
-          // nudge text overflow past the row instead of the row growing to
-          // fit it. This overlay approach only makes sense on desktop
-          // because it relies on the edge-mask shadow to soften the overlap
-          // — mobile (above) has no shadow, so its nudge sits beside the
-          // grid instead of over it.
-          <div className="relative grid">
-            <div
-              ref={gridWidthRef}
-              className={[
-                'mcp-grid-carousel',
-                '[grid-area:1/1]',
-                hasPeekRight && 'mcp-grid-carousel--has-next',
-                hasPeekLeft && 'mcp-grid-carousel--has-prev',
-              ]
-                .filter(Boolean)
-                .join(' ')}
-            >
-              {inlineAttachment && (
-                <CrossDatasetGridAttachment
-                  attachment={inlineAttachment}
-                  fixHeight={false}
-                  rowHeight={gridCellHeight}
-                  headerHeight={gridCellHeight}
-                />
-              )}
-            </div>
-            {scrollPlan && (
-              <GridSlideNav
-                activeSlide={clampedActiveSlide}
-                slideCount={scrollPlan.pageCount}
-                hasMoreBeyondSlides={scrollPlan.hasMoreBeyondSlides}
-                hasMoreRows={hasMoreRows}
-                showArrows
+        <div className="flex items-center justify-between px-4 pb-3">
+          <span className="text-sm font-medium text-neutrals-1000">Data</span>
+          {scrollPlan && (
+            <div className="flex items-center gap-2">
+              <HostIconButton
+                icon={ChevronLeftIcon}
                 platform={platform}
-                onPrev={() => setActiveSlide((s) => Math.max(0, s - 1))}
-                onNext={() =>
+                onClick={() => setActiveSlide((s) => Math.max(0, s - 1))}
+                ariaLabel="Previous slide"
+                variant="bordered"
+                className="relative"
+                disabled={clampedActiveSlide === 0}
+              />
+              <HostIconButton
+                icon={ChevronRightIcon}
+                platform={platform}
+                onClick={() =>
                   setActiveSlide((s) =>
                     Math.min(scrollPlan.pageCount - 1, s + 1),
                   )
                 }
+                ariaLabel="Next slide"
+                variant="bordered"
+                className="relative"
+                disabled={clampedActiveSlide === scrollPlan.pageCount - 1}
+              />
+            </div>
+          )}
+        </div>
+        <div className="relative grid">
+          <div
+            ref={gridWidthRef}
+            className={[
+              'mcp-grid-carousel',
+              'shadow-md',
+              '[grid-area:1/1]',
+              !hasPeekLeft && 'pl-4',
+              !hasPeekRight && 'pr-4',
+              hasPeekRight && 'mcp-grid-carousel--has-next',
+              hasPeekLeft && 'mcp-grid-carousel--has-prev',
+            ]
+              .filter(Boolean)
+              .join(' ')}
+          >
+            {inlineAttachment && (
+              <CrossDatasetGridAttachment
+                attachment={inlineAttachment}
+                fixHeight={false}
+                rowHeight={gridCellHeight}
+                headerHeight={gridCellHeight}
+                {...(isMobile
+                  ? { metadataColumnWidth: MOBILE_GRID_CELL_HEIGHT }
+                  : {})}
               />
             )}
           </div>
-        )}
-        {showMobileNudge && <RowsTruncatedHint />}
+          {scrollPlan && (
+            <GridSlideNav
+              activeSlide={clampedActiveSlide}
+              slideCount={scrollPlan.pageCount}
+              hasMoreBeyondSlides={scrollPlan.hasMoreBeyondSlides}
+              hasMoreRows={hasMoreRows}
+            />
+          )}
+        </div>
         {canRequestFullscreen && (
-          <GridRowLimitFooter
-            total={totalRows}
-            visible={Math.min(rowCap, totalRows)}
-            platform={platform}
-            onOpenFullView={requestFullscreen}
-          />
+          <div className="border-t border-neutrals-300">
+            <div className="px-4">
+              <GridRowLimitFooter
+                total={totalRows}
+                visible={Math.min(rowCap, totalRows)}
+                platform={platform}
+                onOpenFullView={requestFullscreen}
+              />
+            </div>
+          </div>
         )}
       </div>
     );

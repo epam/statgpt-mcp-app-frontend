@@ -168,7 +168,8 @@ export function AppContent({
   return (
     <div
       className={classNames('relative flex flex-col', {
-        'm-4': !isFullscreen,
+        'my-4': !isFullscreen && (isFillHeight || showLoader),
+        'mx-4': !isFullscreen && (isFillHeight || showLoader),
         'h-full': isFillHeight,
         'min-h-[var(--mcp-widget-min-height)]': !isFillHeight && showLoader,
       })}

@@ -2,10 +2,8 @@ import { INLINE_GRID_NUDGE_TEXT } from '../constants/inlineGrid';
 
 /**
  * Plain "view more" line shown below the inline grid when rows are
- * truncated. Rendered identically by both platforms — desktop
- * (`GridSlideNav`) and mobile (`DataView`) each decide independently
- * whether to show it (gated by their own last-slide/`hasMoreRows` check),
- * but the markup itself doesn't differ, so it lives in one place.
+ * truncated, rendered by `GridSlideNav` (gated by its own last-slide/
+ * `hasMoreRows` check) identically on both platforms.
  */
 export function RowsTruncatedHint() {
   return (

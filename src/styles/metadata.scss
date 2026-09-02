@@ -2,7 +2,7 @@
   @apply absolute top-0 right-0;
   @apply border-transparent border-r-semantic-info;
   @apply border-r-[10px] border-b-[10px];
-  @apply cursor-pointer;
+  cursor: pointer;
 }
 
 :root[data-platform='mobile'] .ag-cell .metadata-indicator {
@@ -11,4 +11,12 @@
 
 :root:not([data-display-mode='fullscreen']) .metadata-indicator {
   display: none;
+}
+
+// The library also renders a separate full-cell click overlay next to the
+// triangle; hiding the triangle alone doesn't stop clicks.
+:root:not([data-display-mode='fullscreen'])
+  .metadata-indicator
+  + .cursor-pointer {
+  pointer-events: none;
 }

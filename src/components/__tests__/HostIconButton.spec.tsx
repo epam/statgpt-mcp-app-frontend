@@ -144,6 +144,49 @@ describe('HostIconButton', () => {
     expect(button).toHaveClass('before:absolute');
     expect(button).toHaveClass('before:inset-[-4px]');
   });
+
+  it('is not disabled by default', () => {
+    render(
+      <HostIconButton
+        icon={StubIcon}
+        platform={Platform.Desktop}
+        onClick={vi.fn()}
+        ariaLabel="Do thing"
+      />,
+    );
+    expect(screen.getByRole('button', { name: 'Do thing' })).not.toBeDisabled();
+  });
+
+  it('applies the native disabled attribute and a dimmed style when disabled is true', () => {
+    render(
+      <HostIconButton
+        icon={StubIcon}
+        platform={Platform.Desktop}
+        onClick={vi.fn()}
+        ariaLabel="Do thing"
+        disabled
+      />,
+    );
+    const button = screen.getByRole('button', { name: 'Do thing' });
+    expect(button).toBeDisabled();
+    expect(button).toHaveClass('opacity-40');
+    expect(button).toHaveClass('pointer-events-none');
+  });
+
+  it('does not call onClick when disabled and clicked', async () => {
+    const onClick = vi.fn();
+    render(
+      <HostIconButton
+        icon={StubIcon}
+        platform={Platform.Desktop}
+        onClick={onClick}
+        ariaLabel="Do thing"
+        disabled
+      />,
+    );
+    await userEvent.click(screen.getByRole('button', { name: 'Do thing' }));
+    expect(onClick).not.toHaveBeenCalled();
+  });
 });
 
 describe('HostIconButton floating variant', () => {
