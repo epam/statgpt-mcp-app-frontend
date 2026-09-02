@@ -1,4 +1,5 @@
 import { lazy, Suspense, useEffect, useMemo, useState } from 'react';
+import classNames from 'classnames';
 import {
   CrossDatasetGridAttachment,
   useConversationViewSidePanelOptional,
@@ -345,8 +346,12 @@ export function DataView({
 
   if (!fillHeight) {
     return (
-      <div>
-        <div className="flex items-center justify-between px-4 pb-3">
+      <div className={isMobile ? 'pb-3' : undefined}>
+        <div
+          className={classNames('flex items-center justify-between pb-3', {
+            'px-4 pt-3': isMobile,
+          })}
+        >
           <span className="text-sm font-medium text-neutrals-1000">Data</span>
           {scrollPlan && (
             <div className="flex items-center gap-2">
@@ -378,17 +383,17 @@ export function DataView({
         <div className="relative grid">
           <div
             ref={gridWidthRef}
-            className={[
+            className={classNames(
               'mcp-grid-carousel',
               'shadow-md',
               '[grid-area:1/1]',
-              !hasPeekLeft && 'pl-4',
-              !hasPeekRight && 'pr-4',
-              hasPeekRight && 'mcp-grid-carousel--has-next',
-              hasPeekLeft && 'mcp-grid-carousel--has-prev',
-            ]
-              .filter(Boolean)
-              .join(' ')}
+              {
+                'pl-4': isMobile && !hasPeekLeft,
+                'pr-4': isMobile && !hasPeekRight,
+                'mcp-grid-carousel--has-next': hasPeekRight,
+                'mcp-grid-carousel--has-prev': hasPeekLeft,
+              },
+            )}
           >
             {inlineAttachment && (
               <CrossDatasetGridAttachment
@@ -413,7 +418,7 @@ export function DataView({
         </div>
         {canRequestFullscreen && (
           <div className="border-t border-neutrals-300">
-            <div className="px-4">
+            <div className={isMobile ? 'px-4' : undefined}>
               <GridRowLimitFooter
                 total={totalRows}
                 visible={Math.min(rowCap, totalRows)}

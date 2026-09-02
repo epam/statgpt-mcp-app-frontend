@@ -469,7 +469,23 @@ describe('DataView', () => {
       expect(screen.getByText('Data')).toBeInTheDocument();
     });
 
-    it('wraps the row-limit footer in horizontal padding', () => {
+    it('wraps the row-limit footer in horizontal padding on mobile', () => {
+      render(
+        <DataView
+          chartAttachment={undefined}
+          crossDatasetGridAttachment={gridAttachment()}
+          platform={Platform.Mobile}
+          isFullscreen={false}
+          fillHeight={false}
+          canRequestFullscreen
+          requestFullscreen={() => {}}
+        />,
+      );
+      const footerLabel = screen.getByText(/Showing/);
+      expect(footerLabel.closest('.px-4')).not.toBeNull();
+    });
+
+    it('gives the footer no horizontal padding on desktop', () => {
       render(
         <DataView
           chartAttachment={undefined}
@@ -482,7 +498,7 @@ describe('DataView', () => {
         />,
       );
       const footerLabel = screen.getByText(/Showing/);
-      expect(footerLabel.closest('.px-4')).not.toBeNull();
+      expect(footerLabel.closest('.px-4')).toBeNull();
     });
 
     it('gives the footer wrapper an edge-to-edge top border, unpadded so it spans the full width', () => {
@@ -530,6 +546,46 @@ describe('DataView', () => {
       expect(header).not.toBeNull();
       expect(header).not.toHaveClass('py-3');
       expect(header).not.toHaveClass('pt-3');
+    });
+
+    it('adds header top padding and outer wrapper bottom padding on mobile only', () => {
+      const { container } = render(
+        <DataView
+          chartAttachment={undefined}
+          crossDatasetGridAttachment={gridAttachment()}
+          platform={Platform.Mobile}
+          isFullscreen={false}
+          fillHeight={false}
+        />,
+      );
+      expect(container.firstChild).toHaveClass('pb-3');
+      expect(screen.getByText('Data').closest('.pt-3')).not.toBeNull();
+    });
+
+    it('gives the header horizontal padding on mobile', () => {
+      render(
+        <DataView
+          chartAttachment={undefined}
+          crossDatasetGridAttachment={gridAttachment()}
+          platform={Platform.Mobile}
+          isFullscreen={false}
+          fillHeight={false}
+        />,
+      );
+      expect(screen.getByText('Data').closest('.px-4')).not.toBeNull();
+    });
+
+    it('gives the header no horizontal padding on desktop', () => {
+      render(
+        <DataView
+          chartAttachment={undefined}
+          crossDatasetGridAttachment={gridAttachment()}
+          platform={Platform.Desktop}
+          isFullscreen={false}
+          fillHeight={false}
+        />,
+      );
+      expect(screen.getByText('Data').closest('.px-4')).toBeNull();
     });
   });
 
@@ -615,7 +671,7 @@ describe('DataView', () => {
       TriggerableResizeObserver.instances = [];
     });
 
-    it('pads the left edge (no prev) and leaves the right edge flush (next exists) on the first of two slides', () => {
+    it('pads the left edge (no prev) and leaves the right edge flush (next exists) on the first of two slides, on mobile', () => {
       render(
         <DataView
           chartAttachment={undefined}
@@ -623,7 +679,7 @@ describe('DataView', () => {
             data: [{ id: 1 }],
             columns: columnsFixture(),
           }}
-          platform={Platform.Desktop}
+          platform={Platform.Mobile}
           isFullscreen={false}
           fillHeight={false}
         />,
@@ -639,7 +695,7 @@ describe('DataView', () => {
       expect(grid).not.toHaveClass('mcp-grid-carousel--has-prev');
     });
 
-    it('leaves the left edge flush (prev exists) and pads the right edge (no next, no overflow) on the last of two slides', () => {
+    it('leaves the left edge flush (prev exists) and pads the right edge (no next, no overflow) on the last of two slides, on mobile', () => {
       render(
         <DataView
           chartAttachment={undefined}
@@ -647,7 +703,7 @@ describe('DataView', () => {
             data: [{ id: 1 }],
             columns: columnsFixture(),
           }}
-          platform={Platform.Desktop}
+          platform={Platform.Mobile}
           isFullscreen={false}
           fillHeight={false}
         />,
@@ -664,7 +720,7 @@ describe('DataView', () => {
       expect(grid).not.toHaveClass('mcp-grid-carousel--has-next');
     });
 
-    it('leaves both edges flush on a middle slide with a prev and a next slide', () => {
+    it('leaves both edges flush on a middle slide with a prev and a next slide, on mobile', () => {
       // 3 columns at 130px each, 150px viewport: only 1 column fits per
       // page (a 2nd would be 260 > 150), landing on exactly 3 pages —
       // activeSlide 1 (after one "Next" click) has both a prev and a next.
@@ -677,7 +733,7 @@ describe('DataView', () => {
         <DataView
           chartAttachment={undefined}
           crossDatasetGridAttachment={{ data: [{ id: 1 }], columns: cols }}
-          platform={Platform.Desktop}
+          platform={Platform.Mobile}
           isFullscreen={false}
           fillHeight={false}
         />,
@@ -692,6 +748,54 @@ describe('DataView', () => {
       expect(grid).not.toHaveClass('pr-4');
       expect(grid).toHaveClass('mcp-grid-carousel--has-prev');
       expect(grid).toHaveClass('mcp-grid-carousel--has-next');
+    });
+
+    it('never pads either edge on desktop, even on the first slide where mobile would be padded', () => {
+      render(
+        <DataView
+          chartAttachment={undefined}
+          crossDatasetGridAttachment={{
+            data: [{ id: 1 }],
+            columns: columnsFixture(),
+          }}
+          platform={Platform.Desktop}
+          isFullscreen={false}
+          fillHeight={false}
+        />,
+      );
+      act(() => {
+        TriggerableResizeObserver.instances[0].trigger(300);
+      });
+
+      const grid = document.querySelector('.mcp-grid-carousel') as HTMLElement;
+      expect(grid).not.toHaveClass('pl-4');
+      expect(grid).not.toHaveClass('pr-4');
+      // The fade itself is unaffected by platform — only the padding is.
+      expect(grid).toHaveClass('mcp-grid-carousel--has-next');
+    });
+
+    it('never pads either edge on desktop, even on the last slide where mobile would be padded', () => {
+      render(
+        <DataView
+          chartAttachment={undefined}
+          crossDatasetGridAttachment={{
+            data: [{ id: 1 }],
+            columns: columnsFixture(),
+          }}
+          platform={Platform.Desktop}
+          isFullscreen={false}
+          fillHeight={false}
+        />,
+      );
+      act(() => {
+        TriggerableResizeObserver.instances[0].trigger(300);
+      });
+      fireEvent.click(screen.getByRole('button', { name: 'Next slide' }));
+
+      const grid = document.querySelector('.mcp-grid-carousel') as HTMLElement;
+      expect(grid).not.toHaveClass('pl-4');
+      expect(grid).not.toHaveClass('pr-4');
+      expect(grid).toHaveClass('mcp-grid-carousel--has-prev');
     });
   });
 
