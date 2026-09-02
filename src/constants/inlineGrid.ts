@@ -7,7 +7,7 @@ export const INLINE_GRID_ROW_CAP: Record<Platform, number> = {
 };
 
 /** Hard cap on inline-reachable column slides — always exactly this many at most, both platforms. */
-export const MAX_INLINE_SLIDES = 3;
+export const MAX_INLINE_SLIDES = 2;
 
 /**
  * Fixed inline-mode column widths, one first-pass value per column type —
@@ -23,25 +23,10 @@ export const INLINE_IDENTITY_COLUMN_WIDTH = 220;
 
 export const INLINE_VALUE_COLUMN_WIDTH = 130;
 
-/** Minimum net horizontal pointer delta (px) to register as a slide-changing swipe. */
-export const SWIPE_THRESHOLD_PX = 40;
-
 /**
- * Shared "there's more than what's shown" hint text — the desktop vertical
- * overlay (`GridSlideNav`), mobile's reserved column (`MobileGridNudge`),
- * and both platforms' plain duplicate line below the grid (`DataView`) all
- * render this exact copy, so it lives in one place instead of three.
+ * Shared "there's more than what's shown" hint text — the vertical overlay
+ * hint and the plain duplicate line below the grid (both rendered by
+ * `GridSlideNav`, identically on both platforms) render this exact copy, so
+ * it lives in one place instead of two.
  */
 export const INLINE_GRID_NUDGE_TEXT = 'To view more, open full view';
-
-/**
- * Mobile's reserved "view more" column (`MobileGridNudge`) width, in px.
- * `DataView` measures the grid's width on a container that's stable across
- * slides (not the grid div itself, which shrinks when this column mounts
- * beside it on the last slide) and always subtracts this constant before
- * budgeting pages — even on slides where the column isn't currently shown —
- * so the page layout never depends on whether this column happens to be
- * mounted right now. `MobileGridNudge` sizes itself to this same constant,
- * so the two can never drift apart.
- */
-export const MOBILE_GRID_NUDGE_COLUMN_WIDTH = 32;

@@ -368,6 +368,20 @@ describe('DataView', () => {
       expect(screen.queryByTestId('chart-view')).not.toBeInTheDocument();
     });
 
+    it('applies a shadow to the full-bleed grid', () => {
+      render(
+        <DataView
+          chartAttachment={undefined}
+          crossDatasetGridAttachment={gridAttachment()}
+          platform={Platform.Desktop}
+          isFullscreen={false}
+          fillHeight={false}
+        />,
+      );
+      const grid = document.querySelector('.mcp-grid-carousel');
+      expect(grid).toHaveClass('shadow-md');
+    });
+
     it('shows the row-limit footer when total rows exceed the cap and fullscreen can be requested', () => {
       render(
         <DataView
@@ -441,6 +455,82 @@ describe('DataView', () => {
         '6',
       );
     });
+
+    it('renders the "Data" header label above the inline grid', () => {
+      render(
+        <DataView
+          chartAttachment={undefined}
+          crossDatasetGridAttachment={gridAttachment()}
+          platform={Platform.Desktop}
+          isFullscreen={false}
+          fillHeight={false}
+        />,
+      );
+      expect(screen.getByText('Data')).toBeInTheDocument();
+    });
+
+    it('wraps the row-limit footer in horizontal padding', () => {
+      render(
+        <DataView
+          chartAttachment={undefined}
+          crossDatasetGridAttachment={gridAttachment()}
+          platform={Platform.Desktop}
+          isFullscreen={false}
+          fillHeight={false}
+          canRequestFullscreen
+          requestFullscreen={() => {}}
+        />,
+      );
+      const footerLabel = screen.getByText(/Showing/);
+      expect(footerLabel.closest('.px-4')).not.toBeNull();
+    });
+
+    it('gives the footer wrapper an edge-to-edge top border, unpadded so it spans the full width', () => {
+      render(
+        <DataView
+          chartAttachment={undefined}
+          crossDatasetGridAttachment={gridAttachment()}
+          platform={Platform.Desktop}
+          isFullscreen={false}
+          fillHeight={false}
+          canRequestFullscreen
+          requestFullscreen={() => {}}
+        />,
+      );
+      const footerLabel = screen.getByText(/Showing/);
+      const borderedWrapper = footerLabel.closest('.border-t');
+      expect(borderedWrapper).not.toBeNull();
+      expect(borderedWrapper).not.toHaveClass('px-4');
+    });
+
+    it('gives the outer wrapper no bottom padding', () => {
+      const { container } = render(
+        <DataView
+          chartAttachment={undefined}
+          crossDatasetGridAttachment={gridAttachment()}
+          platform={Platform.Desktop}
+          isFullscreen={false}
+          fillHeight={false}
+        />,
+      );
+      expect(container.firstChild).not.toHaveClass('pb-3');
+    });
+
+    it('gives the header row 12px bottom padding and no top padding', () => {
+      render(
+        <DataView
+          chartAttachment={undefined}
+          crossDatasetGridAttachment={gridAttachment()}
+          platform={Platform.Desktop}
+          isFullscreen={false}
+          fillHeight={false}
+        />,
+      );
+      const header = screen.getByText('Data').closest('.pb-3');
+      expect(header).not.toBeNull();
+      expect(header).not.toHaveClass('py-3');
+      expect(header).not.toHaveClass('pt-3');
+    });
   });
 
   describe('scroll-based column carousel navigation', () => {
@@ -452,6 +542,43 @@ describe('DataView', () => {
     beforeEach(() => {
       TriggerableResizeObserver.instances = [];
     });
+
+    it.each([Platform.Desktop, Platform.Mobile])(
+      'disables the previous arrow on the first slide and the next arrow on the last slide (%s)',
+      (platform) => {
+        render(
+          <DataView
+            chartAttachment={undefined}
+            crossDatasetGridAttachment={{
+              data: [{ id: 1 }],
+              columns: columnsFixture(),
+            }}
+            platform={platform}
+            isFullscreen={false}
+            fillHeight={false}
+          />,
+        );
+        act(() => {
+          TriggerableResizeObserver.instances[0].trigger(300);
+        });
+
+        expect(
+          screen.getByRole('button', { name: 'Previous slide' }),
+        ).toBeDisabled();
+        expect(
+          screen.getByRole('button', { name: 'Next slide' }),
+        ).not.toBeDisabled();
+
+        fireEvent.click(screen.getByRole('button', { name: 'Next slide' }));
+
+        expect(
+          screen.getByRole('button', { name: 'Previous slide' }),
+        ).not.toBeDisabled();
+        expect(
+          screen.getByRole('button', { name: 'Next slide' }),
+        ).toBeDisabled();
+      },
+    );
 
     it("scrolls the grid's real viewport to the next page's offset when the next-slide arrow is clicked", () => {
       render(
@@ -483,18 +610,64 @@ describe('DataView', () => {
     });
   });
 
-  describe('mobile page layout stability', () => {
+  describe('per-edge grid padding (padded when no peek, flush+faded when a peek exists)', () => {
     beforeEach(() => {
       TriggerableResizeObserver.instances = [];
     });
 
-    it("reserves the nudge column's width out of the measured grid width unconditionally, so the page layout doesn't depend on which slide is active", () => {
-      // 3 equal 130px value columns, measured at 285px: the nudge column's
-      // 32px must always come out of that budget (not just when it happens
-      // to be mounted), or this would land on 2 pages ([0, 260]: 'a'+'b'
-      // fit together in a raw 285px budget) instead of the correct 3
-      // ([0, 130, 260]: only 'a' fits once 32px is reserved, same as if the
-      // nudge column were actually taking up space).
+    it('pads the left edge (no prev) and leaves the right edge flush (next exists) on the first of two slides', () => {
+      render(
+        <DataView
+          chartAttachment={undefined}
+          crossDatasetGridAttachment={{
+            data: [{ id: 1 }],
+            columns: columnsFixture(),
+          }}
+          platform={Platform.Desktop}
+          isFullscreen={false}
+          fillHeight={false}
+        />,
+      );
+      act(() => {
+        TriggerableResizeObserver.instances[0].trigger(300);
+      });
+
+      const grid = document.querySelector('.mcp-grid-carousel') as HTMLElement;
+      expect(grid).toHaveClass('pl-4');
+      expect(grid).not.toHaveClass('pr-4');
+      expect(grid).toHaveClass('mcp-grid-carousel--has-next');
+      expect(grid).not.toHaveClass('mcp-grid-carousel--has-prev');
+    });
+
+    it('leaves the left edge flush (prev exists) and pads the right edge (no next, no overflow) on the last of two slides', () => {
+      render(
+        <DataView
+          chartAttachment={undefined}
+          crossDatasetGridAttachment={{
+            data: [{ id: 1 }],
+            columns: columnsFixture(),
+          }}
+          platform={Platform.Desktop}
+          isFullscreen={false}
+          fillHeight={false}
+        />,
+      );
+      act(() => {
+        TriggerableResizeObserver.instances[0].trigger(300);
+      });
+      fireEvent.click(screen.getByRole('button', { name: 'Next slide' }));
+
+      const grid = document.querySelector('.mcp-grid-carousel') as HTMLElement;
+      expect(grid).not.toHaveClass('pl-4');
+      expect(grid).toHaveClass('pr-4');
+      expect(grid).toHaveClass('mcp-grid-carousel--has-prev');
+      expect(grid).not.toHaveClass('mcp-grid-carousel--has-next');
+    });
+
+    it('leaves both edges flush on a middle slide with a prev and a next slide', () => {
+      // 3 columns at 130px each, 150px viewport: only 1 column fits per
+      // page (a 2nd would be 260 > 150), landing on exactly 3 pages —
+      // activeSlide 1 (after one "Next" click) has both a prev and a next.
       const cols = [
         { colId: 'a', field: 'a', width: 130 },
         { colId: 'b', field: 'b', width: 130 },
@@ -504,32 +677,56 @@ describe('DataView', () => {
         <DataView
           chartAttachment={undefined}
           crossDatasetGridAttachment={{ data: [{ id: 1 }], columns: cols }}
+          platform={Platform.Desktop}
+          isFullscreen={false}
+          fillHeight={false}
+        />,
+      );
+      act(() => {
+        TriggerableResizeObserver.instances[0].trigger(150);
+      });
+      fireEvent.click(screen.getByRole('button', { name: 'Next slide' }));
+
+      const grid = document.querySelector('.mcp-grid-carousel') as HTMLElement;
+      expect(grid).not.toHaveClass('pl-4');
+      expect(grid).not.toHaveClass('pr-4');
+      expect(grid).toHaveClass('mcp-grid-carousel--has-prev');
+      expect(grid).toHaveClass('mcp-grid-carousel--has-next');
+    });
+  });
+
+  describe('mobile navigation (arrow buttons, no swipe)', () => {
+    beforeEach(() => {
+      TriggerableResizeObserver.instances = [];
+    });
+
+    it("scrolls the grid's real viewport to the next page's offset when the next-slide arrow is clicked", () => {
+      render(
+        <DataView
+          chartAttachment={undefined}
+          crossDatasetGridAttachment={{
+            data: [{ id: 1 }],
+            columns: columnsFixture(),
+          }}
           platform={Platform.Mobile}
           isFullscreen={false}
           fillHeight={false}
         />,
       );
       act(() => {
-        TriggerableResizeObserver.instances[0].trigger(285);
+        TriggerableResizeObserver.instances[0].trigger(300);
       });
 
-      const grid = document.querySelector('.mcp-grid-carousel') as HTMLElement;
       const scrollEl = document.querySelector(
         '.ag-center-cols-viewport',
       ) as HTMLElement;
       expect(scrollEl.scrollLeft).toBe(0);
 
-      const swipeNext = () => {
-        fireEvent.pointerDown(grid, { clientX: 300, clientY: 100 });
-        fireEvent.pointerMove(grid, { clientX: 200, clientY: 100 });
-        fireEvent.pointerUp(grid, { clientX: 200, clientY: 100 });
-      };
+      fireEvent.click(screen.getByRole('button', { name: 'Next slide' }));
+      expect(scrollEl.scrollLeft).toBe(190);
 
-      swipeNext();
-      expect(scrollEl.scrollLeft).toBe(130);
-
-      swipeNext();
-      expect(scrollEl.scrollLeft).toBe(260);
+      fireEvent.click(screen.getByRole('button', { name: 'Previous slide' }));
+      expect(scrollEl.scrollLeft).toBe(0);
     });
   });
 });

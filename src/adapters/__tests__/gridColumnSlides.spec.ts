@@ -1,5 +1,4 @@
 import type { ColDef } from 'ag-grid-community';
-import { Platform } from '../../host/hostContext';
 import { MAX_INLINE_SLIDES } from '../../constants/inlineGrid';
 import { buildColumnScrollPlan, sliceInlineRows } from '../gridColumnSlides';
 
@@ -38,7 +37,7 @@ describe('buildColumnScrollPlan', () => {
       valueCol('2021'),
       valueCol('2022'),
     ];
-    const result = buildColumnScrollPlan(cols, 800, Platform.Desktop, false);
+    const result = buildColumnScrollPlan(cols, 800, false);
     expect(result.pageCount).toBe(1);
     expect(result.pageOffsets).toEqual([0]);
     expect(result.hasMoreBeyondSlides).toBe(false);
@@ -53,24 +52,24 @@ describe('buildColumnScrollPlan', () => {
 
   it('excludes the chart column from both the width budget and visibility', () => {
     const cols = [identityCol('agency'), chartCol()];
-    const result = buildColumnScrollPlan(cols, 800, Platform.Desktop, false);
+    const result = buildColumnScrollPlan(cols, 800, false);
     const chart = result.columns.find((c) => c.colId === 'Chart_column');
     expect(chart?.hide).toBe(true);
   });
 
-  it("splits into a second page starting exactly at the first page's used width, on mobile (no rewind)", () => {
+  it('splits into a second page, rewound by the fixed peek width, on both platforms', () => {
     // 4 value columns (130 each), 300px viewport: 2 fit per page (260px),
-    // a 3rd would be 390px > 300px — page 2 starts at exactly 260. Mobile
-    // never rewinds, so this is the raw, un-adjusted boundary.
+    // a 3rd would be 390px > 300px — raw page-2 boundary is 260, rewound by
+    // min(30, 130) = 30, landing at 230.
     const cols = [
       valueCol('2021'),
       valueCol('2022'),
       valueCol('2023'),
       valueCol('2024'),
     ];
-    const result = buildColumnScrollPlan(cols, 300, Platform.Mobile, false);
+    const result = buildColumnScrollPlan(cols, 300, false);
     expect(result.pageCount).toBe(2);
-    expect(result.pageOffsets).toEqual([0, 260]);
+    expect(result.pageOffsets).toEqual([0, 230]);
     expect(result.hasMoreBeyondSlides).toBe(false);
     const visible = result.columns.filter((c) => !c.hide);
     expect(visible.map((c) => c.colId)).toEqual([
@@ -85,16 +84,18 @@ describe('buildColumnScrollPlan', () => {
     // MAX_INLINE_SLIDES + 7 value columns (130 each), 150px viewport → exactly
     // 1 column per page (a 2nd would always exceed 150px) — MAX_INLINE_SLIDES
     // pages hold MAX_INLINE_SLIDES columns, the remaining 7 are hidden
-    // entirely. Mobile: no rewind, raw boundaries. Sized off the actual
-    // constant (not a hardcoded page count) so this stays correct whatever
-    // it's currently tuned to.
+    // entirely. Every page after the first is rewound by min(30, 130) = 30.
+    // Sized off the actual constant (not a hardcoded page count) so this
+    // stays correct whatever it's currently tuned to.
     const cols = Array.from({ length: MAX_INLINE_SLIDES + 7 }, (_, i) =>
       valueCol(`${2000 + i}`),
     );
-    const result = buildColumnScrollPlan(cols, 150, Platform.Mobile, false);
+    const result = buildColumnScrollPlan(cols, 150, false);
     expect(result.pageCount).toBe(MAX_INLINE_SLIDES);
     expect(result.pageOffsets).toEqual(
-      Array.from({ length: MAX_INLINE_SLIDES }, (_, i) => i * 130),
+      Array.from({ length: MAX_INLINE_SLIDES }, (_, i) =>
+        i === 0 ? 0 : i * 130 - 30,
+      ),
     );
     expect(result.hasMoreBeyondSlides).toBe(true);
     const visible = result.columns.filter((c) => !c.hide).map((c) => c.colId);
@@ -124,7 +125,7 @@ describe('buildColumnScrollPlan', () => {
       identityCol('wide'),
       valueCol('afterWide'),
     ];
-    const result = buildColumnScrollPlan(cols, 300, Platform.Desktop, false);
+    const result = buildColumnScrollPlan(cols, 300, false);
     expect(result.pageCount).toBe(MAX_INLINE_SLIDES);
     expect(result.hasMoreBeyondSlides).toBe(true);
     const visible = result.columns.filter((c) => !c.hide).map((c) => c.colId);
@@ -138,23 +139,13 @@ describe('buildColumnScrollPlan', () => {
     );
   });
 
-  describe('desktop-only left-peek rewind', () => {
-    // These two specifically need at least 2 pages, so use a fixed 2-column
-    // fixture regardless of MAX_INLINE_SLIDES's current value — the rewind
-    // math itself doesn't depend on how many pages are allowed, only on
-    // there being a "page after the first" to rewind at all.
+  describe('left-peek rewind', () => {
     it('rewinds each page after the first by the fixed rewind width, capped at the previous column width', () => {
-      // 2 value columns (130 each), 150px viewport: raw boundaries are
-      // [0, 130]. Desktop rewinds page 1 by min(30, 130) = 30 → 100.
+      // 2 value columns (130 each), 150px viewport: raw boundary is 130.
+      // Rewound by min(30, 130) = 30 → 100.
       const cols = [valueCol('2000'), valueCol('2001')];
-      const result = buildColumnScrollPlan(cols, 150, Platform.Desktop, false);
+      const result = buildColumnScrollPlan(cols, 150, false);
       expect(result.pageOffsets).toEqual([0, 100]);
-    });
-
-    it('never rewinds on mobile, even at the same width/viewport', () => {
-      const cols = [valueCol('2000'), valueCol('2001')];
-      const result = buildColumnScrollPlan(cols, 150, Platform.Mobile, false);
-      expect(result.pageOffsets).toEqual([0, 130]);
     });
   });
 
@@ -167,7 +158,7 @@ describe('buildColumnScrollPlan', () => {
     ];
     // Budget only fits agency+2010+2011 (220+130+130=480); if the hidden
     // column were budgeted too, this would need a 2nd page instead of 1.
-    const result = buildColumnScrollPlan(cols, 480, Platform.Desktop, false);
+    const result = buildColumnScrollPlan(cols, 480, false);
     expect(result.pageCount).toBe(1);
     const hiddenCol = result.columns.find((c) => c.colId === 'other-dim-1');
     expect(hiddenCol?.hide).toBe(true);
@@ -179,7 +170,7 @@ describe('buildColumnScrollPlan', () => {
       identityCol('dataset'),
       valueCol('2021'),
     ];
-    const result = buildColumnScrollPlan(cols, 0, Platform.Desktop, false);
+    const result = buildColumnScrollPlan(cols, 0, false);
     expect(result.pageCount).toBe(1);
     expect(result.pageOffsets).toEqual([0]);
     expect(result.hasMoreBeyondSlides).toBe(false);
@@ -187,21 +178,11 @@ describe('buildColumnScrollPlan', () => {
     expect(visible).toHaveLength(3);
   });
 
-  it('clamps every column width to the shared clamp width when the viewport itself is narrow, regardless of platform', () => {
+  it('clamps every column width to the shared clamp width when the viewport itself is narrow', () => {
     // Without the clamp, 2 identity columns (220 each) would need a 2nd
     // page at a 300px viewport; clamped to 100 each, both fit on page 1.
     const cols = [identityCol('agency'), identityCol('dataset')];
-    const desktop = buildColumnScrollPlan(cols, 300, Platform.Desktop, true);
-    const mobile = buildColumnScrollPlan(cols, 300, Platform.Mobile, true);
-    expect(desktop.pageCount).toBe(1);
-    expect(mobile.pageCount).toBe(1);
-  });
-
-  it('uses identical widths on both platforms when the viewport is not narrow', () => {
-    const cols = [identityCol('agency'), valueCol('2021')];
-    const desktop = buildColumnScrollPlan(cols, 1000, Platform.Desktop, false);
-    const mobile = buildColumnScrollPlan(cols, 1000, Platform.Mobile, false);
-    expect(desktop.pageOffsets).toEqual(mobile.pageOffsets);
-    expect(desktop.pageCount).toBe(mobile.pageCount);
+    const result = buildColumnScrollPlan(cols, 300, true);
+    expect(result.pageCount).toBe(1);
   });
 });

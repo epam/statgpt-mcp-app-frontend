@@ -351,3 +351,99 @@ describe('AppContent — loading placeholder by display mode', () => {
     ).toBeInTheDocument();
   });
 });
+
+describe('AppContent — outer wrapper margin', () => {
+  it('keeps horizontal margin in inline mode while the loading placeholder is showing', () => {
+    const { container } = render(
+      <AppContent
+        snapshot={baseSnapshot()}
+        loading={true}
+        error={null}
+        emptyState={null}
+        isFillHeight={false}
+        isFullscreen={false}
+        canRequestFullscreen={false}
+        requestFullscreen={noopRequestFullscreen}
+        crossDataset={null}
+        meta={null}
+        effectiveLocale="en"
+        pythonCode={undefined}
+        platform="desktop"
+      />,
+    );
+    const wrapper = container.firstChild as HTMLElement;
+    expect(wrapper).toHaveClass('my-4');
+    expect(wrapper).toHaveClass('mx-4');
+  });
+
+  it('drops both vertical and horizontal margin in genuine inline mode', () => {
+    const { container } = render(
+      <AppContent
+        snapshot={baseSnapshot()}
+        loading={false}
+        error={null}
+        emptyState={null}
+        isFillHeight={false}
+        isFullscreen={false}
+        canRequestFullscreen={false}
+        requestFullscreen={noopRequestFullscreen}
+        crossDataset={null}
+        meta={null}
+        effectiveLocale="en"
+        pythonCode={undefined}
+        platform="desktop"
+      />,
+    );
+    const wrapper = container.firstChild as HTMLElement;
+    expect(wrapper).not.toHaveClass('my-4');
+    expect(wrapper).not.toHaveClass('mx-4');
+    expect(wrapper).not.toHaveClass('m-4');
+  });
+
+  it('keeps both vertical and horizontal margin in pip mode', () => {
+    const { container } = render(
+      <AppContent
+        snapshot={baseSnapshot()}
+        loading={false}
+        error={null}
+        emptyState={null}
+        isFillHeight={true}
+        isFullscreen={false}
+        canRequestFullscreen={false}
+        requestFullscreen={noopRequestFullscreen}
+        crossDataset={null}
+        meta={null}
+        effectiveLocale="en"
+        pythonCode={undefined}
+        platform="desktop"
+      />,
+    );
+    const wrapper = container.firstChild as HTMLElement;
+    expect(wrapper).toHaveClass('my-4');
+    expect(wrapper).toHaveClass('mx-4');
+  });
+
+  it('keeps neither vertical nor horizontal margin in fullscreen mode', () => {
+    const { container } = render(
+      <AppContent
+        snapshot={baseSnapshot()}
+        loading={false}
+        error={null}
+        emptyState={null}
+        isFillHeight={true}
+        isFullscreen={true}
+        canRequestFullscreen={false}
+        requestFullscreen={noopRequestFullscreen}
+        crossDataset={null}
+        meta={null}
+        effectiveLocale="en"
+        pythonCode={undefined}
+        platform="desktop"
+      />,
+    );
+    const wrapper = container.firstChild as HTMLElement;
+    expect(wrapper).not.toHaveClass('my-4');
+    expect(wrapper).not.toHaveClass('mx-4');
+    expect(wrapper).not.toHaveClass('m-4');
+  });
+});
