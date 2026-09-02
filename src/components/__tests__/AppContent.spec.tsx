@@ -63,6 +63,7 @@ describe('AppContent — empty state tabs', () => {
         effectiveLocale="en"
         pythonCode={undefined}
         platform="desktop"
+        hostKind="claude"
       />,
     );
 
@@ -94,6 +95,7 @@ describe('AppContent — empty state tabs', () => {
         effectiveLocale="en"
         pythonCode={undefined}
         platform="desktop"
+        hostKind="claude"
       />,
     );
 
@@ -128,6 +130,7 @@ describe('AppContent — empty state tabs', () => {
         effectiveLocale="en"
         pythonCode={undefined}
         platform="desktop"
+        hostKind="claude"
       />,
     );
 
@@ -156,6 +159,7 @@ describe('AppContent — empty state tabs', () => {
         effectiveLocale="en"
         pythonCode={undefined}
         platform="desktop"
+        hostKind="claude"
       />,
     );
 
@@ -196,6 +200,7 @@ describe('AppContent — empty state tabs', () => {
           effectiveLocale="en"
           pythonCode={undefined}
           platform={platform}
+          hostKind="claude"
         />,
       );
 
@@ -233,6 +238,7 @@ describe('AppContent — empty state tabs', () => {
         effectiveLocale="en"
         pythonCode={undefined}
         platform="desktop"
+        hostKind="claude"
       />,
     );
 
@@ -265,6 +271,7 @@ describe('AppContent — floating fullscreen button vs DataView inline content',
         effectiveLocale="en"
         pythonCode={undefined}
         platform="desktop"
+        hostKind="claude"
       />,
     );
 
@@ -289,6 +296,7 @@ describe('AppContent — floating fullscreen button vs DataView inline content',
         effectiveLocale="en"
         pythonCode={undefined}
         platform="desktop"
+        hostKind="claude"
       />,
     );
 
@@ -319,6 +327,7 @@ describe('AppContent — loading placeholder by display mode', () => {
         effectiveLocale="en"
         pythonCode={undefined}
         platform="desktop"
+        hostKind="claude"
       />,
     );
 
@@ -343,6 +352,7 @@ describe('AppContent — loading placeholder by display mode', () => {
         effectiveLocale="en"
         pythonCode={undefined}
         platform="desktop"
+        hostKind="claude"
       />,
     );
 
@@ -369,6 +379,7 @@ describe('AppContent — outer wrapper margin', () => {
         effectiveLocale="en"
         pythonCode={undefined}
         platform="desktop"
+        hostKind="claude"
       />,
     );
     const wrapper = container.firstChild as HTMLElement;
@@ -391,6 +402,7 @@ describe('AppContent — outer wrapper margin', () => {
         effectiveLocale="en"
         pythonCode={undefined}
         platform="desktop"
+        hostKind="claude"
       />,
     );
     const wrapper = container.firstChild as HTMLElement;
@@ -413,6 +425,7 @@ describe('AppContent — outer wrapper margin', () => {
         effectiveLocale="en"
         pythonCode={undefined}
         platform="desktop"
+        hostKind="claude"
       />,
     );
     const wrapper = container.firstChild as HTMLElement;
@@ -435,6 +448,7 @@ describe('AppContent — outer wrapper margin', () => {
         effectiveLocale="en"
         pythonCode={undefined}
         platform="desktop"
+        hostKind="claude"
       />,
     );
     const wrapper = container.firstChild as HTMLElement;

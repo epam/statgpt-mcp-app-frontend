@@ -7,7 +7,7 @@ import {
 import type { EChartsOption } from 'echarts-for-react/src/types';
 import type { BridgeSnapshot, WidgetMeta } from '../bridge/types';
 import { EmptyStateKind, type EmptyStateContent } from '../bridge/emptyState';
-import { Platform } from '../host/hostContext';
+import { HostKind, Platform } from '../host/hostContext';
 import { useDataAttachments } from '../hooks/useDataAttachments';
 import type { CrossDatasetInputs } from '../types/sdmx';
 import { ConnectionStatus } from './ConnectionStatus';
@@ -47,6 +47,7 @@ interface Props {
     ctx: { isMobile: boolean },
   ) => EChartsOption;
   platform: Platform;
+  hostKind: HostKind;
 }
 
 export function AppContent({
@@ -64,6 +65,7 @@ export function AppContent({
   pythonCode,
   chartTransformOption,
   platform,
+  hostKind,
 }: Props) {
   const closePanel = useConversationViewSidePanelOptional()?.closePanel;
   const { chartAttachment, crossDatasetGridAttachment } = useDataAttachments({
@@ -165,12 +167,16 @@ export function AppContent({
     );
   }
 
+  const isChatGptNonMobile =
+    hostKind === HostKind.ChatGpt && platform !== Platform.Mobile;
+
   return (
     <div
       className={classNames('relative flex flex-col', {
         'm-4': !isFullscreen && (isFillHeight || showLoader),
         'h-full': isFillHeight,
         'min-h-[var(--mcp-widget-min-height)]': !isFillHeight && showLoader,
+        'p-3': isChatGptNonMobile && !isFullscreen,
       })}
     >
       {showFullscreenButton && (
