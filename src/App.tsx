@@ -4,7 +4,7 @@ import { useHostLayout } from './hooks/useHostLayout';
 import { useHostTheme } from './hooks/useHostTheme';
 import { useChartTheme } from './hooks/useChartTheme';
 import { useInlineHeightSync } from './hooks/useInlineHeightSync';
-import { usePlatform } from './host/hostContext';
+import { detectHostKind, usePlatform } from './host/hostContext';
 import { AppProviders } from './components/AppProviders';
 import { AppContent } from './components/AppContent';
 
@@ -23,6 +23,7 @@ export default function App() {
     locale,
   } = useHostLayout(snapshot.hostContext);
   const platform = usePlatform(snapshot.hostContext);
+  const hostKind = detectHostKind();
   useInlineHeightSync(!isFillHeight);
   const effectiveLocale = locale ?? 'en';
 
@@ -47,6 +48,7 @@ export default function App() {
         pythonCode={meta?.pythonCode}
         chartTransformOption={chartTransformOption}
         platform={platform}
+        hostKind={hostKind}
       />
     </AppProviders>
   );
