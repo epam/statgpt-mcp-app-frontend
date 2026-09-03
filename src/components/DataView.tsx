@@ -407,14 +407,7 @@ export function DataView({
               />
             )}
           </div>
-          {scrollPlan && (
-            <GridSlideNav
-              activeSlide={clampedActiveSlide}
-              slideCount={scrollPlan.pageCount}
-              hasMoreBeyondSlides={scrollPlan.hasMoreBeyondSlides}
-              hasMoreRows={hasMoreRows}
-            />
-          )}
+          {scrollPlan && <GridSlideNav hasMoreRows={hasMoreRows} />}
         </div>
         {canRequestFullscreen && (
           <div className="border-t border-neutrals-300">
