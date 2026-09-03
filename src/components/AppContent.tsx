@@ -121,11 +121,16 @@ export function AppContent({
 
     if (emptyState) {
       return emptyState.kind === EmptyStateKind.Error ? (
-        <ErrorBanner message={emptyState.message} />
+        <ErrorBanner
+          message={emptyState.message}
+          isMobile={platform === Platform.Mobile}
+          isInline={!isFillHeight}
+        />
       ) : (
         <div
           className={classNames('flex flex-col gap-1', {
             'min-h-0 flex-1': isFillHeight,
+            'pb-3': platform === Platform.Mobile && !isFillHeight,
           })}
         >
           <div
@@ -133,7 +138,11 @@ export function AppContent({
               [FULLSCREEN_BUTTON_GUTTER[platform]]: showFullscreenButton,
             })}
           >
-            <TextResponse text={emptyState.message} />
+            <TextResponse
+              text={emptyState.message}
+              isMobile={platform === Platform.Mobile}
+              isInline={!isFillHeight}
+            />
           </div>
           <EmptyStateTabs
             tabs={emptyState.tabs}
@@ -186,7 +195,13 @@ export function AppContent({
         />
       )}
 
-      {error && <ErrorBanner message={error} />}
+      {error && (
+        <ErrorBanner
+          message={error}
+          isMobile={platform === Platform.Mobile}
+          isInline={!isFillHeight}
+        />
+      )}
 
       {renderContent()}
     </div>

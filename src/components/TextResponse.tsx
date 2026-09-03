@@ -1,8 +1,13 @@
+import classNames from 'classnames';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 
 interface Props {
   text: string;
+  /** Adds the widget's mobile edge padding when also `isInline`. */
+  isMobile?: boolean;
+  /** True outside pip/fullscreen, where the widget supplies its own margin instead. */
+  isInline?: boolean;
 }
 
 /**
@@ -12,10 +17,16 @@ interface Props {
  * text turns.
  *
  * @param text - The markdown text content to display.
+ * @param isMobile - See `Props.isMobile`.
+ * @param isInline - See `Props.isInline`.
  */
-export function TextResponse({ text }: Props) {
+export function TextResponse({ text, isMobile, isInline }: Props) {
   return (
-    <div className="prose prose-sm max-w-none text-neutrals-900">
+    <div
+      className={classNames('prose prose-sm max-w-none text-neutrals-900', {
+        'px-4 pt-3': isMobile && isInline,
+      })}
+    >
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
         components={{
