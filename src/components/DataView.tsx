@@ -1,4 +1,11 @@
-import { lazy, Suspense, useEffect, useMemo, useState } from 'react';
+import {
+  lazy,
+  Suspense,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useState,
+} from 'react';
 import classNames from 'classnames';
 import {
   CrossDatasetGridAttachment,
@@ -206,6 +213,18 @@ export function DataView({
     items,
     PREFERRED_FULLSCREEN_TAB,
   );
+
+  /**
+   * `DataView` stays mounted across display-mode transitions (only props
+   * change), so `useActiveTab`'s `preferredInitialId` only applies once, on
+   * first mount — without this, re-entering fullscreen after closing it
+   * would resume whatever tab was active when it closed instead of always
+   * opening on Grid. `useLayoutEffect` (not `useEffect`) so the correction
+   * commits before paint, avoiding a one-frame flash of the stale tab.
+   */
+  useLayoutEffect(() => {
+    if (isFullscreen) setActiveTab(PREFERRED_FULLSCREEN_TAB);
+  }, [isFullscreen, setActiveTab]);
 
   useEffect(() => {
     if (activeTab !== 'grid') closePanel?.();
