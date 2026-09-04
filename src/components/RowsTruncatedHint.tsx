@@ -7,7 +7,7 @@ import { INLINE_GRID_NUDGE_TEXT } from '../constants/inlineGrid';
  */
 export function RowsTruncatedHint() {
   return (
-    <p className="mt-2 text-center text-xs text-neutrals-700">
+    <p className="my-2 text-center text-xs text-neutrals-700">
       {INLINE_GRID_NUDGE_TEXT}
     </p>
   );

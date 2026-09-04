@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import classNames from 'classnames';
 import type { EmptyStateTab } from '../bridge/emptyState';
 import type { DataSetChoice, DimensionValueInfo } from '../bridge/types';
-import type { Platform } from '../host/hostContext';
+import { Platform } from '../host/hostContext';
 import { useActiveTab } from '../hooks/useActiveTab';
 import { DataGrid, type DataGridColumn } from './DataGrid';
 import { Tabs, type TabItem } from './Tabs';
@@ -88,11 +88,18 @@ export function EmptyStateTabs({ tabs, fillHeight, platform }: Props) {
     [tabs, fillHeight],
   );
   const [activeId, setActiveId] = useActiveTab(items);
+  const isMobile = platform === Platform.Mobile;
+  const isInline = !fillHeight;
 
   if (tabs.length === 0) return null;
 
   return (
-    <div className={classNames({ 'flex-1 min-h-0': fillHeight })}>
+    <div
+      className={classNames({
+        'flex-1 min-h-0': fillHeight,
+        'px-4': isMobile && isInline,
+      })}
+    >
       <Tabs
         items={items}
         activeId={activeId}
