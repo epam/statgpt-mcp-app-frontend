@@ -7,7 +7,10 @@ import {
 } from '@epam/statgpt-conversation-view';
 import type { WidgetMeta } from '../bridge/types';
 import type { CrossDatasetInputs } from '../types/sdmx';
-import { dropMetadataIconColumn } from '../adapters/gridColumns';
+import {
+  disableColumnDragging,
+  dropMetadataIconColumn,
+} from '../adapters/gridColumns';
 import { ATTACHMENT_TYPE } from '../constants/attachmentTypes';
 import { CHART_SERIES_COLORS } from '../constants/chartColors';
 import { formatNumbers } from '../constants/format-numbers';
@@ -73,7 +76,10 @@ export function useDataAttachments({
       effectiveLocale,
       formatNumbers,
     );
-    return isFullscreen ? content : dropMetadataIconColumn(content);
+    const withoutMetadataIcon = isFullscreen
+      ? content
+      : dropMetadataIconColumn(content);
+    return disableColumnDragging(withoutMetadataIcon);
   }, [crossDataset, effectiveLocale, isFullscreen, getDimensionsScheme]);
 
   return { chartAttachment, crossDatasetGridAttachment };

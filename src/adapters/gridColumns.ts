@@ -18,3 +18,12 @@ export function dropMetadataIconColumn(
     columns: content.columns.filter((col) => !isMetadataIconColumn(col)),
   };
 }
+
+export function disableColumnDragging(
+  content: CrossDatasetGridAttachmentData,
+): CrossDatasetGridAttachmentData {
+  return {
+    ...content,
+    columns: content.columns.map((col) => ({ ...col, suppressMovable: true })),
+  };
+}
