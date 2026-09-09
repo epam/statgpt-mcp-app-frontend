@@ -36,7 +36,116 @@ describe('AppContent — empty state tabs', () => {
     mockAgGridElementDimensions();
   });
 
-  it('renders the message and the tab bar when the empty state carries non-empty tabs', () => {
+  it('renders the fullscreen header and the tab bar in pip/fullscreen when the empty state carries non-empty tabs', () => {
+    render(
+      <AppContent
+        snapshot={baseSnapshot()}
+        loading={false}
+        error={null}
+        emptyState={{
+          kind: EmptyStateKind.Text,
+          message: 'Multiple datasets match your query.',
+          tabs: [
+            {
+              kind: 'datasets',
+              id: 'datasets',
+              label: 'Datasets',
+              datasets: [{ id: 'a', name: 'Dataset A', isOfficial: true }],
+            },
+          ],
+        }}
+        isFillHeight={true}
+        isFullscreen={false}
+        canRequestFullscreen={false}
+        requestFullscreen={noopRequestFullscreen}
+        crossDataset={null}
+        meta={null}
+        effectiveLocale="en"
+        pythonCode={undefined}
+        platform="desktop"
+        hostKind="claude"
+      />,
+    );
+
+    expect(screen.getByText('Browse available dimension')).toBeInTheDocument();
+    expect(
+      screen.queryByText('Multiple datasets match your query.'),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: 'Datasets' }),
+    ).toBeInTheDocument();
+  });
+
+  it('renders only the message, no tab bar, when the empty state has an empty tabs array', () => {
+    render(
+      <AppContent
+        snapshot={baseSnapshot()}
+        loading={false}
+        error={null}
+        emptyState={{
+          kind: EmptyStateKind.Text,
+          message: 'No data was found.',
+          tabs: [],
+        }}
+        isFillHeight={false}
+        isFullscreen={false}
+        canRequestFullscreen={false}
+        requestFullscreen={noopRequestFullscreen}
+        crossDataset={null}
+        meta={null}
+        effectiveLocale="en"
+        pythonCode={undefined}
+        platform="desktop"
+        hostKind="claude"
+      />,
+    );
+
+    expect(screen.getByText('No data was found.')).toBeInTheDocument();
+    expect(screen.queryByRole('button')).not.toBeInTheDocument();
+  });
+
+  it('renders the message and the inline nudge card, not the tab bar, in genuine inline mode when the empty state carries non-empty tabs', () => {
+    render(
+      <AppContent
+        snapshot={baseSnapshot()}
+        loading={false}
+        error={null}
+        emptyState={{
+          kind: EmptyStateKind.Text,
+          message: 'Multiple datasets match your query.',
+          tabs: [
+            {
+              kind: 'datasets',
+              id: 'datasets',
+              label: 'Datasets',
+              datasets: [{ id: 'a', name: 'Dataset A', isOfficial: true }],
+            },
+          ],
+        }}
+        isFillHeight={false}
+        isFullscreen={false}
+        canRequestFullscreen={true}
+        requestFullscreen={noopRequestFullscreen}
+        crossDataset={null}
+        meta={null}
+        effectiveLocale="en"
+        pythonCode={undefined}
+        platform="desktop"
+        hostKind="claude"
+      />,
+    );
+
+    expect(
+      screen.getByText('Multiple datasets match your query.'),
+    ).toBeInTheDocument();
+    expect(screen.getByText('Not sure which one fits?')).toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: 'Datasets' }),
+    ).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Browse' })).toBeInTheDocument();
+  });
+
+  it('renders the message only, no card and no tab bar, in genuine inline mode when canRequestFullscreen is false', () => {
     render(
       <AppContent
         snapshot={baseSnapshot()}
@@ -71,11 +180,12 @@ describe('AppContent — empty state tabs', () => {
       screen.getByText('Multiple datasets match your query.'),
     ).toBeInTheDocument();
     expect(
-      screen.getByRole('button', { name: 'Datasets' }),
-    ).toBeInTheDocument();
+      screen.queryByText('Not sure which one fits?'),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByRole('button')).not.toBeInTheDocument();
   });
 
-  it('renders only the message, no tab bar, when the empty state has an empty tabs array', () => {
+  it('shows the floating fullscreen button in pip when the empty state carries a grid, even though it is otherwise a fallback state', () => {
     render(
       <AppContent
         snapshot={baseSnapshot()}
@@ -83,12 +193,19 @@ describe('AppContent — empty state tabs', () => {
         error={null}
         emptyState={{
           kind: EmptyStateKind.Text,
-          message: 'No data was found.',
-          tabs: [],
+          message: 'Multiple datasets match your query.',
+          tabs: [
+            {
+              kind: 'datasets',
+              id: 'datasets',
+              label: 'Datasets',
+              datasets: [{ id: 'a', name: 'Dataset A', isOfficial: true }],
+            },
+          ],
         }}
-        isFillHeight={false}
+        isFillHeight={true}
         isFullscreen={false}
-        canRequestFullscreen={false}
+        canRequestFullscreen={true}
         requestFullscreen={noopRequestFullscreen}
         crossDataset={null}
         meta={null}
@@ -99,11 +216,12 @@ describe('AppContent — empty state tabs', () => {
       />,
     );
 
-    expect(screen.getByText('No data was found.')).toBeInTheDocument();
-    expect(screen.queryByRole('button')).not.toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: 'Expand to fullscreen' }),
+    ).toBeInTheDocument();
   });
 
-  it('shows the fullscreen button when the empty state carries a grid, even though it is otherwise a fallback state', () => {
+  it('hides the floating fullscreen button in genuine inline mode when the empty state carries a grid (its own Browse button replaces it)', () => {
     render(
       <AppContent
         snapshot={baseSnapshot()}
@@ -135,8 +253,8 @@ describe('AppContent — empty state tabs', () => {
     );
 
     expect(
-      screen.getByRole('button', { name: 'Expand to fullscreen' }),
-    ).toBeInTheDocument();
+      screen.queryByRole('button', { name: 'Expand to fullscreen' }),
+    ).not.toBeInTheDocument();
   });
 
   it('hides the fullscreen button when the empty state is text-only (no tabs)', () => {
@@ -172,7 +290,7 @@ describe('AppContent — empty state tabs', () => {
     ['desktop' as const, 'pr-10'],
     ['mobile' as const, 'pr-11'],
   ])(
-    'reserves a %s-sized gutter on the message when the fullscreen button is shown beside it',
+    'reserves a %s-sized gutter on the fullscreen header when the fullscreen button is shown beside it (pip)',
     (platform, gutterClass) => {
       render(
         <AppContent
@@ -191,7 +309,7 @@ describe('AppContent — empty state tabs', () => {
               },
             ],
           }}
-          isFillHeight={false}
+          isFillHeight={true}
           isFullscreen={false}
           canRequestFullscreen={true}
           requestFullscreen={noopRequestFullscreen}
@@ -204,14 +322,13 @@ describe('AppContent — empty state tabs', () => {
         />,
       );
 
-      const messageGutter = screen.getByText(
-        'Multiple datasets match your query.',
-      ).parentElement?.parentElement;
-      expect(messageGutter?.className).toContain(gutterClass);
+      const headerGutter = screen.getByText('Browse available dimension')
+        .parentElement?.parentElement;
+      expect(headerGutter?.className).toContain(gutterClass);
     },
   );
 
-  it('does not reserve a gutter on the message when the fullscreen button is hidden', () => {
+  it('does not reserve a gutter on the fullscreen header when the fullscreen button is hidden', () => {
     render(
       <AppContent
         snapshot={baseSnapshot()}
@@ -229,7 +346,7 @@ describe('AppContent — empty state tabs', () => {
             },
           ],
         }}
-        isFillHeight={false}
+        isFillHeight={true}
         isFullscreen={false}
         canRequestFullscreen={false}
         requestFullscreen={noopRequestFullscreen}
@@ -242,11 +359,10 @@ describe('AppContent — empty state tabs', () => {
       />,
     );
 
-    const messageGutter = screen.getByText(
-      'Multiple datasets match your query.',
-    ).parentElement?.parentElement;
-    expect(messageGutter?.className).not.toContain('pr-10');
-    expect(messageGutter?.className).not.toContain('pr-11');
+    const headerGutter = screen.getByText('Browse available dimension')
+      .parentElement?.parentElement;
+    expect(headerGutter?.className).not.toContain('pr-10');
+    expect(headerGutter?.className).not.toContain('pr-11');
   });
 });
 

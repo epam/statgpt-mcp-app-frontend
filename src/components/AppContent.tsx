@@ -12,6 +12,8 @@ import { useDataAttachments } from '../hooks/useDataAttachments';
 import type { CrossDatasetInputs } from '../types/sdmx';
 import { ConnectionStatus } from './ConnectionStatus';
 import { DataView } from './DataView';
+import { EmptyStateFullscreenHeader } from './EmptyStateFullscreenHeader';
+import { EmptyStateInlineNudge } from './EmptyStateInlineNudge';
 import { EmptyStateTabs } from './EmptyStateTabs';
 import { ErrorBanner } from './ErrorBanner';
 import { FullscreenButton } from './FullscreenButton';
@@ -84,18 +86,22 @@ export function AppContent({
   const showFallback = !showLoader && !hasData && !error && !!emptyState;
   const hasEmptyStateGrid = !!emptyState && emptyState.tabs.length > 0;
   /**
-   * The last clause excludes only genuine inline mode's plain `DataView`
-   * content (no `emptyState`, `isFillHeight` false) — `GridRowLimitFooter`
-   * now always renders there (even when nothing is truncated), carrying its
-   * own "Open full view" button, so the floating one would be redundant.
-   * Pip and the empty-state-tabs fallback are unaffected either way.
+   * The second-to-last clause excludes only genuine inline mode's plain
+   * `DataView` content (no `emptyState`, `isFillHeight` false) —
+   * `GridRowLimitFooter` now always renders there (even when nothing is
+   * truncated), carrying its own "Open full view" button, so the floating
+   * one would be redundant. The last clause excludes genuine inline mode's
+   * empty-state nudge card case (`hasEmptyStateGrid && !isFillHeight`) for
+   * the same reason — see `EmptyStateInlineNudge`. Pip and the
+   * empty-state-tabs fallback in fullscreen/pip are unaffected either way.
    */
   const showFullscreenButton =
     canRequestFullscreen &&
     !isFullscreen &&
     !showLoader &&
     (!showFallback || hasEmptyStateGrid) &&
-    (isFillHeight || !!emptyState);
+    (isFillHeight || !!emptyState) &&
+    !(hasEmptyStateGrid && !isFillHeight);
 
   useEffect(() => {
     if (showFallback) {
@@ -138,17 +144,30 @@ export function AppContent({
               [FULLSCREEN_BUTTON_GUTTER[platform]]: showFullscreenButton,
             })}
           >
-            <TextResponse
-              text={emptyState.message}
-              isMobile={platform === Platform.Mobile}
-              isInline={!isFillHeight}
-            />
+            {hasEmptyStateGrid && isFillHeight ? (
+              <EmptyStateFullscreenHeader />
+            ) : (
+              <TextResponse
+                text={emptyState.message}
+                isMobile={platform === Platform.Mobile}
+                isInline={!isFillHeight}
+              />
+            )}
           </div>
-          <EmptyStateTabs
-            tabs={emptyState.tabs}
-            fillHeight={isFillHeight}
-            platform={platform}
-          />
+          {hasEmptyStateGrid && !isFillHeight ? (
+            canRequestFullscreen && (
+              <EmptyStateInlineNudge
+                platform={platform}
+                onBrowse={requestFullscreen}
+              />
+            )
+          ) : (
+            <EmptyStateTabs
+              tabs={emptyState.tabs}
+              fillHeight={isFillHeight}
+              platform={platform}
+            />
+          )}
         </div>
       );
     }
