@@ -187,7 +187,7 @@ export function ChartView({
       )}
       <div
         className={classNames(
-          'flex min-h-0 flex-col gap-2',
+          'flex flex-col gap-2',
           isFullscreen &&
             'chart-side-by-side:flex-row chart-side-by-side:gap-4',
           fillHeight && 'flex-1',
