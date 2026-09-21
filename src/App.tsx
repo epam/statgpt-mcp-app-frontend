@@ -21,6 +21,7 @@ export default function App() {
     canRequestFullscreen,
     requestFullscreen,
     locale,
+    hasInlineSafeAreaFallback,
   } = useHostLayout(snapshot.hostContext);
   const platform = usePlatform(snapshot.hostContext);
   const hostKind = detectHostKind();
@@ -49,6 +50,7 @@ export default function App() {
         chartTransformOption={chartTransformOption}
         platform={platform}
         hostKind={hostKind}
+        hasInlineSafeAreaFallback={hasInlineSafeAreaFallback}
       />
     </AppProviders>
   );

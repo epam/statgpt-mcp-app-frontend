@@ -570,4 +570,52 @@ describe('AppContent — outer wrapper margin', () => {
     const wrapper = container.firstChild as HTMLElement;
     expect(wrapper).not.toHaveClass('m-4');
   });
+
+  it('drops the loading-placeholder margin in inline mode when the widget already applies its own inline safe-area fallback', () => {
+    const { container } = render(
+      <AppContent
+        snapshot={baseSnapshot()}
+        loading={true}
+        error={null}
+        emptyState={null}
+        isFillHeight={false}
+        isFullscreen={false}
+        canRequestFullscreen={false}
+        requestFullscreen={noopRequestFullscreen}
+        crossDataset={null}
+        meta={null}
+        effectiveLocale="en"
+        pythonCode={undefined}
+        platform="desktop"
+        hostKind="claude"
+        hasInlineSafeAreaFallback={true}
+      />,
+    );
+    const wrapper = container.firstChild as HTMLElement;
+    expect(wrapper).not.toHaveClass('m-4');
+  });
+
+  it('keeps the pip-mode margin even when the inline safe-area fallback flag is set', () => {
+    const { container } = render(
+      <AppContent
+        snapshot={baseSnapshot()}
+        loading={false}
+        error={null}
+        emptyState={null}
+        isFillHeight={true}
+        isFullscreen={false}
+        canRequestFullscreen={false}
+        requestFullscreen={noopRequestFullscreen}
+        crossDataset={null}
+        meta={null}
+        effectiveLocale="en"
+        pythonCode={undefined}
+        platform="desktop"
+        hostKind="claude"
+        hasInlineSafeAreaFallback={true}
+      />,
+    );
+    const wrapper = container.firstChild as HTMLElement;
+    expect(wrapper).toHaveClass('m-4');
+  });
 });

@@ -82,3 +82,40 @@ export function resolveEffectiveSafeArea(
     left: Math.max(host.left, min.left),
   };
 }
+
+/**
+ * Widget-defined default padding for inline mode when the host reports no
+ * `safeAreaInsets` at all. Applied as a true fallback (see
+ * `shouldUseInlineAbsentFallback`), not merged via `resolveEffectiveSafeArea`
+ * — a host that reports a real value, even all-zero, is left untouched.
+ */
+export const INLINE_ABSENT_SAFE_AREA_FALLBACK: Record<Platform, SafeAreaSides> =
+  {
+    [Platform.Desktop]: { top: 12, right: 12, bottom: 12, left: 12 },
+    [Platform.Mobile]: { top: 8, right: 8, bottom: 8, left: 8 },
+  };
+
+/**
+ * Whether the inline-mode absent-insets fallback should apply: the host
+ * isn't ChatGPT, the display mode is inline, and the host reported no
+ * `safeAreaInsets` at all (as opposed to reporting a real, even all-zero,
+ * value). Callers must additionally confirm the host handshake has actually
+ * completed (i.e. `hostContext` itself is defined) before using this
+ * result — `safeAreaInsets` is indistinguishable from "not reported" both
+ * before the handshake and when a host genuinely never reports one, and
+ * only the latter should trigger the fallback.
+ * @param hostKind - Result of `detectHostKind()` for the current host.
+ * @param displayMode - Current resolved display mode.
+ * @param safeAreaInsets - Raw `hostContext.safeAreaInsets`, `undefined` if the host didn't report one.
+ */
+export function shouldUseInlineAbsentFallback(
+  hostKind: HostKind,
+  displayMode: DisplayMode,
+  safeAreaInsets: SafeAreaSides | undefined,
+): boolean {
+  return (
+    hostKind !== HostKind.ChatGpt &&
+    displayMode === DisplayMode.Inline &&
+    safeAreaInsets === undefined
+  );
+}
