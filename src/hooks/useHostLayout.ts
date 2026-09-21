@@ -6,7 +6,12 @@ import {
   useDisplayMode,
   usePlatform,
 } from '../host/hostContext';
-import { resolveEffectiveSafeArea, resolveMinSafeArea } from '../host/safeArea';
+import {
+  INLINE_ABSENT_SAFE_AREA_FALLBACK,
+  resolveEffectiveSafeArea,
+  resolveMinSafeArea,
+  shouldUseInlineAbsentFallback,
+} from '../host/safeArea';
 
 export interface HostLayout {
   isFillHeight: boolean;
@@ -14,6 +19,17 @@ export interface HostLayout {
   canRequestFullscreen: boolean;
   requestFullscreen: () => void;
   locale: string | undefined;
+  /**
+   * Whether `--mcp-safe-area-*` is currently set from
+   * `INLINE_ABSENT_SAFE_AREA_FALLBACK` — a true fallback applied outright,
+   * not merged against a reported value — rather than from a host-reported
+   * `safeAreaInsets`. Only ever `true` once the host handshake has actually
+   * completed and the host still reported nothing for inline; never `true`
+   * merely because `hostContext` hasn't arrived yet. Consumers that add
+   * their own inline-mode spacing (e.g. `AppContent`'s loading-placeholder
+   * margin) should suppress it when this is true, so the two don't stack.
+   */
+  hasInlineSafeAreaFallback: boolean;
 }
 
 /**
@@ -69,7 +85,34 @@ export function useHostLayout(
     };
   }, [platform]);
 
+  const hasInlineSafeAreaFallback =
+    hostContext !== undefined &&
+    shouldUseInlineAbsentFallback(
+      detectHostKind(),
+      currentDisplayMode,
+      safeAreaInsets,
+    );
+
   useEffect(() => {
+    if (hasInlineSafeAreaFallback) {
+      const fallback = INLINE_ABSENT_SAFE_AREA_FALLBACK[platform];
+      (['top', 'right', 'bottom', 'left'] as const).forEach((side) => {
+        document.documentElement.style.setProperty(
+          `--mcp-safe-area-host-${side}`,
+          '0px',
+        );
+        document.documentElement.style.setProperty(
+          `--mcp-safe-area-min-${side}`,
+          `${fallback[side]}px`,
+        );
+        document.documentElement.style.setProperty(
+          `--mcp-safe-area-${side}`,
+          `${fallback[side]}px`,
+        );
+      });
+      return;
+    }
+
     const host = {
       top: safeAreaInsets?.top ?? 0,
       right: safeAreaInsets?.right ?? 0,
@@ -97,7 +140,7 @@ export function useHostLayout(
         `${effective[side]}px`,
       );
     });
-  }, [safeAreaInsets, platform, currentDisplayMode]);
+  }, [safeAreaInsets, platform, currentDisplayMode, hasInlineSafeAreaFallback]);
 
   const canRequestFullscreen =
     hostContext?.availableDisplayModes?.includes('fullscreen') ?? false;
@@ -112,5 +155,6 @@ export function useHostLayout(
     canRequestFullscreen,
     requestFullscreen,
     locale: hostContext?.locale,
+    hasInlineSafeAreaFallback,
   };
 }

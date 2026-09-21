@@ -218,6 +218,63 @@ describe('useHostLayout', () => {
       ).toBe('0px');
     });
 
+    it('applies the 12px inline fallback on desktop when a non-ChatGPT host reports no safeAreaInsets at all', () => {
+      renderHook(() =>
+        useHostLayout(
+          makeHostContext({ displayMode: 'inline', platform: 'desktop' }),
+        ),
+      );
+
+      ['top', 'right', 'bottom', 'left'].forEach((side) => {
+        expect(
+          document.documentElement.style.getPropertyValue(
+            `--mcp-safe-area-${side}`,
+          ),
+        ).toBe('12px');
+        expect(
+          document.documentElement.style.getPropertyValue(
+            `--mcp-safe-area-host-${side}`,
+          ),
+        ).toBe('0px');
+      });
+    });
+
+    it('applies the 8px inline fallback on mobile when a non-ChatGPT host reports no safeAreaInsets at all', () => {
+      renderHook(() =>
+        useHostLayout(
+          makeHostContext({ displayMode: 'inline', platform: 'mobile' }),
+        ),
+      );
+
+      ['top', 'right', 'bottom', 'left'].forEach((side) => {
+        expect(
+          document.documentElement.style.getPropertyValue(
+            `--mcp-safe-area-${side}`,
+          ),
+        ).toBe('8px');
+      });
+    });
+
+    it('does not apply the inline fallback when a non-ChatGPT host reports real (all-zero) insets', () => {
+      renderHook(() =>
+        useHostLayout(
+          makeHostContext({
+            displayMode: 'inline',
+            platform: 'desktop',
+            safeAreaInsets: { top: 0, right: 0, bottom: 0, left: 0 },
+          }),
+        ),
+      );
+
+      ['top', 'right', 'bottom', 'left'].forEach((side) => {
+        expect(
+          document.documentElement.style.getPropertyValue(
+            `--mcp-safe-area-${side}`,
+          ),
+        ).toBe('0px');
+      });
+    });
+
     it('updates all safe-area CSS vars on rerender with a new hostContext', () => {
       const { rerender } = renderHook(
         ({ ctx }: { ctx: McpUiHostContext | undefined }) => useHostLayout(ctx),
@@ -304,6 +361,46 @@ describe('useHostLayout', () => {
       result.current.requestFullscreen();
 
       expect(bridge.requestDisplayMode).toHaveBeenCalledWith('fullscreen');
+    });
+  });
+
+  describe('hasInlineSafeAreaFallback', () => {
+    it('is true when a non-ChatGPT host reports no safeAreaInsets for inline', () => {
+      const { result } = renderHook(() =>
+        useHostLayout(makeHostContext({ displayMode: 'inline' })),
+      );
+
+      expect(result.current.hasInlineSafeAreaFallback).toBe(true);
+    });
+
+    it('is false when safeAreaInsets is reported, even all-zero', () => {
+      const { result } = renderHook(() =>
+        useHostLayout(
+          makeHostContext({
+            displayMode: 'inline',
+            safeAreaInsets: { top: 0, right: 0, bottom: 0, left: 0 },
+          }),
+        ),
+      );
+
+      expect(result.current.hasInlineSafeAreaFallback).toBe(false);
+    });
+
+    it('is false before the handshake completes (hostContext undefined), even though that also defaults to inline', () => {
+      const { result } = renderHook(() => useHostLayout(undefined));
+
+      expect(result.current.hasInlineSafeAreaFallback).toBe(false);
+      expect(
+        document.documentElement.style.getPropertyValue('--mcp-safe-area-top'),
+      ).toBe('0px');
+    });
+
+    it('is false outside inline mode', () => {
+      const { result } = renderHook(() =>
+        useHostLayout(makeHostContext({ displayMode: 'fullscreen' })),
+      );
+
+      expect(result.current.hasInlineSafeAreaFallback).toBe(false);
     });
   });
 

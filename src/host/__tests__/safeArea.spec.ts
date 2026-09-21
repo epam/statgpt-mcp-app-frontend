@@ -1,7 +1,9 @@
 import { DisplayMode, HostKind, Platform } from '../hostContext';
 import {
+  INLINE_ABSENT_SAFE_AREA_FALLBACK,
   resolveEffectiveSafeArea,
   resolveMinSafeArea,
+  shouldUseInlineAbsentFallback,
   ZERO_SAFE_AREA,
   type SafeAreaOverrides,
 } from '../safeArea';
@@ -135,5 +137,96 @@ describe('resolveEffectiveSafeArea', () => {
     const min = { top: 16, right: 16, bottom: 16, left: 16 };
 
     expect(resolveEffectiveSafeArea(host, min)).toEqual(host);
+  });
+});
+
+describe('shouldUseInlineAbsentFallback', () => {
+  it('is false for ChatGPT, regardless of display mode or insets', () => {
+    expect(
+      shouldUseInlineAbsentFallback(
+        HostKind.ChatGpt,
+        DisplayMode.Inline,
+        undefined,
+      ),
+    ).toBe(false);
+    expect(
+      shouldUseInlineAbsentFallback(
+        HostKind.ChatGpt,
+        DisplayMode.Inline,
+        ZERO_SAFE_AREA,
+      ),
+    ).toBe(false);
+    expect(
+      shouldUseInlineAbsentFallback(
+        HostKind.ChatGpt,
+        DisplayMode.Fullscreen,
+        undefined,
+      ),
+    ).toBe(false);
+  });
+
+  it('is false for a non-ChatGPT host outside inline mode, regardless of insets', () => {
+    expect(
+      shouldUseInlineAbsentFallback(
+        HostKind.Claude,
+        DisplayMode.Fullscreen,
+        undefined,
+      ),
+    ).toBe(false);
+    expect(
+      shouldUseInlineAbsentFallback(
+        HostKind.Claude,
+        DisplayMode.Pip,
+        undefined,
+      ),
+    ).toBe(false);
+  });
+
+  it('is false for a non-ChatGPT host in inline mode when insets are reported, even all-zero', () => {
+    expect(
+      shouldUseInlineAbsentFallback(
+        HostKind.Claude,
+        DisplayMode.Inline,
+        ZERO_SAFE_AREA,
+      ),
+    ).toBe(false);
+    expect(
+      shouldUseInlineAbsentFallback(HostKind.Claude, DisplayMode.Inline, {
+        top: 44,
+        right: 0,
+        bottom: 34,
+        left: 0,
+      }),
+    ).toBe(false);
+  });
+
+  it('is true for a non-ChatGPT host in inline mode when insets are fully absent', () => {
+    expect(
+      shouldUseInlineAbsentFallback(
+        HostKind.Claude,
+        DisplayMode.Inline,
+        undefined,
+      ),
+    ).toBe(true);
+  });
+});
+
+describe('INLINE_ABSENT_SAFE_AREA_FALLBACK', () => {
+  it('is 12px all sides on desktop', () => {
+    expect(INLINE_ABSENT_SAFE_AREA_FALLBACK[Platform.Desktop]).toEqual({
+      top: 12,
+      right: 12,
+      bottom: 12,
+      left: 12,
+    });
+  });
+
+  it('is 8px all sides on mobile', () => {
+    expect(INLINE_ABSENT_SAFE_AREA_FALLBACK[Platform.Mobile]).toEqual({
+      top: 8,
+      right: 8,
+      bottom: 8,
+      left: 8,
+    });
   });
 });

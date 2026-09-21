@@ -50,6 +50,13 @@ interface Props {
   ) => EChartsOption;
   platform: Platform;
   hostKind: HostKind;
+  /**
+   * Whether the loading placeholder's inline-mode margin is currently
+   * redundant with the widget's own `--mcp-safe-area-*` fallback padding
+   * (see `useHostLayout`'s `hasInlineSafeAreaFallback`) — when true, the
+   * placeholder's `m-4` is suppressed so the two don't stack.
+   */
+  hasInlineSafeAreaFallback?: boolean;
 }
 
 export function AppContent({
@@ -68,6 +75,7 @@ export function AppContent({
   chartTransformOption,
   platform,
   hostKind,
+  hasInlineSafeAreaFallback = false,
 }: Props) {
   const closePanel = useConversationViewSidePanelOptional()?.closePanel;
   const { chartAttachment, crossDatasetGridAttachment } = useDataAttachments({
@@ -201,7 +209,9 @@ export function AppContent({
   return (
     <div
       className={classNames('relative flex flex-col', {
-        'm-4': !isFullscreen && (isFillHeight || showLoader),
+        'm-4':
+          !isFullscreen &&
+          (isFillHeight || (showLoader && !hasInlineSafeAreaFallback)),
         'h-full': isFillHeight,
         'min-h-[var(--mcp-widget-min-height)]': !isFillHeight && showLoader,
         'p-3': isChatGptNonMobile && !isFullscreen,
