@@ -68,7 +68,7 @@ export function ChartPager({
         )}
       />
       {showLabel && (
-        <span className="h4 select-none text-neutrals-800">
+        <span className="text-token-xs font-semibold select-none text-neutrals-800">
           {currentIndex + 1}/{totalCount}
         </span>
       )}

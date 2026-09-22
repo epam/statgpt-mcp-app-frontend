@@ -40,10 +40,10 @@ export function EmptyStateInlineNudge({ platform, onBrowse }: Props) {
         className="shrink-0 self-start text-neutrals-1000"
       />
       <div className="min-w-0 flex-1">
-        <p className="text-sm font-semibold text-neutrals-1000">
+        <p className="text-token-sm font-semibold text-neutrals-1000">
           Not sure which one fits?
         </p>
-        <p className="text-sm text-neutrals-700">
+        <p className="text-token-sm text-neutrals-700">
           Browse available dimensions to find the exact one.
         </p>
       </div>

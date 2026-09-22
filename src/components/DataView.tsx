@@ -371,7 +371,9 @@ export function DataView({
             'px-4 pt-3': isMobile,
           })}
         >
-          <span className="text-sm font-medium text-neutrals-1000">Data</span>
+          <span className="text-token-sm font-medium text-neutrals-1000">
+            Data
+          </span>
           {scrollPlan && (
             <div className="flex items-center gap-2">
               <HostIconButton

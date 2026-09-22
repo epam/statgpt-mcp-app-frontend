@@ -85,6 +85,27 @@ export default {
       borderWidth: {
         DEFAULT: 'var(--border-width)',
       },
+      fontWeight: {
+        normal: 'var(--font-weight-normal, 400)',
+        medium: 'var(--font-weight-medium, 500)',
+        semibold: 'var(--font-weight-semibold, 600)',
+        bold: 'var(--font-weight-bold, 700)',
+      },
+      fontSize: {
+        'token-xs': [
+          'var(--font-text-xs-size, 12px)',
+          'var(--font-text-xs-line-height, 16px)',
+        ],
+        'token-xs-size': 'var(--font-text-xs-size, 12px)',
+        'token-sm': [
+          'var(--font-text-sm-size, 14px)',
+          'var(--font-text-sm-line-height, 20px)',
+        ],
+        'token-heading-sm': [
+          'var(--font-heading-sm-size, 16px)',
+          'var(--font-heading-sm-line-height, 24px)',
+        ],
+      },
       boxShadow: {
         drop: '0px 4px 4px 0px #BBBBBB40',
       },

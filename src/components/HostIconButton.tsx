@@ -63,7 +63,7 @@ export function HostIconButton({
       className={classNames(
         'z-10 flex items-center hover:bg-neutrals-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-1',
         label
-          ? 'gap-1.5 py-1.5 pl-1.5 pr-2 text-xs font-medium text-neutrals-1000'
+          ? 'gap-1.5 py-1.5 pl-1.5 pr-2 text-token-xs font-medium text-neutrals-1000'
           : 'p-1.5 text-neutrals-700 hover:text-neutrals-1000',
         disabled && 'pointer-events-none opacity-40',
         isMobile && "before:absolute before:inset-[-4px] before:content-['']",

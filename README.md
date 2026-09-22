@@ -15,6 +15,8 @@ A **single-widget MCP App** that renders an SDMX data explorer inside an AI chat
 
 The host calls `query_data` → the widget receives the tool result via the MCP-UI spec bridge → `useSdmxData` fetches SDMX data via `sdmx_proxy` → adapters transform the response into a `ChartModel` → `DataView` renders the `Grid` tab as an ag-grid table. Display mode and host theme are applied reactively via `useHostLayout` and `useHostTheme`.
 
+See [`DESIGN_TOKENS.md`](./DESIGN_TOKENS.md) for exactly which host `--color-*`/`--font-*`/`--border-*` tokens this widget consumes, where, and with what fallback.
+
 ## Environment variables
 
 Local builds bake `VITE_BASE_URL` into the static output via Vite's `base`. The **Docker image** builds with a placeholder origin and rewrites it to the **runtime** `VITE_BASE_URL` on startup (`docker-entrypoint.d/40-replace-base-url.sh`), so one image serves any environment. The widget HTML is served by the host inside a sandboxed iframe whose origin differs from the widget origin, so asset URLs must be absolute and point back at the widget origin.

@@ -17,7 +17,9 @@ function DimensionRow({ dimension }: RowProps) {
   return (
     <div className="flex flex-wrap items-baseline gap-x-1">
       <span className="caption text-neutrals-700">{dimension.title}:</span>
-      <span className="h4 text-neutrals-1000">{dimension.value}</span>
+      <span className="text-token-xs font-semibold text-neutrals-1000">
+        {dimension.value}
+      </span>
     </div>
   );
 }

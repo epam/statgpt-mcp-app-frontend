@@ -31,7 +31,7 @@ export function GridRowLimitFooter({
 }: Props) {
   return (
     <div className="flex items-center justify-between gap-2 pt-3">
-      <span className="text-xs text-neutrals-700">
+      <span className="text-token-xs text-neutrals-700">
         Showing {visible} of {total} results
       </span>
       <HostIconButton
