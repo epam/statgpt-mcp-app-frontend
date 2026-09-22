@@ -164,7 +164,7 @@ export function ChartView({
       )}
     >
       <div className="flex items-center justify-between">
-        <span className="text-[12px] text-neutrals-700">
+        <span className="text-token-xs-size text-neutrals-700">
           Chart: {chartIndex + 1}/{flatUnits.length}
         </span>
         <ChartPager

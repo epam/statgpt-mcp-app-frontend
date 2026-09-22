@@ -56,7 +56,7 @@ export function Tabs<Id extends string>({
             key={item.id}
             onClick={() => onSelect(item.id)}
             className={classNames(
-              'px-4 py-2 text-sm font-medium -mb-px border-b-2 transition-colors',
+              'px-4 py-2 text-token-sm font-medium -mb-px border-b-2 transition-colors',
               isMobile && 'py-[11px]',
               'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-primary',
               activeId === item.id

@@ -24,7 +24,7 @@ export function ErrorBanner({ message, isMobile, isInline }: Props) {
   return (
     <div
       className={classNames(
-        'rounded border border-semantic-error bg-semantic-error-light px-3 py-2 text-sm text-semantic-error',
+        'rounded border border-semantic-error bg-semantic-error-light px-3 py-2 text-token-sm text-semantic-error',
         { 'mx-4 my-3': isMobile && isInline },
       )}
     >

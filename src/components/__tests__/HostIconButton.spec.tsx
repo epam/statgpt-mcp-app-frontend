@@ -97,7 +97,7 @@ describe('HostIconButton', () => {
     expect(screen.getByRole('button')).toHaveTextContent('Open full view');
   });
 
-  it('renders the label at 12px, colored as primary/black text', () => {
+  it('renders the label sized from the host font token (12px fallback), colored as primary/black text', () => {
     render(
       <HostIconButton
         icon={StubIcon}
@@ -108,7 +108,7 @@ describe('HostIconButton', () => {
       />,
     );
     const button = screen.getByRole('button');
-    expect(button).toHaveClass('text-xs');
+    expect(button).toHaveClass('text-token-xs');
     expect(button).toHaveClass('text-neutrals-1000');
   });
 
