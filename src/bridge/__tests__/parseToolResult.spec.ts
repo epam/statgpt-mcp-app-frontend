@@ -75,8 +75,21 @@ describe('extractWidgetMeta', () => {
     expect(result?.version).toBe(2);
   });
 
-  it('omits version when not 1 or 2', () => {
-    const withBadVersion = { ...minimalToolResult, version: 3 };
+  it('includes version 3 when present (schema v3, read from the mcp-app _meta payload)', () => {
+    const withV3 = { ...minimalToolResult, version: 3 as const };
+    const result = extractWidgetMeta(withV3);
+    expect(result?.version).toBe(3);
+  });
+
+  it('includes queryId on a query when present (schema v3)', () => {
+    const queryWithId = { ...minimalQuery, queryId: 'dq_333e6e65fc' };
+    const withQueryId = { ...minimalToolResult, queries: [queryWithId] };
+    const result = extractWidgetMeta(withQueryId);
+    expect(result?.queries).toEqual([queryWithId]);
+  });
+
+  it('omits version when not 1, 2 or 3', () => {
+    const withBadVersion = { ...minimalToolResult, version: 4 };
     const result = extractWidgetMeta(withBadVersion);
     expect(result?.version).toBeUndefined();
   });

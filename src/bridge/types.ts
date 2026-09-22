@@ -74,13 +74,18 @@ export interface MissingDimensionInfo {
 /** Describes why a query is incomplete: which dimensions of which dataset still need a value. */
 export interface MissingDimensionsInfo {
   datasetId: string;
+  /** Source id (URN) of that dataset, when known — schema v3+. */
+  datasetUrn?: string;
   dimensions: MissingDimensionInfo[];
 }
 
+/** A query as the MCP-app payload carries it, with its schema v3+ `queryId`. */
+export type WidgetQuery = DataQuery & { queryId?: string };
+
 export interface WidgetToolResult {
-  version: 1 | 2;
+  version: 1 | 2 | 3;
   title?: string;
-  queries: DataQuery[];
+  queries: WidgetQuery[];
   tools: { sdmxProxy: string };
   pythonCode?: string;
   status?: DataQueryStatus;
@@ -90,9 +95,9 @@ export interface WidgetToolResult {
 }
 
 export interface WidgetMeta {
-  version?: 1 | 2;
+  version?: 1 | 2 | 3;
   title?: string;
-  queries: DataQuery[];
+  queries: WidgetQuery[];
   sdmxProxyToolName: string;
   pythonCode?: string;
   status?: DataQueryStatus;

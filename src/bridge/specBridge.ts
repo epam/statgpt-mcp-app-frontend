@@ -6,6 +6,7 @@ import { BridgeError, type BridgeSnapshot, type HostBridge } from './types';
 import {
   extractCallToolPayload,
   findTextBlock,
+  resolveToolResult,
   unwrapStructured,
 } from './utils';
 
@@ -59,7 +60,7 @@ export function createSpecBridge(): HostBridge {
     };
 
     sdkApp.ontoolresult = (params) => {
-      const toolResult = unwrapStructured(params.structuredContent) ?? null;
+      const toolResult = resolveToolResult(params);
       const toolResultText = findTextBlock(params.content)?.text;
       logger.debug('bridge', 'tool-result received', {
         raw: params,
