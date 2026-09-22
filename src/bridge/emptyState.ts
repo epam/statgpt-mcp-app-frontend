@@ -36,15 +36,21 @@ export const DEFAULT_FALLBACK_MESSAGE =
  * Whether the widget should run its normal fetch/render path for this result, rather
  * than showing an empty/error state.
  *
- * True for schema v2's `status: 'data_available'`.
+ * True for `status: 'data_available'`, under schema v2 or v3 alike — both always carry
+ * `status` (the real backend requires it on every mcp-app payload), so neither gets the
+ * v1 fallback below.
  *
  * **Also true for a genuine schema v1 payload — this is the schema v1 fallback.**
  * Schema v1 (`version === 1`) predates the `status` field entirely, so a v1 payload
  * reaching this function already has real, executable `queries` and must behave
  * exactly as it did before `status` existed: fetch and render. This fallback requires
- * `version === 1` in addition to a missing `status` — a v2 payload (`version === 2`)
- * that happens to be missing `status` is not v1-shaped and is very likely a bug, so it
- * does NOT get this treatment; it falls through to the empty/error path instead.
+ * `version === 1` in addition to a missing `status` — a v2 or v3 payload (`version === 2`
+ * or `version === 3`) that happens to be missing `status` is not v1-shaped and is very
+ * likely a bug, so it does NOT get this treatment; it falls through to the empty/error
+ * path instead. **Do not widen this fallback to include v3** — v1's absent `status` is
+ * expected (the field didn't exist yet), while v2/v3's absent `status` is always a
+ * malformed payload, and treating the two as equivalent would let a broken v3 result
+ * through as if it had real data.
  */
 export function isDataAvailable(meta: WidgetMeta | null): boolean {
   if (!meta) return false;

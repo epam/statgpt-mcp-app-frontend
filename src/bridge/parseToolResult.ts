@@ -20,7 +20,10 @@ export function extractWidgetMeta(toolResult: unknown): WidgetMeta | null {
   const t = candidate as Partial<WidgetToolResult>;
   if (!Array.isArray(t.queries) || !t.tools?.sdmxProxy) return null;
   return {
-    version: t.version === 1 || t.version === 2 ? t.version : undefined,
+    version:
+      t.version === 1 || t.version === 2 || t.version === 3
+        ? t.version
+        : undefined,
     title: typeof t.title === 'string' ? t.title : undefined,
     queries: t.queries,
     sdmxProxyToolName: t.tools.sdmxProxy,
