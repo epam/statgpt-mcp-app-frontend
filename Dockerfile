@@ -1,5 +1,5 @@
 # Build-only stage; the runtime image below is nginx, so Node/npm do not ship.
-FROM node:24.21-alpine3.24 AS base
+FROM node:24.22.1-alpine3.24 AS base
 
 FROM base AS deps
 WORKDIR /app
@@ -28,7 +28,7 @@ FROM nginxinc/nginx-unprivileged:1.30.5-alpine3.24 AS runner
 # zlib (CVE-2026-85091) is preinstalled in the base image, so `apk add` would not
 # update it. The base image runs as UID 101, so switch to root for this layer only.
 USER root
-RUN apk upgrade --no-cache zlib
+RUN apk upgrade --no-cache zlib brotli-libs
 USER 101
 
 COPY --from=builder /app/dist /usr/share/nginx/html
