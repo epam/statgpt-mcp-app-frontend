@@ -23,12 +23,12 @@ RUN npm run build
 # and writes its pid + temp dirs under /tmp — so the image runs under a hardened
 # securityContext (readOnlyRootFilesystem, non-root) with only /tmp writable.
 # Pinned tag (stable = 1.30.x) so rebuilds pick the same patched Alpine 3.24 base.
-FROM nginxinc/nginx-unprivileged:1.30.5-alpine3.24 AS runner
+FROM nginxinc/nginx-unprivileged:1.30.6-alpine3.24 AS runner
 
 # zlib (CVE-2026-85091) is preinstalled in the base image, so `apk add` would not
 # update it. The base image runs as UID 101, so switch to root for this layer only.
 USER root
-RUN apk upgrade --no-cache zlib brotli-libs
+RUN apk upgrade --no-cache zlib brotli-libs curl libcurl libexpat libx11 libxpm
 USER 101
 
 COPY --from=builder /app/dist /usr/share/nginx/html
