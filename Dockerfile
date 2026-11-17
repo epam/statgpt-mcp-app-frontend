@@ -28,7 +28,7 @@ FROM nginxinc/nginx-unprivileged:1.30.6-alpine3.24 AS runner
 # zlib (CVE-2026-85091) is preinstalled in the base image, so `apk add` would not
 # update it. The base image runs as UID 101, so switch to root for this layer only.
 USER root
-RUN apk upgrade --no-cache zlib brotli-libs curl libcurl libexpat libx11 libxpm
+RUN apk upgrade --no-cache zlib brotli-libs curl libcurl libexpat libx11 libxpm libxslt musl musl-utils
 USER 101
 
 COPY --from=builder /app/dist /usr/share/nginx/html
