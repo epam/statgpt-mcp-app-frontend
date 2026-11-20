@@ -27,10 +27,11 @@ RUN npm run build
 # before Docker Hub does.
 FROM public.ecr.aws/nginx/nginx-unprivileged:1.31.9-alpine3.24 AS runner
 
-# zlib (CVE-2026-85091) is preinstalled in the base image, so `apk add` would not
-# update it. The base image runs as UID 101, so switch to root for this layer only.
+# zlib (CVE-2026-85091) and libcrypto3/libssl3 (OpenSSL 3.5.9-r0 CVEs, fixed in
+# 3.5.9-r1) are preinstalled in the base image, so `apk add` would not update
+# them. The base image runs as UID 101, so switch to root for this layer only.
 USER root
-RUN apk upgrade --no-cache zlib brotli-libs curl libcurl libexpat libx11 libxpm libxslt musl musl-utils
+RUN apk upgrade --no-cache zlib brotli-libs curl libcurl libexpat libx11 libxpm libxslt musl musl-utils libcrypto3 libssl3
 USER 101
 
 COPY --from=builder /app/dist /usr/share/nginx/html
