@@ -22,8 +22,10 @@ RUN npm run build
 # nginx-unprivileged runs as a non-root user, listens on a non-privileged port,
 # and writes its pid + temp dirs under /tmp — so the image runs under a hardened
 # securityContext (readOnlyRootFilesystem, non-root) with only /tmp writable.
-# Pinned tag (stable = 1.30.x) so rebuilds pick the same patched Alpine 3.24 base.
-FROM nginxinc/nginx-unprivileged:1.30.6-alpine3.24 AS runner
+# Pinned tag (mainline = 1.31.x) so rebuilds pick the same patched Alpine 3.24 base.
+# Pulled from the nginx public ECR repository, which publishes new releases
+# before Docker Hub does.
+FROM public.ecr.aws/nginx/nginx-unprivileged:1.31.9-alpine3.24 AS runner
 
 # zlib (CVE-2026-85091) is preinstalled in the base image, so `apk add` would not
 # update it. The base image runs as UID 101, so switch to root for this layer only.
